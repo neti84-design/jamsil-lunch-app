@@ -25,8 +25,17 @@ npm run dev        # http://localhost:5173
 npm run build      # dist/ 생성
 ```
 
-GitHub Pages 배포: `main` 브랜치에 푸시하면 `.github/workflows/deploy.yml` 이 자동 배포합니다.
-(저장소 Settings → Pages → Source 를 **GitHub Actions** 로 한 번 설정 필요)
+## 배포 (Vercel)
+
+주소: **https://jamsim.vercel.app**
+
+1. https://vercel.com 로그인 → **Add New… → Project** → GitHub 저장소 `jamsil-lunch-app` **Import**
+2. **Project Name** 을 `jamsim` 으로 변경 (→ `jamsim.vercel.app`)
+3. Framework Preset 은 **Vite** 로 자동 인식됩니다 (`vercel.json` 에 빌드 설정 포함)
+4. **Environment Variables** 에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` 추가 (아래 Supabase 절 참고)
+5. **Deploy** → 이후 `main` 브랜치에 푸시할 때마다 자동 재배포됩니다
+
+프로젝트 이름은 Settings → General → Project Name 에서 나중에도 바꿀 수 있습니다.
 
 ## 실시간 제보·후기 연결 (Supabase, 5분)
 
@@ -41,8 +50,8 @@ GitHub Pages 배포: `main` 브랜치에 푸시하면 `.github/workflows/deploy.
    VITE_SUPABASE_URL=https://xxxx.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJ...
    ```
-5. GitHub Pages 배포: 저장소 **Settings → Secrets and variables → Actions** 에
-   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` 두 개를 **Repository secret** 으로 추가 → 다음 푸시부터 반영
+5. Vercel 배포: 프로젝트 **Settings → Environment Variables** 에
+   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` 두 개를 추가 → **Redeploy** 하면 반영
 
 동작 방식: `reports` 테이블 하나에 웨이팅 제보와 후기가 쌓이고, Supabase Realtime 으로 다른 사람의 제보가 새로고침 없이 바로 뜹니다.
 익명 키로 누구나 읽기/쓰기만 가능하고 수정·삭제는 막혀 있습니다(RLS). 링크를 아는 사람만 쓰는 사내용 전제입니다.

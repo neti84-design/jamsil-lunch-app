@@ -4848,5 +4848,1627 @@ export const RESTAURANTS: Restaurant[] = [
       "https://www.diningcode.com/profile.php?rid=Bj3A3mcif8jT"
     ],
     "dataNotes": "규동 12,000은 예산 내, 나머지는 초과. 송리단길."
+  },
+  // 건물별 필터용 추가 조사 (2026-10, 검색 결과 요약 기반 — dataNotes 참고)
+  {
+    "id": "gabaejeong-sigma",
+    "name": "가배정",
+    "branch": null,
+    "cuisine": "한식",
+    "subcategory": "남도 한정식·백반",
+    "signature": [
+      "남도밥상",
+      "보리굴비 정식",
+      "가배정 정식"
+    ],
+    "priceRange": [
+      9000,
+      25000
+    ],
+    "menu": [
+      {
+        "name": "남도밥상",
+        "price": 9000
+      },
+      {
+        "name": "가배정 정식",
+        "price": 15000
+      },
+      {
+        "name": "보리굴비 정식",
+        "price": 25000
+      }
+    ],
+    "concepts": [
+      "filling"
+    ],
+    "seating": {
+      "group": true,
+      "solo": null,
+      "groupSize": null,
+      "room": true,
+      "estimated": true,
+      "notes": "방 예약 가능하다는 후기"
+    },
+    "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층",
+    "lat": 37.5147,
+    "lng": 127.103,
+    "approxLocation": true,
+    "phone": "02-423-5532",
+    "hours": "11:00~22:00",
+    "breakTime": null,
+    "closedDays": "일요일",
+    "reservation": {
+      "method": "phone",
+      "notes": null
+    },
+    "waiting": {
+      "level": "medium",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "시그마타워 지하의 남도 한정식집으로 점심 백반을 찾는 직장인이 많고 방 예약이 가능하다.",
+      "highlights": [
+        "점심 백반",
+        "방 예약 가능",
+        "보리굴비"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=8WVZAqQ5xboF",
+      "https://www.mangoplate.com/restaurants/uGUkqkojn--8",
+      "https://www.siksinhot.com/P/841884"
+    ],
+    "dataNotes": "메뉴 가격은 식신 등록 정보(2022년경 후기 기준)라 현재 가격과 다를 수 있음."
+  },
+  {
+    "id": "kimmyeongja-gukbap-sigma",
+    "name": "김명자국밥",
+    "branch": null,
+    "cuisine": "한식",
+    "subcategory": "굴국밥",
+    "signature": [
+      "굴국밥",
+      "굴전",
+      "굴떡국"
+    ],
+    "priceRange": [
+      12000,
+      15000
+    ],
+    "menu": [
+      {
+        "name": "굴국밥",
+        "price": 12000
+      }
+    ],
+    "concepts": [
+      "hangover",
+      "quick"
+    ],
+    "seating": {
+      "group": null,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층",
+    "lat": 37.5147,
+    "lng": 127.103,
+    "approxLocation": true,
+    "phone": null,
+    "hours": "월~금 11:00~21:10",
+    "breakTime": null,
+    "closedDays": "토·일",
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "medium",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "통영 직송 생굴을 쓰는 굴국밥집으로 점심시간 대기가 생길 수 있다.",
+      "highlights": [
+        "통영 생굴",
+        "굴국밥·굴전"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=nl7CEg2kQRwx"
+    ],
+    "dataNotes": "굴국밥 외 메뉴 가격 미확인."
+  },
+  {
+    "id": "monster-dakhanmari-sigma",
+    "name": "몬스터닭한마리 얼큰이찌개마을",
+    "branch": null,
+    "cuisine": "한식",
+    "subcategory": "찌개·닭한마리",
+    "signature": [
+      "참치김치찌개",
+      "부대찌개",
+      "닭한마리"
+    ],
+    "priceRange": [
+      9000,
+      12000
+    ],
+    "menu": [
+      {
+        "name": "참치김치찌개",
+        "price": 9000
+      },
+      {
+        "name": "우삼겹된장찌개",
+        "price": 9000
+      },
+      {
+        "name": "부대찌개",
+        "price": 9500
+      },
+      {
+        "name": "동태알고니탕",
+        "price": 10000
+      },
+      {
+        "name": "닭한마리",
+        "price": 23000
+      }
+    ],
+    "concepts": [
+      "hangover",
+      "filling"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층 B108호",
+    "lat": 37.5147,
+    "lng": 127.103,
+    "approxLocation": true,
+    "phone": "02-420-3455",
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "시그마타워 지하의 찌개·닭한마리 전문점으로 맵고 얼큰한 찌개가 특징이다.",
+      "highlights": [
+        "찌개 9천원대",
+        "얼큰한 국물"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=aN6GKSYFSR2U"
+    ],
+    "dataNotes": "다이닝코드상 주소 신천동 7-19 지하108호. 영업시간 확인 필요."
+  },
+  {
+    "id": "bobuseon-budae-bossam-sigma",
+    "name": "보부선부대보쌈",
+    "branch": null,
+    "cuisine": "한식",
+    "subcategory": "보쌈·부대찌개·닭갈비",
+    "signature": [
+      "보쌈정식",
+      "철판 닭갈비",
+      "부대찌개"
+    ],
+    "priceRange": [
+      7000,
+      15000
+    ],
+    "menu": [
+      {
+        "name": "보쌈정식",
+        "price": 11000
+      },
+      {
+        "name": "닭갈비(1인)",
+        "price": 13000
+      },
+      {
+        "name": "부대찌개",
+        "price": 9000
+      },
+      {
+        "name": "김치찌개",
+        "price": 7000
+      },
+      {
+        "name": "콩나물해장국",
+        "price": 7000
+      }
+    ],
+    "concepts": [
+      "filling",
+      "heavy"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층",
+    "lat": 37.5147,
+    "lng": 127.103,
+    "approxLocation": true,
+    "phone": null,
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "medium",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "간판은 보쌈·부대찌개지만 철판 닭갈비도 인기이며 점심시간 웨이팅이 있다는 후기가 많다.",
+      "highlights": [
+        "보쌈정식",
+        "철판 닭갈비",
+        "찌개 7~9천원"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=tP9aUZZK8abo"
+    ],
+    "dataNotes": "가격은 리뷰마다 차이(닭갈비 13,000~14,000원)."
+  },
+  {
+    "id": "italy-budae-jjigae-jamsilyeok",
+    "name": "이태리부대찌개",
+    "branch": "잠실역점",
+    "cuisine": "한식",
+    "subcategory": "부대찌개",
+    "signature": [
+      "부대찌개",
+      "라면사리"
+    ],
+    "priceRange": [
+      10000,
+      12000
+    ],
+    "menu": [
+      {
+        "name": "부대찌개(1인)",
+        "price": 11000
+      }
+    ],
+    "concepts": [
+      "filling",
+      "heavy"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": "좌석이 많아 점심에도 웨이팅 없었다는 후기"
+    },
+    "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층 101호",
+    "lat": 37.5147,
+    "lng": 127.103,
+    "approxLocation": true,
+    "phone": null,
+    "hours": "11:00~22:00",
+    "breakTime": "15:00~17:00",
+    "closedDays": "일요일",
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "low",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "시그마타워 지하의 부대찌개 프랜차이즈로 좌석이 많아 점심에도 대기가 적은 편이다.",
+      "highlights": [
+        "좌석 많음",
+        "1인분 주문 가능"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8·9번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=mojCHoK2A1kg"
+    ],
+    "dataNotes": "주소 올림픽로 289 지하1층 101호. 소스 페이지 전화번호가 가배정과 같아 신뢰 불가로 null 처리. 휴무일 출처 간 상이."
+  },
+  {
+    "id": "manrijangseong-hyundai-tower",
+    "name": "만리장성",
+    "branch": null,
+    "cuisine": "중식",
+    "subcategory": "중국집",
+    "signature": [
+      "쟁반짜장",
+      "고추짬뽕"
+    ],
+    "priceRange": [
+      8000,
+      15000
+    ],
+    "menu": [
+      {
+        "name": "쟁반짜장(2인분)",
+        "price": 20000
+      }
+    ],
+    "concepts": [
+      "filling",
+      "quick"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로 293-19 현대타워 지하1층",
+    "lat": 37.5146,
+    "lng": 127.1033,
+    "approxLocation": true,
+    "phone": "02-2202-4282",
+    "hours": "월~토 10:30~21:30",
+    "breakTime": null,
+    "closedDays": "일요일",
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "medium",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "현대타워 지하 1층 중식당으로 쟁반짜장과 고추짬뽕이 유명하고 점심 직장인 수요가 많다.",
+      "highlights": [
+        "쟁반짜장",
+        "고추짬뽕",
+        "직장인 점심"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8·9번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=VxaUDsrquL3i"
+    ],
+    "dataNotes": "라스트오더 20:30. 매장 안내에는 11:00 오픈으로 적혀 있었다는 후기. 단품 가격 미확인(가격대 추정)."
+  },
+  {
+    "id": "hyundai-kalguksu-jamsil",
+    "name": "현대칼국수",
+    "branch": null,
+    "cuisine": "한식",
+    "subcategory": "칼국수·백반",
+    "signature": [
+      "칼국수",
+      "제육정식",
+      "황태국밥"
+    ],
+    "priceRange": [
+      7000,
+      9000
+    ],
+    "menu": [
+      {
+        "name": "칼국수",
+        "price": 7000
+      },
+      {
+        "name": "해물얼큰칼국수",
+        "price": 8000
+      },
+      {
+        "name": "제육정식",
+        "price": 9000
+      },
+      {
+        "name": "코다리찜",
+        "price": 8000
+      },
+      {
+        "name": "황태국밥",
+        "price": 8000
+      }
+    ],
+    "concepts": [
+      "quick",
+      "hangover"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로 293-19 현대타워 지하1층 26호",
+    "lat": 37.5146,
+    "lng": 127.1033,
+    "approxLocation": true,
+    "phone": "02-422-3868",
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "현대타워 지하 식당가의 칼국수·백반집으로 점심과 회식 모두 이용된다.",
+      "highlights": [
+        "저렴한 칼국수",
+        "제육정식"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8·9번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=gTFo3eDPwYYG"
+    ],
+    "dataNotes": "지하1층 26호. 가격은 사용자 등록 사진 기준이라 오래됐을 수 있음."
+  },
+  {
+    "id": "kongnaru-kongnamul-gukbap-jamsil",
+    "name": "전주콩나루콩나물국밥",
+    "branch": "잠실1호점",
+    "cuisine": "한식",
+    "subcategory": "콩나물국밥",
+    "signature": [
+      "콩나물국밥",
+      "오징어콩나물국밥",
+      "돌솥비빔밥"
+    ],
+    "priceRange": [
+      8000,
+      9000
+    ],
+    "menu": [
+      {
+        "name": "콩나물국밥",
+        "price": 8000
+      },
+      {
+        "name": "오징어콩나물국밥",
+        "price": 9000
+      },
+      {
+        "name": "황태콩나물국밥",
+        "price": 9000
+      },
+      {
+        "name": "돌솥비빔밥",
+        "price": 9000
+      },
+      {
+        "name": "모둠만두",
+        "price": 6000
+      }
+    ],
+    "concepts": [
+      "hangover",
+      "quick",
+      "light"
+    ],
+    "seating": {
+      "group": null,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로 293-19 현대타워 지하1층",
+    "lat": 37.5146,
+    "lng": 127.1033,
+    "approxLocation": true,
+    "phone": "02-422-0091",
+    "hours": "07:30~21:00",
+    "breakTime": "15:00~17:00",
+    "closedDays": "토·일",
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "현대타워 지하의 가성비 콩나물국밥집으로 아침 식사 장소로도 추천된다.",
+      "highlights": [
+        "콩나물국밥 8천원",
+        "아침 영업",
+        "해장"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8·9번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=KcaCPHn5cMRf"
+    ],
+    "dataNotes": "영업시간 출처 상이(07:15 오픈, 브레이크 ~17:30, 토요일 영업 표기도 있음)."
+  },
+  {
+    "id": "hanguk-gyoja-jamsil",
+    "name": "한국교자",
+    "branch": "잠실점",
+    "cuisine": "한식",
+    "subcategory": "칼국수·만두",
+    "signature": [
+      "교자칼국수",
+      "바지락칼국수",
+      "만두"
+    ],
+    "priceRange": [
+      11000,
+      14000
+    ],
+    "menu": [
+      {
+        "name": "교자칼국수",
+        "price": 11000
+      },
+      {
+        "name": "바지락칼국수",
+        "price": 11000
+      },
+      {
+        "name": "해물칼국수",
+        "price": 14000
+      }
+    ],
+    "concepts": [
+      "quick",
+      "hangover"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 송파대로 558 월드타워빌딩 지하1층",
+    "lat": 37.5119,
+    "lng": 127.1037,
+    "approxLocation": true,
+    "phone": "02-3434-0088",
+    "hours": "10:30~22:30",
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "월드타워빌딩 지하의 칼국수·만두집으로 바지락칼국수는 무난하다는 평이다.",
+      "highlights": [
+        "칼국수",
+        "만두"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 6·7번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://polle.com/place/3MZmgk/%ED%95%9C%EA%B5%AD%20%EA%B5%90%EC%9E%90",
+      "https://www.diningcode.com/profile.php?rid=gefHTDOR0Qvf",
+      "https://www.siksinhot.com/P/314634"
+    ],
+    "dataNotes": "가격은 polle 기준(게시일 미상). 수제비·해물파전은 아쉽다는 평도 있음."
+  },
+  {
+    "id": "gimbap-cheonguk-sincheon",
+    "name": "김밥천국",
+    "branch": "신천동점",
+    "cuisine": "분식",
+    "subcategory": "김밥·분식",
+    "signature": [
+      "참치김밥",
+      "제육덮밥",
+      "김치찌개"
+    ],
+    "priceRange": [
+      4000,
+      10000
+    ],
+    "menu": [
+      {
+        "name": "원조김밥",
+        "price": 4000
+      },
+      {
+        "name": "참치김밥",
+        "price": 5000
+      },
+      {
+        "name": "라면",
+        "price": 4500
+      },
+      {
+        "name": "김치찌개",
+        "price": 9000
+      },
+      {
+        "name": "제육덮밥",
+        "price": 10000
+      }
+    ],
+    "concepts": [
+      "quick",
+      "light"
+    ],
+    "seating": {
+      "group": false,
+      "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
+      "notes": "혼밥하기 좋은 분식집"
+    },
+    "address": "서울 송파구 송파대로 558 월드타워빌딩 지하1층 B08호",
+    "lat": 37.5119,
+    "lng": 127.1037,
+    "approxLocation": true,
+    "phone": null,
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "low",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "월드타워빌딩 지하의 분식집으로 혼밥하기 좋다.",
+      "highlights": [
+        "혼밥",
+        "저렴한 분식"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 6·7번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=Fb6XnDUeJX1c",
+      "https://www.siksinhot.com/P/1591008"
+    ],
+    "dataNotes": "지하1층 B08호. 가격표 작성일 미상."
+  },
+  {
+    "id": "chaal-tower730",
+    "name": "차알",
+    "branch": "잠실730타워점",
+    "cuisine": "중식",
+    "subcategory": "모던 중식",
+    "signature": [
+      "차알 짜장면",
+      "차알 짬뽕",
+      "핫볶면"
+    ],
+    "priceRange": [
+      9000,
+      18000
+    ],
+    "menu": [
+      {
+        "name": "차알 짜장면",
+        "price": 9000
+      },
+      {
+        "name": "차알 짬뽕",
+        "price": 12000
+      },
+      {
+        "name": "핫볶면",
+        "price": 12500
+      },
+      {
+        "name": "차알 마라탕면",
+        "price": 14000
+      },
+      {
+        "name": "차알탕수육",
+        "price": 21000
+      }
+    ],
+    "concepts": [
+      "filling"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 송파대로 570 타워730 지하1층",
+    "lat": 37.5109,
+    "lng": 127.1034,
+    "approxLocation": true,
+    "phone": "0507-1412-2385",
+    "hours": "월~토 10:50~21:00",
+    "breakTime": "15:00~17:00",
+    "closedDays": "일요일",
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "타워730 지하의 모던 중식당으로 짜장·짬뽕·볶음면 등 1인 식사 메뉴가 다양하다.",
+      "highlights": [
+        "1인 메뉴",
+        "무료 주차"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 7번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=Ky1Aa97GhQA3"
+    ],
+    "dataNotes": "라스트오더 14:30/20:30. 가격은 사용자 사진 기준."
+  },
+  {
+    "id": "songchu-gamagol-inurban-jamsil",
+    "name": "송추가마골 인어반",
+    "branch": "잠실점",
+    "cuisine": "한식",
+    "subcategory": "갈비탕·고기",
+    "signature": [
+      "갈비탕",
+      "런치 정식",
+      "갈비"
+    ],
+    "priceRange": [
+      15000,
+      20000
+    ],
+    "menu": [
+      {
+        "name": "갈비탕",
+        "price": 17000
+      },
+      {
+        "name": "무청시래기갈비탕(얼큰)",
+        "price": 14000
+      }
+    ],
+    "concepts": [
+      "filling",
+      "heavy"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": "회식·모임 가능, 양 많다는 후기"
+    },
+    "address": "서울 송파구 송파대로 570 타워730 지하1층",
+    "lat": 37.5109,
+    "lng": 127.1034,
+    "approxLocation": true,
+    "phone": null,
+    "hours": "11:15~21:45",
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "타워730 지하의 갈비 전문점으로 갈비탕과 평일 런치 정식이 점심에 인기다.",
+      "highlights": [
+        "갈비탕",
+        "평일 런치정식(16시까지)",
+        "지하 식당 이용 시 2시간 무료주차"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 7번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=ZXdLIgsGfHOQ",
+      "https://polle.com/place/3J2Co5/%EC%86%A1%EC%B6%94%EA%B0%80%EB%A7%88%EA%B3%A8%20%EC%9D%B8%20%EC%96%B4%EB%B0%98",
+      "https://www.siksinhot.com/P/824774"
+    ],
+    "dataNotes": "갈비탕 가격 출처 상이(15,000~17,000원). 시래기갈비탕 가격은 오래된 식신 자료. 런치 정식은 주말·공휴일 불가."
+  },
+  {
+    "id": "hongsugye-jjimdak-tower730",
+    "name": "홍수계찜닭",
+    "branch": "잠실타워730점",
+    "cuisine": "한식",
+    "subcategory": "찜닭·닭갈비",
+    "signature": [
+      "찜닭한상",
+      "치즈닭갈비한상",
+      "찜닭"
+    ],
+    "priceRange": [
+      12000,
+      13000
+    ],
+    "menu": [
+      {
+        "name": "찜닭한상",
+        "price": 12000
+      },
+      {
+        "name": "닭갈비한상",
+        "price": 12000
+      },
+      {
+        "name": "치즈닭갈비한상",
+        "price": 13000
+      },
+      {
+        "name": "찜닭(소)",
+        "price": 26000
+      }
+    ],
+    "concepts": [
+      "filling",
+      "heavy"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 송파대로 570 타워730 지하1층",
+    "lat": 37.5109,
+    "lng": 127.1034,
+    "approxLocation": true,
+    "phone": null,
+    "hours": "11:00~22:00",
+    "breakTime": "15:00~17:00",
+    "closedDays": null,
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "타워730 지하의 찜닭 전문점으로 1인 한상 메뉴가 있어 점심에 적당하다.",
+      "highlights": [
+        "1인 한상 메뉴",
+        "주말 브레이크 없음"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 7번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=9fUITQ5mmnVj"
+    ],
+    "dataNotes": "브레이크타임은 평일만. 공깃밥 별도라는 후기."
+  },
+  {
+    "id": "osai-chobap-jamsil",
+    "name": "오마카세 오사이초밥",
+    "branch": "잠실점",
+    "cuisine": "일식",
+    "subcategory": "스시 오마카세",
+    "signature": [
+      "런치 오마카세 코스",
+      "후토마키"
+    ],
+    "priceRange": [
+      22000,
+      22000
+    ],
+    "menu": [
+      {
+        "name": "오마카세 스시 런치 코스",
+        "price": 22000
+      },
+      {
+        "name": "디너 코스",
+        "price": 33000
+      }
+    ],
+    "concepts": [
+      "light"
+    ],
+    "seating": {
+      "group": false,
+      "solo": true,
+      "groupSize": 11,
+      "room": false,
+      "estimated": true,
+      "notes": "11석 카운터, 런치 1·2·3부(11:30/12:30/13:30)"
+    },
+    "address": "서울 송파구 올림픽로 295 삼성생명빌딩 지하1층",
+    "lat": 37.5144,
+    "lng": 127.1036,
+    "approxLocation": true,
+    "phone": "0507-1419-4624",
+    "hours": "11:30~21:30",
+    "breakTime": "15:00~17:00",
+    "closedDays": null,
+    "reservation": {
+      "method": "phone",
+      "notes": null
+    },
+    "waiting": {
+      "level": "high",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "삼성생명빌딩 지하의 가성비 스시 오마카세로 런치 10피스 코스가 2만원대다.",
+      "highlights": [
+        "런치 2만2천원",
+        "10pcs+후토마키+우동+디저트",
+        "11석이라 예약 필수"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 9번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=BT7Cy916tces",
+      "https://polle.com/place/2XpKom/%EC%98%A4%EB%A7%88%EC%B9%B4%EC%84%B8%20%EC%98%A4%EC%82%AC%EC%9D%B4%EC%B4%88%EB%B0%A5"
+    ],
+    "dataNotes": "polle에는 런치 19,000원(이전 가격 추정). 예약 방식은 전화 기준, 다른 채널은 미확인."
+  },
+  {
+    "id": "초이스시-잠실리센츠",
+    "name": "초이스시",
+    "branch": null,
+    "cuisine": "일식",
+    "subcategory": "스시",
+    "signature": [
+      "연어 초밥",
+      "참치(아카미) 초밥",
+      "모둠초밥"
+    ],
+    "priceRange": [
+      15000,
+      30000
+    ],
+    "menu": [
+      {
+        "name": "모둠초밥",
+        "price": 18000
+      },
+      {
+        "name": "연어초밥",
+        "price": 16000
+      }
+    ],
+    "concepts": [
+      "light"
+    ],
+    "seating": {
+      "group": null,
+      "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
+      "notes": "아파트 상가 1층 소규모 스시집으로 추정"
+    },
+    "address": "서울 송파구 올림픽로 145 리센츠상가 1층",
+    "lat": 37.512,
+    "lng": 127.0917,
+    "approxLocation": true,
+    "phone": null,
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "리센츠 상가의 보급형 동네 스시집으로, 잠실치고 합리적인 가격에 연어와 아카미 품질이 좋다는 평이 있다.",
+      "highlights": [
+        "합리적인 가격",
+        "연어·참치 품질 호평",
+        "아파트 상가 동네 맛집"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": null,
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://polle.com/ramul_jang/posts/111",
+      "https://polle.com/place/3rpr8s/%EC%B4%88%EC%9D%B4%20%EC%8A%A4%EC%8B%9C"
+    ],
+    "dataNotes": "위치(리센츠 상가 1층)는 블로그 후기 기준. 메뉴 가격·priceRange는 확인되지 않아 추정치. 영업시간 미확인."
+  },
+  {
+    "id": "이춘복참치-잠실",
+    "name": "이춘복참치",
+    "branch": "잠실점",
+    "cuisine": "일식",
+    "subcategory": "참치·회덮밥",
+    "signature": [
+      "회덮밥",
+      "대구지리",
+      "알탕"
+    ],
+    "priceRange": [
+      12000,
+      29000
+    ],
+    "menu": [
+      {
+        "name": "회덮밥",
+        "price": 14000
+      },
+      {
+        "name": "대구지리",
+        "price": 12000
+      },
+      {
+        "name": "알탕",
+        "price": 12000
+      },
+      {
+        "name": "점심 특정식",
+        "price": 29000
+      }
+    ],
+    "concepts": [
+      "hangover",
+      "filling"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": "참치 전문점 특성상 룸/단체석 가능성 있으나 미확인"
+    },
+    "address": "서울 송파구 올림픽로 269 롯데캐슬 캐슬플라자 2층",
+    "lat": 37.5141,
+    "lng": 127.1017,
+    "approxLocation": true,
+    "phone": "0507-1392-4558",
+    "hours": "11:00~23:30",
+    "breakTime": "14:30~16:30",
+    "closedDays": null,
+    "reservation": {
+      "method": "phone",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "잠실역 7번 출구 바로 앞 캐슬플라자 2층 참치집으로, 점심에는 1만원대 회덮밥·지리·알탕을 판다.",
+      "highlights": [
+        "1만원대 점심 식사 메뉴",
+        "건물 지하주차장 이용 가능",
+        "잠실역 7번 출구 인접"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 7번 출구",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.localnaeil.com/News/View/654379"
+    ],
+    "dataNotes": "가격·영업시간은 지역내일 기사 기준(작성 시점 확인 필요)."
+  },
+  {
+    "id": "애슐리퀸즈-잠실롯데캐슬",
+    "name": "애슐리퀸즈",
+    "branch": "잠실롯데캐슬점",
+    "cuisine": "양식",
+    "subcategory": "뷔페",
+    "signature": [
+      "샐러드바 뷔페",
+      "피자·파스타",
+      "디저트"
+    ],
+    "priceRange": [
+      19900,
+      19900
+    ],
+    "menu": [
+      {
+        "name": "평일 점심 뷔페(성인)",
+        "price": 19900
+      },
+      {
+        "name": "평일 점심 뷔페(초등학생)",
+        "price": 12900
+      }
+    ],
+    "concepts": [
+      "filling",
+      "heavy",
+      "salad"
+    ],
+    "seating": {
+      "group": true,
+      "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
+      "notes": "대형 뷔페 매장, 단체 수용 용이 추정"
+    },
+    "address": "서울 송파구 올림픽로 269 롯데캐슬 캐슬플라자",
+    "lat": 37.5141,
+    "lng": 127.1017,
+    "approxLocation": true,
+    "phone": null,
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "high",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "전국 애슐리퀸즈 중 방문객이 가장 많은 매장으로, 평일 점심 가성비가 좋지만 붐빈다는 평이 많다.",
+      "highlights": [
+        "평일 점심 가성비",
+        "2025년 상반기 20만명 이상 방문(전국 1위 매장)",
+        "사람이 많아 다소 정신없음"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": null,
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://polle.com/place/5jFCTd/%EC%95%A0%EC%8A%90%EB%A6%AC%20%ED%80%B8%EC%A6%88",
+      "https://www.hankyung.com/article/202507072570i",
+      "https://www.insight.co.kr/news/471164"
+    ],
+    "dataNotes": "주소는 polle 기준 올림픽로 269, 층 미확인. 가격은 2026년 6월 보도 기준 브랜드 공통 평일 점심가."
+  },
+  {
+    "id": "차이797-잠실롯데캐슬",
+    "name": "차이797",
+    "branch": "잠실롯데캐슬점",
+    "cuisine": "중식",
+    "subcategory": "중식 다이닝·딤섬",
+    "signature": [
+      "백짬뽕",
+      "샤오롱바오",
+      "런치 코스"
+    ],
+    "priceRange": [
+      15000,
+      39000
+    ],
+    "menu": [
+      {
+        "name": "런치 코스",
+        "price": 39000
+      }
+    ],
+    "concepts": [
+      "filling"
+    ],
+    "seating": {
+      "group": true,
+      "solo": null,
+      "groupSize": null,
+      "room": true,
+      "estimated": true,
+      "notes": "코스요리·프라이빗 공간 특화 'Chai797 다이닝'으로 리뉴얼"
+    },
+    "address": "서울 송파구 올림픽로 269 롯데캐슬 캐슬플라자 2층",
+    "lat": 37.5141,
+    "lng": 127.1017,
+    "approxLocation": true,
+    "phone": null,
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "low",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "캐슬플라자 2층 중식당으로 백짬뽕과 딤섬 평이 좋고, 룸을 갖춘 코스 다이닝으로 리뉴얼됐다.",
+      "highlights": [
+        "백짬뽕 호평",
+        "하가우·쇼마이 등 수제 딤섬",
+        "프라이빗 룸·코스(런치 3만9천원~)"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": null,
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://polle.com/place/2TF4rT/%EC%B0%A8%EC%9D%B4%20797",
+      "https://www.localnaeil.com/News/View/643736/10"
+    ],
+    "dataNotes": "런치 코스 3만9천원~은 리뉴얼 기사 기준. 단품(짬뽕 등) 가격 미확인이라 priceRange 하한은 추정. 영업시간 미확인."
+  },
+  {
+    "id": "포브라더스-롯데백화점잠실",
+    "name": "포브라더스",
+    "branch": "롯데백화점 잠실점",
+    "cuisine": "아시안",
+    "subcategory": "베트남 쌀국수",
+    "signature": [
+      "쌀국수",
+      "월남쌈"
+    ],
+    "priceRange": [
+      14000,
+      20000
+    ],
+    "menu": [
+      {
+        "name": "쌀국수",
+        "price": 15000
+      },
+      {
+        "name": "월남쌈(2인)",
+        "price": 34000
+      }
+    ],
+    "concepts": [
+      "light",
+      "hangover"
+    ],
+    "seating": {
+      "group": null,
+      "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로 240 롯데백화점 잠실점 본관 11층",
+    "lat": 37.5116,
+    "lng": 127.0984,
+    "approxLocation": true,
+    "phone": null,
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "11년 연속 블루리본에 선정된 도곡동 쌀국수 맛집이 2025년 7월 잠실점 본관 11층에 입점했다.",
+      "highlights": [
+        "20시간 우린 육수",
+        "블루리본 11년 연속",
+        "백화점 식당가라 쾌적"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": null,
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.dailian.co.kr/news/view/1519242/MZ-%EC%9E%85%EB%A7%9B-%EC%82%AC%EB%A1%9C%EC%9E%A1%EC%9E%90-%EB%A1%AF%EB%8D%B0%EB%B0%B1%ED%99%94%EC%A0%90-%EC%A0%84%EA%B5%AD%EA%B5%AC-2025",
+      "https://biz.newdaily.co.kr/site/data/html/2025/07/04/2025070400317.amp.html",
+      "https://www.localnaeil.com/News/View/646254"
+    ],
+    "dataNotes": "쌀국수 가격은 추정. 월남쌈 34,000원은 2021년 도곡 본점 기사 가격. 영업시간은 백화점 식당가 운영시간에 따름(미확인). 본관 리뉴얼(~2027) 진행 중이라 층 변동 가능."
+  },
+  {
+    "id": "아웃백-잠실롯데",
+    "name": "아웃백 스테이크하우스",
+    "branch": "잠실롯데점",
+    "cuisine": "양식",
+    "subcategory": "스테이크·패밀리레스토랑",
+    "signature": [
+      "스테이크",
+      "투움바 파스타",
+      "부시맨 브레드"
+    ],
+    "priceRange": [
+      20000,
+      45000
+    ],
+    "menu": [
+      {
+        "name": "투움바 파스타",
+        "price": 27000
+      },
+      {
+        "name": "런치 세트",
+        "price": 30000
+      }
+    ],
+    "concepts": [
+      "heavy",
+      "filling"
+    ],
+    "seating": {
+      "group": true,
+      "solo": null,
+      "groupSize": 14,
+      "room": true,
+      "estimated": true,
+      "notes": "34테이블 148석, 14인 프라이빗룸, 창가석"
+    },
+    "address": "서울 송파구 올림픽로 240 롯데백화점 잠실점 2층",
+    "lat": 37.5116,
+    "lng": 127.0984,
+    "approxLocation": true,
+    "phone": null,
+    "hours": "10:30~21:00",
+    "breakTime": null,
+    "closedDays": "연중무휴",
+    "reservation": {
+      "method": "unknown",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "2025년 3월 롯데백화점 잠실점에 문을 연 148석 규모 아웃백으로, 14인 프라이빗룸이 있어 팀 회식 점심에 적합하다.",
+      "highlights": [
+        "14인 프라이빗룸",
+        "롯데월드 뷰 창가석",
+        "잠실역 실내 연결"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": null,
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": []
+    },
+    "sources": [
+      "https://www.hankyung.com/article/202503115939i",
+      "https://www.smarttoday.co.kr/ko-kr/articles/74848",
+      "https://www.albamon.com/jobs/detail/117493940"
+    ],
+    "dataNotes": "층(2층)은 2026년 6월 채용공고 기준. 영업시간은 오픈 기사 기준. 메뉴 가격은 추정치."
   }
 ];

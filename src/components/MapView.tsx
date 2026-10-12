@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Circle, MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { CUISINE_EMOJI, type Restaurant } from '../types';
-import { JAMSIL_STATION, minutesToMeters } from '../lib/geo';
+import { JAMSIL_STATION, OFFICE, minutesToMeters } from '../lib/geo';
 import { formatWon } from '../lib/links';
 import { useTileStatus } from '../hooks/useTileStatus';
 
@@ -12,6 +12,13 @@ interface Props {
   onSelect: (id: string) => void;
   maxWalk: number;
 }
+
+const officeIcon = L.divIcon({
+  className: 'pin station',
+  html: '<span>🏢</span>',
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
+});
 
 const stationIcon = L.divIcon({
   className: 'pin station',
@@ -69,7 +76,7 @@ export function MapView({ restaurants, selectedId, onSelect, maxWalk }: Props) {
           지도 타일을 불러올 수 없는 환경이라 <strong>거리 약도</strong>로 표시 중입니다. 정식 배포 주소에서는 실제 지도가 보입니다.
         </div>
       )}
-    <MapContainer center={[JAMSIL_STATION.lat, JAMSIL_STATION.lng]} zoom={15} className="map" scrollWheelZoom>
+    <MapContainer center={[OFFICE.lat, OFFICE.lng]} zoom={15} className="map" scrollWheelZoom>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -79,7 +86,7 @@ export function MapView({ restaurants, selectedId, onSelect, maxWalk }: Props) {
         RING_MINUTES.map((m) => (
           <Circle
             key={m}
-            center={[JAMSIL_STATION.lat, JAMSIL_STATION.lng]}
+            center={[OFFICE.lat, OFFICE.lng]}
             radius={minutesToMeters(m)}
             pathOptions={{ color: '#b8b0a6', weight: 1, fill: false, dashArray: '2 6' }}
             interactive={false}
@@ -90,12 +97,15 @@ export function MapView({ restaurants, selectedId, onSelect, maxWalk }: Props) {
           </Circle>
         ))}
       <Circle
-        center={[JAMSIL_STATION.lat, JAMSIL_STATION.lng]}
+        center={[OFFICE.lat, OFFICE.lng]}
         radius={minutesToMeters(maxWalk)}
         pathOptions={{ color: '#ff6b35', weight: 1, fillOpacity: 0.04, dashArray: '4 4' }}
       />
       <Marker position={[JAMSIL_STATION.lat, JAMSIL_STATION.lng]} icon={stationIcon} zIndexOffset={-100}>
         <Popup>잠실역 (2·8호선)</Popup>
+      </Marker>
+      <Marker position={[OFFICE.lat, OFFICE.lng]} icon={officeIcon} zIndexOffset={-50}>
+        <Popup>출발: 본사 (롯데캐슬골드 · 8번 출구)</Popup>
       </Marker>
       {restaurants
         .filter((r) => r.lat != null && r.lng != null)

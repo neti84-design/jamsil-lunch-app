@@ -15,7 +15,7 @@ import { TowerLogo } from './components/TowerLogo';
 import { useReports } from './hooks/useReports';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
-import { bigBuildings, buildingOf } from './lib/buildings';
+import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
 import { maybeOpen } from './lib/hours';
 import { makeQueryMatcher } from './lib/search';
 import type { ReportSummary } from './lib/reports';
@@ -130,7 +130,7 @@ export default function App() {
 
   const walkById = useMemo(() => {
     const m = new Map<string, number | null>();
-    for (const r of RESTAURANTS) m.set(r.id, walkMinutesFrom(r.lat, r.lng, r.walkMinutes));
+    for (const r of RESTAURANTS) m.set(r.id, walkMinutesFrom(r.lat, r.lng, r.walkMinutes, insideMinutes(r)));
     return m;
   }, []);
   const byId = useMemo(() => new Map(RESTAURANTS.map((r) => [r.id, r])), []);

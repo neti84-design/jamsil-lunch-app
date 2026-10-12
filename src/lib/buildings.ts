@@ -20,6 +20,14 @@ export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
   { name: '홈플러스 잠실점', emoji: '🛒', re: /홈플러스 잠실/ },
 ];
 
+/** 큰 쇼핑몰은 입구에서 식당가까지 건물 안을 한참 걸어야 한다 (분) */
+const INSIDE_MIN: Record<string, number> = { 롯데월드몰: 4, 롯데백화점: 3 };
+
+export function insideMinutes(r: Restaurant): number {
+  const b = buildingOf(r);
+  return b ? (INSIDE_MIN[b] ?? 0) : 0;
+}
+
 /** 이 수 이상 모인 건물만 필터·홈에 보여준다 */
 export const MIN_BUILDING_COUNT = 3;
 

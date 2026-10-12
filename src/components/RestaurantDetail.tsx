@@ -9,6 +9,7 @@ import {
 } from '../types';
 import { formatWon, kakaoMapLink, naverBlogSearchLink, naverMapLink, telLink } from '../lib/links';
 import { ReportPanel } from './ReportPanel';
+import type { LocalReason } from '../lib/reports';
 import { useTileStatus } from '../hooks/useTileStatus';
 import type { NewReport, Report } from '../lib/reports';
 
@@ -19,6 +20,7 @@ interface Props {
   budget: number;
   reports: Report[];
   reportMode: 'supabase' | 'local';
+  reportLocalReason?: LocalReason;
   now: number;
   onAddReport: (r: NewReport) => Promise<unknown>;
   onClose: () => void;
@@ -27,7 +29,7 @@ interface Props {
 
 const REPO_ISSUES = 'https://github.com/neti84-design/jamsil-lunch-app/issues/new';
 
-export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMode, now, onAddReport, onClose, onToggleFavorite }: Props) {
+export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMode, reportLocalReason, now, onAddReport, onClose, onToggleFavorite }: Props) {
   const wait = WAIT_LABELS[r.waiting.level];
   const res = RESERVATION_LABELS[r.reservation.method];
   const hasCoords = r.lat != null && r.lng != null;
@@ -86,7 +88,7 @@ export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMod
           )}
         </div>
 
-        <ReportPanel restaurantId={r.id} reports={reports} mode={reportMode} now={now} onAdd={onAddReport} />
+        <ReportPanel restaurantId={r.id} reports={reports} mode={reportMode} localReason={reportLocalReason} now={now} onAdd={onAddReport} />
 
         <section>
           <h4>💰 가격</h4>

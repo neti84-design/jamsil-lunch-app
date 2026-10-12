@@ -17,9 +17,13 @@ export interface Report {
 
 export type NewReport = Omit<Report, 'id' | 'createdAt'>;
 
+export type LocalReason = 'unset' | 'invalid-url' | 'init-failed';
+
 export interface ReportsBackend {
   /** 'supabase' = 모두와 공유, 'local' = 이 기기에만 저장 */
   readonly mode: 'supabase' | 'local';
+  /** local 모드일 때 그 이유 (배지에 표시) */
+  readonly localReason?: LocalReason;
   list(): Promise<Report[]>;
   add(r: NewReport): Promise<Report>;
   /** 새 제보가 들어오면 호출. 해제 함수 반환 */
@@ -50,7 +54,11 @@ export function saveNickname(n: string) {
 // ---------- local fallback ----------
 class LocalBackend implements ReportsBackend {
   readonly mode = 'local' as const;
+  readonly localReason: LocalReason;
   private listeners = new Set<(r: Report) => void>();
+  constructor(reason: LocalReason = 'unset') {
+    this.localReason = reason;
+  }
 
   private read(): Report[] {
     try {
@@ -158,14 +166,17 @@ class SupabaseBackend implements ReportsBackend {
 export function createReportsBackend(): ReportsBackend {
   const url = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? '').trim();
   const key = ((import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? '').trim();
-  if (!url || !key) return new LocalBackend();
+  if (!url || !key) return new LocalBackend('unset');
   // 환경변수가 잘못 들어가도(URL 형식 오류 등) 앱 전체가 죽지 않고 로컬 저장으로 넘어가도록
+  if (!/^https?:\/\/[^\s/]+\.supabase\.(co|in)\/?$/i.test(url)) {
+    console.warn('[jamsil-lunch] VITE_SUPABASE_URL 형식이 올바르지 않아 로컬 저장으로 전환합니다');
+    return new LocalBackend('invalid-url');
+  }
   try {
-    new URL(url);
     return new SupabaseBackend(createClient(url, key, { auth: { persistSession: false } }));
   } catch (e) {
-    console.warn('[jamsil-lunch] Supabase 설정이 잘못되어 로컬 저장으로 전환합니다:', e);
-    return new LocalBackend();
+    console.warn('[jamsil-lunch] Supabase 클라이언트 생성 실패, 로컬 저장으로 전환합니다:', e);
+    return new LocalBackend('init-failed');
   }
 }
 

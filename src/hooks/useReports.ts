@@ -44,5 +44,5 @@ export function useReports() {
 
   const summaries = useMemo(() => summarize(reports, now), [reports, now]);
 
-  return { reports, add, summaries, status, mode: backend.mode, now };
+  return { reports, add, summaries, status, mode: backend.mode, localReason: backend.localReason, now };
 }

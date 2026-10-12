@@ -1,4 +1,5 @@
-import { CONCEPT_LABELS, CUISINE_EMOJI, TASTE_TAG_LABELS, WAIT_LABELS, hasDelivery, type Restaurant } from '../types';
+import { CONCEPT_LABELS, TASTE_TAG_LABELS, WAIT_LABELS, hasDelivery, type Restaurant } from '../types';
+import { Thumb } from './Thumb';
 import { formatWon } from '../lib/links';
 import { timeAgo, waitText, type ReportSummary } from '../lib/reports';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
@@ -27,8 +28,8 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
   return (
     <article className={'card' + (selected ? ' selected' : '')} onClick={onSelect}>
       <div className="card-head">
-        <span className="cuisine-emoji" aria-hidden>
-          {CUISINE_EMOJI[r.cuisine]}
+        <span className={'cuisine-emoji' + (r.photo ? ' card-thumb' : '')} aria-hidden>
+          <Thumb r={r} />
         </span>
         <div className="card-title">
           <h3>

@@ -82,6 +82,8 @@ export interface Restaurant {
   dataNotes?: string | null;
   /** 배달 가능 (조사로 확인된 경우 true). 사람들의 "배달 돼요" 체크로도 표시된다 */
   delivery?: boolean | null;
+  /** 카카오맵 대표 사진 주소 (후기·블로그 사진이라 주소만 건다) */
+  photo?: string | null;
   /** 'kakao' = 카카오맵에서 자동으로 가져온 곳 (가격·메뉴·영업시간 없음) */
   source?: 'kakao';
 }

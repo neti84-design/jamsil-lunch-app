@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
-import { CUISINE_EMOJI, type Restaurant } from '../types';
+import type { Restaurant } from '../types';
+import { Thumb } from './Thumb';
 import { DISH_EMOJI, DISH_TAGS, dishTags, type DishTag } from '../lib/dish';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { formatWon } from '../lib/links';
@@ -94,7 +95,7 @@ export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent,
               return (
                 <button key={r.id} className="recent-card" onClick={() => onSelect(r.id)}>
                   <span className="recent-thumb" aria-hidden>
-                    {CUISINE_EMOJI[r.cuisine]}
+                    <Thumb r={r} />
                     {st.state !== 'unknown' && (
                       <span className="recent-state" style={{ background: OPEN_STATE_COLOR[st.state] }}>
                         {st.label}

@@ -144,7 +144,7 @@ class SupabaseBackend implements ReportsBackend {
   }
   subscribe(fn: (r: Report) => void) {
     const ch = this.sb
-      .channel('reports-live')
+      .channel(`reports-live-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reports' }, (payload) =>
         fn(fromRow(payload.new as Row)),
       )

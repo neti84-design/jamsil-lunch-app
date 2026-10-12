@@ -237,3 +237,88 @@ begin
   alter publication supabase_realtime add table public.talk_comments;
 exception when duplicate_object then null;
 end $$;
+
+-- ---------- v5: 점심 투표 ----------
+-- 누구나 후보 식당을 골라 투표(polls)를 만들고 링크로 공유, 가고 싶은 곳에 표(poll_votes)를 찍는다.
+-- 한 기기가 여러 곳을 고를 수 있고(같은 곳은 한 번만), 본인 표만 취소할 수 있습니다.
+create table if not exists public.polls (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (char_length(title) between 1 and 40),
+  candidates text[] not null check (cardinality(candidates) between 2 and 12),
+  device_id text check (char_length(device_id) <= 64),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.poll_votes (
+  id uuid primary key default gen_random_uuid(),
+  poll_id uuid not null references public.polls (id) on delete cascade,
+  restaurant_id text not null check (char_length(restaurant_id) <= 100),
+  device_id text not null check (char_length(device_id) <= 64),
+  created_at timestamptz not null default now(),
+  unique (poll_id, device_id, restaurant_id)
+);
+create index if not exists poll_votes_poll_idx on public.poll_votes (poll_id);
+
+alter table public.polls enable row level security;
+alter table public.poll_votes enable row level security;
+
+drop policy if exists "polls_select_all" on public.polls;
+create policy "polls_select_all" on public.polls for select using (true);
+drop policy if exists "polls_insert_all" on public.polls;
+create policy "polls_insert_all" on public.polls for insert with check (true);
+
+drop policy if exists "poll_votes_select_all" on public.poll_votes;
+create policy "poll_votes_select_all" on public.poll_votes for select using (true);
+-- 후보에 있는 식당에만 표를 찍을 수 있다
+drop policy if exists "poll_votes_insert_candidate" on public.poll_votes;
+create policy "poll_votes_insert_candidate" on public.poll_votes
+  for insert with check (
+    exists (select 1 from public.polls p where p.id = poll_id and restaurant_id = any (p.candidates))
+  );
+
+alter table public.polls replica identity full;
+alter table public.poll_votes replica identity full;
+
+-- 후보 추가 (링크를 받은 사람 누구나, 최대 12곳)
+create or replace function public.add_poll_candidate(p_id uuid, p_restaurant text)
+returns public.polls
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec public.polls;
+begin
+  if char_length(p_restaurant) between 1 and 100 then
+    update public.polls
+      set candidates = array_append(candidates, p_restaurant)
+      where id = p_id and not (p_restaurant = any (candidates)) and cardinality(candidates) < 12;
+  end if;
+  select * into rec from public.polls where id = p_id;
+  return rec;
+end;
+$$;
+
+-- 본인 표 취소: 같은 기기에서 찍은 것만
+create or replace function public.delete_own_poll_vote(p_id uuid, p_device text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.poll_votes where id = p_id and device_id = p_device;
+$$;
+
+grant execute on function public.add_poll_candidate(uuid, text) to anon, authenticated;
+grant execute on function public.delete_own_poll_vote(uuid, text) to anon, authenticated;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.polls;
+exception when duplicate_object then null;
+end $$;
+do $$
+begin
+  alter publication supabase_realtime add table public.poll_votes;
+exception when duplicate_object then null;
+end $$;

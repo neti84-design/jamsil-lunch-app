@@ -9,6 +9,10 @@ interface Props {
   searchBox: ReactNode;
   /** 공유톡 (검색창 바로 아래) */
   talk: ReactNode;
+  /** 오늘의 추천 (날씨·요일) */
+  today: ReactNode;
+  /** 점심 투표 */
+  vote: ReactNode;
   /** 실시간 웨이팅 */
   ticker: ReactNode;
   /** 가까운 매장 카드들 */
@@ -25,7 +29,7 @@ interface Props {
 }
 
 /** 홈: 검색 · 음식 카테고리 · 주요장소 · 최근 본 식당 · 실시간 웨이팅 · 가까운 매장 */
-export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent, buildings, walkById, now, onDish, onBuilding, onSelect, onSeeAll }: Props) {
+export function HomeView({ searchBox, talk, today, vote, ticker, nearby, restaurants, recent, buildings, walkById, now, onDish, onBuilding, onSelect, onSeeAll }: Props) {
   const counts = new Map<DishTag, number>();
   for (const r of restaurants) for (const t of dishTags(r)) counts.set(t, (counts.get(t) ?? 0) + 1);
 
@@ -34,6 +38,8 @@ export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent,
       <div className="home-search">{searchBox}</div>
 
       {talk}
+      {today}
+      {vote}
 
       <section className="home-section">
         <div className="category-grid">

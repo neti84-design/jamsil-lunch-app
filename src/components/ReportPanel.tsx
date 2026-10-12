@@ -10,6 +10,7 @@ import {
   type NewReport,
   type Report,
   type ReportSummary,
+  type ReportTag,
 } from '../lib/reports';
 
 function errMsg(e: unknown): string {
@@ -97,7 +98,7 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
       '후기 등록 실패',
     );
 
-  const toggleTag = (tag: TasteTag) =>
+  const toggleTag = (tag: Exclude<ReportTag, 'fav'>) =>
     run(
       'tag',
       async () => {
@@ -210,6 +211,21 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
           })}
         </div>
         <p className="small">한 기기당 한 번씩만 세요. 다시 누르면 취소돼요.</p>
+      </section>
+
+      <section className="report">
+        <h4>🛵 배달 되나요?</h4>
+        <div className="chips">
+          <button
+            className={'chip tag' + (summary?.myTags.delivery ? ' on' : '')}
+            title="배달앱에서 시켜봤거나 배달되는 걸 확인했으면 눌러주세요"
+            disabled={busy === 'tag'}
+            onClick={() => toggleTag('delivery')}
+          >
+            🛵 배달 돼요 <strong>{summary?.delivery ?? 0}</strong>
+          </button>
+        </div>
+        <p className="small">한 명이라도 체크하면 목록에 "배달" 표시가 붙어요.</p>
       </section>
 
       <section className="report">

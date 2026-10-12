@@ -3,7 +3,7 @@ export type Cuisine = '한식' | '일식' | '중식' | '양식' | '아시안' | 
 export type Concept = 'heavy' | 'hangover' | 'diet' | 'salad' | 'filling' | 'light' | 'quick';
 
 /** 좌석·편의 필터 (테이블링/캐치테이블의 "편의시설" 항목 참고) */
-export type SeatingType = 'solo' | 'group' | 'room';
+export type SeatingType = 'group' | 'room';
 
 export type ReservationMethod =
   | 'phone'
@@ -80,6 +80,8 @@ export interface Restaurant {
   };
   sources?: string[];
   dataNotes?: string | null;
+  /** 배달 가능 (조사로 확인된 경우 true). 사람들의 "배달 돼요" 체크로도 표시된다 */
+  delivery?: boolean | null;
   /** 'kakao' = 카카오맵에서 자동으로 가져온 곳 (가격·메뉴·영업시간 없음) */
   source?: 'kakao';
 }
@@ -99,7 +101,6 @@ export const CONCEPT_LABELS: Record<Concept, { label: string; emoji: string; des
 };
 
 export const SEATING_LABELS: Record<SeatingType, { label: string; emoji: string; desc: string }> = {
-  solo: { label: '혼밥', emoji: '🧑', desc: '1인 좌석·바 좌석 등 혼자 먹기 편한 곳' },
   group: { label: '단체석', emoji: '👥', desc: '여러 명이 한 번에 앉을 수 있는 곳' },
   room: { label: '룸', emoji: '🚪', desc: '별도 룸(프라이빗 공간)이 있는 곳' },
 };
@@ -141,3 +142,8 @@ export const CUISINE_EMOJI: Record<Cuisine, string> = {
   분식: '🍢',
   기타: '🍽️',
 };
+
+/** 배달 가능 표시: 조사값이 true 이거나, 누군가 "배달 돼요"를 체크한 곳 */
+export function hasDelivery(r: Restaurant, checks = 0): boolean {
+  return r.delivery === true || checks > 0;
+}

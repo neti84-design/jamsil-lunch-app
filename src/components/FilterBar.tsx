@@ -21,6 +21,10 @@ export interface Filters {
   groupSize: number;
   /** 도보 상한(분). 99 = 전체 */
   maxWalk: number;
+  /** 지도 탭의 도보 상한(분). 지도는 처음에 5분 이내만 */
+  mapMaxWalk: number;
+  /** 배달 되는 곳만 */
+  delivery: boolean;
   sort: 'stars' | 'walk' | 'rating' | 'price';
   query: string;
   /** 지금 영업 중(또는 영업시간 미확인)인 곳만 */
@@ -40,6 +44,8 @@ export const DEFAULT_FILTERS: Filters = {
   seating: null,
   groupSize: 6,
   maxWalk: ALL_WALK,
+  mapMaxWalk: 5,
+  delivery: false,
   sort: 'stars',
   query: '',
   openNow: false,
@@ -66,9 +72,12 @@ export function walkLabel(m: number): string {
   return m >= ALL_WALK ? '거리 전체' : `도보 ${m}분 이내`;
 }
 
+/** 도보 조건이 들어 있는 칸 — 검색 목록은 maxWalk, 지도는 mapMaxWalk */
+export type WalkKey = 'maxWalk' | 'mapMaxWalk';
+
 /** 현재 적용 중인 조건을 한 줄로 */
-export function describeFilters(f: Filters): string {
-  const parts = [priceLabel(f.maxPrice), walkLabel(f.maxWalk)];
+export function describeFilters(f: Filters, walkKey: WalkKey = 'maxWalk'): string {
+  const parts = [priceLabel(f.maxPrice), walkLabel(f[walkKey])];
   if (f.cuisines.length) parts.push(f.cuisines.join('·'));
   if (f.dishes.length) parts.push(f.dishes.join('·'));
   if (f.concepts.length) parts.push(f.concepts.map((c) => CONCEPT_LABELS[c].label).join('·'));
@@ -76,6 +85,7 @@ export function describeFilters(f: Filters): string {
   else if (f.seating) parts.push(SEATING_LABELS[f.seating].label);
   if (f.building) parts.push(f.building);
   if (f.openNow) parts.push('영업 중');
+  if (f.delivery) parts.push('배달');
   if (f.query.trim()) parts.push(`"${f.query.trim()}"`);
   return parts.join(' · ');
 }
@@ -92,6 +102,8 @@ interface Props {
   /** 세부조건 펼침 여부. 목록을 내리면 App 에서 접는다 */
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 도보 칩이 바꿀 칸 (지도 탭은 mapMaxWalk) */
+  walkKey?: WalkKey;
 }
 
 function toggle<T>(list: T[], v: T): T[] {
@@ -103,9 +115,12 @@ const SWIPE_CLOSE_PX = 50;
 /** 세부조건 영역 최대 높이 (화면 높이 비율) */
 const PANEL_MAX_VH = 0.5;
 
-export function FilterBar({ filters, onChange, resultCount, totalCount, buildings, searchBox, open, onOpenChange }: Props) {
+export function FilterBar({ filters, onChange, resultCount, totalCount, buildings, searchBox, open, onOpenChange, walkKey = 'maxWalk' }: Props) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
-  const isDefault = JSON.stringify({ ...filters, query: '', sort: 'stars' }) === JSON.stringify(DEFAULT_FILTERS);
+  // 지금 화면에서 안 쓰는 도보 칸은 비교에서 뺀다
+  const other: WalkKey = walkKey === 'maxWalk' ? 'mapMaxWalk' : 'maxWalk';
+  const isDefault =
+    JSON.stringify({ ...filters, query: '', sort: 'stars', [other]: DEFAULT_FILTERS[other] }) === JSON.stringify(DEFAULT_FILTERS);
   const panelRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   /** free: 세부조건 목록 밖(검색줄·세부조건 버튼)에서 시작한 터치 → 스크롤과 상관없이 바로 끌어서 접기 */
@@ -204,10 +219,11 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
           🟢 영업 중
         </button>
         <button
-          className={'chip sm' + (filters.seating === 'solo' ? ' on' : '')}
-          onClick={() => set({ seating: filters.seating === 'solo' ? null : 'solo' })}
+          className={'chip sm' + (filters.delivery ? ' on' : '')}
+          title="배달 되는 곳만 (조사로 확인됐거나 누군가 '배달 돼요'를 체크한 곳)"
+          onClick={() => set({ delivery: !filters.delivery })}
         >
-          🧑 혼밥
+          🛵 배달
         </button>
       </div>
 
@@ -316,7 +332,7 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
         <span className="filter-label">도보</span>
         <div className="chips">
           {WALK_STEPS.map((m) => (
-            <button key={m} className={'chip' + (filters.maxWalk === m ? ' on' : '')} onClick={() => set({ maxWalk: m })}>
+            <button key={m} className={'chip' + (filters[walkKey] === m ? ' on' : '')} onClick={() => set({ [walkKey]: m })}>
               {m >= ALL_WALK ? '전체' : `${m}분 이내`}
             </button>
           ))}
@@ -344,9 +360,12 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
       )}
 
       <div className="filter-row between">
-        <div className="filter-desc small">기준: {describeFilters(filters)}</div>
+        <div className="filter-desc small">기준: {describeFilters(filters, walkKey)}</div>
         {!isDefault && (
-          <button className="link" onClick={() => onChange({ ...DEFAULT_FILTERS, query: filters.query, sort: filters.sort })}>
+          <button
+            className="link"
+            onClick={() => onChange({ ...DEFAULT_FILTERS, query: filters.query, sort: filters.sort, [other]: filters[other] })}
+          >
             초기화
           </button>
         )}

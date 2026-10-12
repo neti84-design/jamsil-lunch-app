@@ -1,4 +1,4 @@
-import { CONCEPT_LABELS, CUISINE_EMOJI, TASTE_TAG_LABELS, WAIT_LABELS, type Restaurant } from '../types';
+import { CONCEPT_LABELS, CUISINE_EMOJI, TASTE_TAG_LABELS, WAIT_LABELS, hasDelivery, type Restaurant } from '../types';
 import { formatWon } from '../lib/links';
 import { timeAgo, waitText, type ReportSummary } from '../lib/reports';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
@@ -117,7 +117,7 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
           </span>
         )}
         {s.room && <span className="badge">🚪 룸</span>}
-        {s.solo && <span className="badge">🧑 혼밥</span>}
+        {hasDelivery(r, summary?.delivery) && <span className="badge delivery">🛵 배달</span>}
         {r.concepts.slice(0, 2).map((c) => (
           <span key={c} className="badge soft">
             {CONCEPT_LABELS[c].emoji} {CONCEPT_LABELS[c].label}

@@ -1,6 +1,9 @@
-import { useEffect } from 'react';
+/// <reference types="leaflet.markercluster" />
+import { useEffect, useMemo, useRef } from 'react';
 import { Circle, MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
 import { CUISINE_EMOJI, type Restaurant } from '../types';
 import { JAMSIL_STATION, OFFICE, minutesToMeters } from '../lib/geo';
 import { formatWon } from '../lib/links';
@@ -11,6 +14,7 @@ interface Props {
   selectedId: string | null;
   onSelect: (id: string) => void;
   maxWalk: number;
+  walkById: Map<string, number | null>;
 }
 
 const officeIcon = L.divIcon({
@@ -35,6 +39,43 @@ function makeIcon(r: Restaurant, selected: boolean) {
     iconAnchor: selected ? [19, 38] : [15, 30],
     popupAnchor: [0, selected ? -36 : -28],
   });
+}
+
+/** 말풍선에 넣을 대표 메뉴와 금액 */
+function mainItem(r: Restaurant): string {
+  if (r.menu.length > 0) return `${r.menu[0].name} ${formatWon(r.menu[0].price)}`;
+  if (r.priceRange) return `${r.signature[0] ?? r.subcategory} ${formatWon(r.priceRange[0])}~`;
+  return `${r.subcategory} · 가격 미확인`;
+}
+
+/** 묶음 핀: 개수가 많을수록 조금 크게 */
+function clusterIcon(cluster: L.MarkerCluster) {
+  const n = cluster.getChildCount();
+  const size = n < 10 ? 34 : n < 50 ? 40 : 46;
+  return L.divIcon({ className: 'cluster-pin', html: `<span>${n}</span>`, iconSize: [size, size] });
+}
+
+/** 선택한 식당 핀 — 묶음 밖에 따로 그려서 항상 보이고, 말풍선이 자동으로 열린다 */
+function SelectedMarker({ r, walk }: { r: Restaurant; walk: number | null }) {
+  const ref = useRef<L.Marker>(null);
+  useEffect(() => {
+    // 지도가 이동을 마친 뒤 열어야 말풍선이 화면 밖으로 밀리지 않는다
+    const t = setTimeout(() => ref.current?.openPopup(), 350);
+    return () => clearTimeout(t);
+  }, [r.id]);
+  return (
+    <Marker ref={ref} position={[r.lat!, r.lng!]} icon={makeIcon(r, true)} zIndexOffset={1000}>
+      <Popup className="pin-popup" closeButton={false} autoPan={false}>
+        <strong>
+          {r.name}
+          {r.branch && <span className="small"> {r.branch}</span>}
+        </strong>
+        <br />
+        {mainItem(r)}
+        {walk != null && <span className="small"> · 도보 {walk}분</span>}
+      </Popup>
+    </Marker>
+  );
 }
 
 function FlyTo({ r }: { r: Restaurant | undefined }) {
@@ -66,8 +107,18 @@ function AutoResize() {
 
 const RING_MINUTES = [5, 10, 15, 20];
 
-export function MapView({ restaurants, selectedId, onSelect, maxWalk }: Props) {
+export function MapView({ restaurants, selectedId, onSelect, maxWalk, walkById }: Props) {
   const selected = restaurants.find((r) => r.id === selectedId);
+  // 묶음 핀은 선택이 바뀔 때마다 다시 만들지 않도록 따로 계산
+  const markers = useMemo(
+    () =>
+      restaurants
+        .filter((r) => r.lat != null && r.lng != null)
+        .map((r) => (
+          <Marker key={r.id} position={[r.lat!, r.lng!]} icon={makeIcon(r, false)} eventHandlers={{ click: () => onSelect(r.id) }} />
+        )),
+    [restaurants, onSelect],
+  );
   const tiles = useTileStatus();
   return (
     <div className={'map-shell' + (tiles.blocked ? ' schematic' : '')}>
@@ -107,24 +158,19 @@ export function MapView({ restaurants, selectedId, onSelect, maxWalk }: Props) {
       <Marker position={[OFFICE.lat, OFFICE.lng]} icon={officeIcon} zIndexOffset={-50}>
         <Popup>출발: 본사 (롯데캐슬골드 · 8번 출구)</Popup>
       </Marker>
-      {restaurants
-        .filter((r) => r.lat != null && r.lng != null)
-        .map((r) => (
-          <Marker
-            key={r.id}
-            position={[r.lat!, r.lng!]}
-            icon={makeIcon(r, r.id === selectedId)}
-            zIndexOffset={r.id === selectedId ? 1000 : 0}
-            eventHandlers={{ click: () => onSelect(r.id) }}
-          >
-            <Popup>
-              <strong>{r.name}</strong>
-              <br />
-              {r.subcategory}
-              {r.priceRange && <> · {formatWon(r.priceRange[0])}~</>}
-            </Popup>
-          </Marker>
-        ))}
+      <MarkerClusterGroup
+        chunkedLoading
+        maxClusterRadius={48}
+        showCoverageOnHover={false}
+        spiderfyOnMaxZoom
+        disableClusteringAtZoom={18}
+        iconCreateFunction={clusterIcon}
+      >
+        {markers}
+      </MarkerClusterGroup>
+      {selected && selected.lat != null && selected.lng != null && (
+        <SelectedMarker r={selected} walk={walkById.get(selected.id) ?? null} />
+      )}
       <AutoResize />
       <FlyTo r={selected} />
     </MapContainer>

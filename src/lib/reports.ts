@@ -2,8 +2,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { TasteTag, WaitLevel } from '../types';
 
 export type ReportKind = 'wait' | 'review' | 'tag';
-/** 'fav' = 관심 저장 (추천매장 집계용, 기기당 식당마다 한 번) */
-export type ReportTag = TasteTag | 'fav';
+/** 'fav' = 관심 저장 (추천매장 집계용, 기기당 식당마다 한 번), 'delivery' = 배달 돼요 체크 */
+export type ReportTag = TasteTag | 'fav' | 'delivery';
 
 export interface Report {
   id: string;
@@ -259,21 +259,37 @@ class SupabaseBackend implements ReportsBackend {
   }
 }
 
-export function createReportsBackend(): ReportsBackend {
+let clientCache: { sb: SupabaseClient | null; reason?: LocalReason } | null = null;
+
+/** 제보·공유톡이 함께 쓰는 Supabase 연결. 설정이 없거나 잘못되면 sb = null (로컬 저장) */
+export function supabaseClient(): { sb: SupabaseClient | null; reason?: LocalReason } {
+  if (clientCache) return clientCache;
   const url = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? '').trim();
   const key = ((import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? '').trim();
-  if (!url || !key) return new LocalBackend('unset');
+  if (!url || !key) clientCache = { sb: null, reason: 'unset' };
   // 환경변수가 잘못 들어가도(URL 형식 오류 등) 앱 전체가 죽지 않고 로컬 저장으로 넘어가도록
-  if (!/^https?:\/\/[^\s/]+\.supabase\.(co|in)\/?$/i.test(url)) {
+  else if (!/^https?:\/\/[^\s/]+\.supabase\.(co|in)\/?$/i.test(url)) {
     console.warn('[jamsil-lunch] VITE_SUPABASE_URL 형식이 올바르지 않아 로컬 저장으로 전환합니다');
-    return new LocalBackend('invalid-url');
+    clientCache = { sb: null, reason: 'invalid-url' };
+  } else {
+    try {
+      clientCache = { sb: createClient(url, key, { auth: { persistSession: false } }) };
+    } catch (e) {
+      console.warn('[jamsil-lunch] Supabase 클라이언트 생성 실패, 로컬 저장으로 전환합니다:', e);
+      clientCache = { sb: null, reason: 'init-failed' };
+    }
   }
-  try {
-    return new SupabaseBackend(createClient(url, key, { auth: { persistSession: false } }));
-  } catch (e) {
-    console.warn('[jamsil-lunch] Supabase 클라이언트 생성 실패, 로컬 저장으로 전환합니다:', e);
-    return new LocalBackend('init-failed');
-  }
+  return clientCache;
+}
+
+/** 로컬 저장 모드에서 쓰는 관리자 비밀번호 */
+export function localAdminToken(): string {
+  return LOCAL_ADMIN;
+}
+
+export function createReportsBackend(): ReportsBackend {
+  const { sb, reason } = supabaseClient();
+  return sb ? new SupabaseBackend(sb) : new LocalBackend(reason);
 }
 
 // ---------- helpers ----------
@@ -297,12 +313,13 @@ export interface ReportSummary {
   hidden: number; // 🤫 숨은맛집 체크 수
   classic: number; // 👍 역시맛집 체크 수
   favs: number; // ⭐ 관심 저장한 기기 수
+  delivery: number; // 🛵 배달 돼요 체크 수
   /** 이 기기에서 체크한 태그 */
   myTags: Partial<Record<ReportTag, string>>; // tag → report id
 }
 
 export function emptySummary(): ReportSummary {
-  return { liveWait: null, reviewCount: 0, avgRating: null, totalStars: 0, hidden: 0, classic: 0, favs: 0, myTags: {} };
+  return { liveWait: null, reviewCount: 0, avgRating: null, totalStars: 0, hidden: 0, classic: 0, favs: 0, delivery: 0, myTags: {} };
 }
 
 export function summarize(reports: Report[], now = Date.now()): Map<string, ReportSummary> {
@@ -323,6 +340,7 @@ export function summarize(reports: Report[], now = Date.now()): Map<string, Repo
       s.avgRating = s.totalStars / s.reviewCount;
     } else if (r.kind === 'tag' && r.tag) {
       if (r.tag === 'fav') s.favs += 1;
+      else if (r.tag === 'delivery') s.delivery += 1;
       else s[r.tag] += 1;
       if (r.deviceId === me && !s.myTags[r.tag]) s.myTags[r.tag] = r.id;
     }

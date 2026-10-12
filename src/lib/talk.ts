@@ -1,0 +1,231 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { deviceId, localAdminToken, supabaseClient } from './reports';
+
+/** 공유톡: 관리자가 올리는 한 줄 질문·공지 */
+export interface TalkPost {
+  id: string;
+  body: string;
+  /** false = 단순 공지 (댓글 닫힘) */
+  allowComments: boolean;
+  createdAt: string; // ISO
+}
+
+/** 공유톡에 사람들이 다는 한 줄 답 */
+export interface TalkComment {
+  id: string;
+  postId: string;
+  body: string;
+  deviceId: string | null;
+  createdAt: string; // ISO
+}
+
+export const TALK_POST_MAX = 100;
+export const TALK_COMMENT_MAX = 60;
+
+export interface TalkHandlers {
+  post: (p: TalkPost) => void;
+  postRemoved: (id: string) => void;
+  comment: (c: TalkComment) => void;
+  commentRemoved: (id: string) => void;
+}
+
+export interface TalkBackend {
+  readonly mode: 'supabase' | 'local';
+  list(): Promise<{ posts: TalkPost[]; comments: TalkComment[] }>;
+  addComment(postId: string, body: string): Promise<TalkComment>;
+  removeOwnComment(id: string): Promise<void>;
+  createPost(body: string, allowComments: boolean, token: string): Promise<TalkPost>;
+  setComments(id: string, allowComments: boolean, token: string): Promise<TalkPost>;
+  removePost(id: string, token: string): Promise<void>;
+  removeComment(id: string, token: string): Promise<void>;
+  subscribe(h: TalkHandlers): () => void;
+}
+
+const WRONG_TOKEN = '관리자 비밀번호가 틀렸어요';
+
+// ---------- local fallback ----------
+const LOCAL_KEY = 'jamsil-lunch:talk';
+
+class LocalTalk implements TalkBackend {
+  readonly mode = 'local' as const;
+  private subs = new Set<TalkHandlers>();
+
+  private read(): { posts: TalkPost[]; comments: TalkComment[] } {
+    try {
+      const v = JSON.parse(localStorage.getItem(LOCAL_KEY) ?? 'null') as { posts: TalkPost[]; comments: TalkComment[] } | null;
+      return v ?? { posts: [], comments: [] };
+    } catch {
+      return { posts: [], comments: [] };
+    }
+  }
+  private write(v: { posts: TalkPost[]; comments: TalkComment[] }) {
+    try {
+      localStorage.setItem(LOCAL_KEY, JSON.stringify({ posts: v.posts.slice(-50), comments: v.comments.slice(-500) }));
+    } catch {
+      /* ignore */
+    }
+  }
+  private admin(token: string) {
+    if (token !== localAdminToken()) throw new Error(WRONG_TOKEN);
+  }
+  async list() {
+    return this.read();
+  }
+  async addComment(postId: string, body: string) {
+    const all = this.read();
+    if (!all.posts.find((p) => p.id === postId)?.allowComments) throw new Error('댓글이 닫힌 글이에요');
+    const c: TalkComment = { id: crypto.randomUUID(), postId, body, deviceId: deviceId(), createdAt: new Date().toISOString() };
+    all.comments.push(c);
+    this.write(all);
+    this.subs.forEach((h) => h.comment(c));
+    return c;
+  }
+  async removeOwnComment(id: string) {
+    const all = this.read();
+    all.comments = all.comments.filter((c) => !(c.id === id && c.deviceId === deviceId()));
+    this.write(all);
+    this.subs.forEach((h) => h.commentRemoved(id));
+  }
+  async createPost(body: string, allowComments: boolean, token: string) {
+    this.admin(token);
+    const all = this.read();
+    const p: TalkPost = { id: crypto.randomUUID(), body, allowComments, createdAt: new Date().toISOString() };
+    all.posts.push(p);
+    this.write(all);
+    this.subs.forEach((h) => h.post(p));
+    return p;
+  }
+  async setComments(id: string, allowComments: boolean, token: string) {
+    this.admin(token);
+    const all = this.read();
+    const p = all.posts.find((x) => x.id === id);
+    if (!p) throw new Error('글을 찾을 수 없어요');
+    p.allowComments = allowComments;
+    this.write(all);
+    this.subs.forEach((h) => h.post(p));
+    return p;
+  }
+  async removePost(id: string, token: string) {
+    this.admin(token);
+    const all = this.read();
+    all.posts = all.posts.filter((p) => p.id !== id);
+    all.comments = all.comments.filter((c) => c.postId !== id);
+    this.write(all);
+    this.subs.forEach((h) => h.postRemoved(id));
+  }
+  async removeComment(id: string, token: string) {
+    this.admin(token);
+    const all = this.read();
+    all.comments = all.comments.filter((c) => c.id !== id);
+    this.write(all);
+    this.subs.forEach((h) => h.commentRemoved(id));
+  }
+  subscribe(h: TalkHandlers) {
+    this.subs.add(h);
+    return () => {
+      this.subs.delete(h);
+    };
+  }
+}
+
+// ---------- supabase ----------
+interface PostRow {
+  id: string;
+  body: string;
+  allow_comments: boolean;
+  created_at: string;
+}
+interface CommentRow {
+  id: string;
+  post_id: string;
+  body: string;
+  device_id: string | null;
+  created_at: string;
+}
+const fromPost = (r: PostRow): TalkPost => ({ id: r.id, body: r.body, allowComments: r.allow_comments, createdAt: r.created_at });
+const fromComment = (r: CommentRow): TalkComment => ({
+  id: r.id,
+  postId: r.post_id,
+  body: r.body,
+  deviceId: r.device_id,
+  createdAt: r.created_at,
+});
+
+class SupabaseTalk implements TalkBackend {
+  readonly mode = 'supabase' as const;
+  private sb: SupabaseClient;
+  constructor(sb: SupabaseClient) {
+    this.sb = sb;
+  }
+  async list() {
+    const [posts, comments] = await Promise.all([
+      this.sb.from('talk_posts').select('*').order('created_at', { ascending: false }).limit(50),
+      this.sb.from('talk_comments').select('*').order('created_at', { ascending: false }).limit(1000),
+    ]);
+    if (posts.error) throw posts.error;
+    if (comments.error) throw comments.error;
+    return { posts: (posts.data as PostRow[]).map(fromPost), comments: (comments.data as CommentRow[]).map(fromComment) };
+  }
+  async addComment(postId: string, body: string) {
+    const { data, error } = await this.sb
+      .from('talk_comments')
+      .insert({ post_id: postId, body, device_id: deviceId() })
+      .select()
+      .single();
+    if (error) throw error;
+    return fromComment(data as CommentRow);
+  }
+  async removeOwnComment(id: string) {
+    const { error } = await this.sb.rpc('delete_own_talk_comment', { p_id: id, p_device: deviceId() });
+    if (error) throw error;
+  }
+  private async adminRow(fn: string, args: Record<string, unknown>): Promise<PostRow> {
+    const { data, error } = await this.sb.rpc(fn, args);
+    if (error) throw error;
+    const row = (Array.isArray(data) ? data[0] : data) as PostRow | null;
+    if (!row?.id) throw new Error(WRONG_TOKEN);
+    return row;
+  }
+  async createPost(body: string, allowComments: boolean, token: string) {
+    return fromPost(await this.adminRow('admin_talk_create', { p_body: body, p_allow: allowComments, p_token: token }));
+  }
+  async setComments(id: string, allowComments: boolean, token: string) {
+    return fromPost(await this.adminRow('admin_talk_set_comments', { p_id: id, p_allow: allowComments, p_token: token }));
+  }
+  async removePost(id: string, token: string) {
+    const { data, error } = await this.sb.rpc('admin_talk_delete_post', { p_id: id, p_token: token });
+    if (error) throw error;
+    if (data !== true) throw new Error(WRONG_TOKEN);
+  }
+  async removeComment(id: string, token: string) {
+    const { data, error } = await this.sb.rpc('admin_talk_delete_comment', { p_id: id, p_token: token });
+    if (error) throw error;
+    if (data !== true) throw new Error(WRONG_TOKEN);
+  }
+  subscribe(h: TalkHandlers) {
+    const ch = this.sb
+      .channel(`talk-live-${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'talk_posts' }, (e) => h.post(fromPost(e.new as PostRow)))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'talk_posts' }, (e) => h.post(fromPost(e.new as PostRow)))
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'talk_posts' }, (e) => {
+        const id = (e.old as Partial<PostRow>).id;
+        if (id) h.postRemoved(id);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'talk_comments' }, (e) =>
+        h.comment(fromComment(e.new as CommentRow)),
+      )
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'talk_comments' }, (e) => {
+        const id = (e.old as Partial<CommentRow>).id;
+        if (id) h.commentRemoved(id);
+      })
+      .subscribe();
+    return () => {
+      void this.sb.removeChannel(ch);
+    };
+  }
+}
+
+export function createTalkBackend(): TalkBackend {
+  const { sb } = supabaseClient();
+  return sb ? new SupabaseTalk(sb) : new LocalTalk();
+}

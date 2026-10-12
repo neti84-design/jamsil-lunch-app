@@ -156,12 +156,17 @@ class SupabaseBackend implements ReportsBackend {
 }
 
 export function createReportsBackend(): ReportsBackend {
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-  if (url && key) {
+  const url = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? '').trim();
+  const key = ((import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? '').trim();
+  if (!url || !key) return new LocalBackend();
+  // 환경변수가 잘못 들어가도(URL 형식 오류 등) 앱 전체가 죽지 않고 로컬 저장으로 넘어가도록
+  try {
+    new URL(url);
     return new SupabaseBackend(createClient(url, key, { auth: { persistSession: false } }));
+  } catch (e) {
+    console.warn('[jamsil-lunch] Supabase 설정이 잘못되어 로컬 저장으로 전환합니다:', e);
+    return new LocalBackend();
   }
-  return new LocalBackend();
 }
 
 // ---------- helpers ----------

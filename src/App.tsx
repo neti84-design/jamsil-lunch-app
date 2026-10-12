@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type UIEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 import { RESTAURANTS } from './data/restaurants';
@@ -101,6 +101,14 @@ function saveJSON(key: string, v: unknown) {
   }
 }
 
+/** history.state 에 넣는 화면 정보 */
+interface NavState {
+  tab: Tab;
+  depth: number;
+  /** 열려 있는 식당 상세 */
+  detail?: string;
+}
+
 export default function App() {
   const [filters, setFilters] = useState<Filters>(() => loadJSON(FILTER_KEY, DEFAULT_FILTERS));
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set(loadJSON<string[]>(FAV_KEY, [])));
@@ -110,7 +118,12 @@ export default function App() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [tab, setTab] = useState<Tab>('home');
+  /** 홈에서 몇 단계 들어왔는지 (0 이면 뒤로가기 버튼 없음) */
+  const [depth, setDepth] = useState(0);
   const mainRef = useRef<HTMLElement>(null);
+  /** 탭별 스크롤 위치 — 뒤로 돌아오면 보던 위치로 */
+  const scrollByTab = useRef(new Map<Tab, number>());
+  const nextScroll = useRef(0);
   const lastScroll = useRef(0);
   const live = useReports();
 
@@ -166,9 +179,47 @@ export default function App() {
     [],
   );
 
+  // ---------- 화면 이동 (브라우저/휴대폰 뒤로가기와 연동) ----------
+  useEffect(() => {
+    history.replaceState({ tab: 'home', depth: 0 } satisfies NavState, '');
+    const onPop = (e: PopStateEvent) => {
+      const st = (e.state as NavState | null) ?? { tab: 'home', depth: 0 };
+      setTab((cur) => {
+        if (cur !== st.tab) {
+          if (mainRef.current) scrollByTab.current.set(cur, mainRef.current.scrollTop);
+          nextScroll.current = scrollByTab.current.get(st.tab) ?? 0;
+        }
+        return st.tab;
+      });
+      setDepth(st.depth);
+      setSelectedId(st.detail ?? null);
+      setFiltersOpen(false);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  useLayoutEffect(() => {
+    mainRef.current?.scrollTo({ top: nextScroll.current });
+  }, [tab]);
+
+  const push = (st: NavState) => {
+    history.pushState(st, '');
+    setDepth(st.depth);
+  };
+
+  const goBack = () => history.back();
+
   const open = (id: string | null) => {
+    if (!id) {
+      // 상세를 뒤로가기 기록으로 열었으면 기록도 하나 되돌린다
+      if ((history.state as NavState | null)?.detail) history.back();
+      else setSelectedId(null);
+      return;
+    }
+    push({ tab, depth: depth + 1, detail: id });
     setSelectedId(id);
-    if (id) setRecentIds((prev) => [id, ...prev.filter((x) => x !== id)].slice(0, MAX_RECENT));
+    setRecentIds((prev) => [id, ...prev.filter((x) => x !== id)].slice(0, MAX_RECENT));
   };
 
   // 관심 저장을 공유 저장소에도 남겨 "추천매장" 집계에 쓴다 (실패해도 내 관심 목록은 그대로)
@@ -200,18 +251,28 @@ export default function App() {
   };
 
   const goTab = (t: Tab) => {
-    if (t === tab) mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    else mainRef.current?.scrollTo({ top: 0 });
+    if (t === tab) {
+      mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    // 홈은 쌓인 기록을 모두 되돌려 처음 상태로
+    if (t === 'home' && depth > 0) {
+      history.go(-depth);
+      return;
+    }
+    if (mainRef.current) scrollByTab.current.set(tab, mainRef.current.scrollTop);
+    nextScroll.current = 0;
+    push({ tab: t, depth: depth + 1 });
     setTab(t);
   };
 
   /** 제목을 누르면 처음 화면으로 */
   const goHome = () => {
-    setSelectedId(null);
     setAdminOpen(false);
     setFiltersOpen(false);
     setFilters(DEFAULT_FILTERS);
-    goTab('home');
+    if (depth > 0) history.go(-depth);
+    else mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const searchWith = (patch: Partial<Filters>) => {
@@ -235,8 +296,15 @@ export default function App() {
     lastScroll.current = top;
   };
 
+  const backButton = depth > 0 && (
+    <button className="back-btn" onClick={goBack} aria-label="뒤로 가기">
+      <span className="back-arrow" aria-hidden />
+    </button>
+  );
+
   const searchBox = (
     <SearchBox
+      leading={tab === 'home' ? null : backButton}
       value={filters.query}
       onChange={(q) => setFilters((f) => ({ ...f, query: q }))}
       onSubmit={submitSearch}
@@ -302,12 +370,14 @@ export default function App() {
       {tab === 'map' && filterBar}
       {tab === 'favorites' && (
         <header className="page-head">
+          {backButton}
           <h2>⭐ 나의 관심매장</h2>
           <span className="small">{favoriteList.length}곳 · 카드의 ☆ 를 누르면 여기에 모여요</span>
         </header>
       )}
       {tab === 'recommend' && (
         <header className="page-head">
+          {backButton}
           <h2>👍 추천매장</h2>
           <span className="small">다른 사람들이 관심 저장·맛집 체크·별점을 남긴 곳</span>
         </header>
@@ -429,7 +499,7 @@ export default function App() {
             isAdmin={live.isAdmin}
             onAddReport={live.add}
             onRemoveReport={live.remove}
-            onClose={() => setSelectedId(null)}
+            onClose={() => open(null)}
             onToggleFavorite={() => toggleFav(selected.id)}
           />
         </>

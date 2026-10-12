@@ -175,6 +175,21 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
     >
       {searchBox}
 
+      {(filters.building || filters.dishes.length > 0) && (
+        <div className="quick-row">
+          {filters.building && (
+            <button className="chip sm on" onClick={() => set({ building: null })} aria-label={`${filters.building} 조건 빼기`}>
+              🏢 {filters.building} ✕
+            </button>
+          )}
+          {filters.dishes.map((d) => (
+            <button key={d} className="chip sm on" onClick={() => set({ dishes: toggle(filters.dishes, d) })} aria-label={`${d} 조건 빼기`}>
+              {d} ✕
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="quick-row">
         {(Object.keys(SORT_LABELS) as Filters['sort'][]).map((k) => (
           <button key={k} className={'chip sm' + (filters.sort === k ? ' on' : '')} onClick={() => set({ sort: k })}>

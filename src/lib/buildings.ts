@@ -11,9 +11,17 @@ export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
   { name: '잠실역 지하상가', emoji: '🚇', re: /잠실역\s*지하상가|잠실지하상가|잠실역 역사 내/ },
   { name: '리센츠상가', emoji: '🏢', re: /리센츠/ },
   { name: '월드타워빌딩', emoji: '🏢', re: /송파대로 558|월드타워빌딩/ },
+  { name: '시그마타워', emoji: '🏢', re: /시그마타워|올림픽로 289(?!\d)/ },
+  { name: '현대타워', emoji: '🏢', re: /현대타워|올림픽로 293-19/ },
+  { name: '타워730', emoji: '🏢', re: /타워730|송파대로 570/ },
+  { name: '삼성생명빌딩', emoji: '🏢', re: /삼성생명|올림픽로 295(?!\d)/ },
+  { name: '갤러리아팰리스', emoji: '🏬', re: /갤러리아\s*팰리스|올림픽로 212(?!\d)/ },
+  { name: '캐슬플라자', emoji: '🏰', re: /캐슬플라자|올림픽로 269(?!\d)/ },
+  { name: '홈플러스 잠실점', emoji: '🛒', re: /홈플러스 잠실/ },
 ];
 
-export const MIN_BUILDING_COUNT = 5;
+/** 이 수 이상 모인 건물만 필터·홈에 보여준다 */
+export const MIN_BUILDING_COUNT = 3;
 
 const cache = new WeakMap<Restaurant, string | null>();
 

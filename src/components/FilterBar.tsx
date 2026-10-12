@@ -85,7 +85,7 @@ interface Props {
   onChange: (f: Filters) => void;
   resultCount: number;
   totalCount: number;
-  /** 필터에 보여줄 큰 건물 목록 */
+  /** 필터에 보여줄 주요장소(건물) 목록 */
   buildings: { name: string; emoji: string; count: number }[];
   /** 검색창 */
   searchBox: ReactNode;
@@ -218,26 +218,6 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
         aria-hidden={!open}
       >
         <div className="filter-panel-inner" ref={innerRef} style={{ maxHeight: fullHeight || undefined, transform: `translateY(${shift}px)` }}>
-      {buildings.length > 0 && (
-        <div className="filter-group">
-          <span className="filter-label">건물</span>
-          <div className="chips">
-            <button className={'chip' + (!filters.building ? ' on' : '')} onClick={() => set({ building: null })}>
-              전체
-            </button>
-            {buildings.map((b) => (
-              <button
-                key={b.name}
-                className={'chip' + (filters.building === b.name ? ' on' : '')}
-                onClick={() => set({ building: filters.building === b.name ? null : b.name })}
-              >
-                {b.emoji} {b.name} <span className="small">{b.count}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="filter-group">
         <span className="filter-label">인당 예산</span>
         <div className="chips">
@@ -342,6 +322,26 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
           ))}
         </div>
       </div>
+
+      {buildings.length > 0 && (
+        <div className="filter-group">
+          <span className="filter-label">주요장소</span>
+          <div className="chips">
+            <button className={'chip' + (!filters.building ? ' on' : '')} onClick={() => set({ building: null })}>
+              전체
+            </button>
+            {buildings.map((b) => (
+              <button
+                key={b.name}
+                className={'chip' + (filters.building === b.name ? ' on' : '')}
+                onClick={() => set({ building: filters.building === b.name ? null : b.name })}
+              >
+                {b.emoji} {b.name} <span className="small">{b.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="filter-row between">
         <div className="filter-desc small">기준: {describeFilters(filters)}</div>

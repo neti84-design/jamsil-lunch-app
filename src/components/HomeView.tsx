@@ -22,7 +22,7 @@ interface Props {
   onSeeAll: () => void;
 }
 
-/** 홈: 검색 · 음식 카테고리 · 건물별 · 최근 본 식당 · 실시간 웨이팅 · 가까운 매장 */
+/** 홈: 검색 · 음식 카테고리 · 주요장소 · 최근 본 식당 · 실시간 웨이팅 · 가까운 매장 */
 export function HomeView({ searchBox, ticker, nearby, restaurants, recent, buildings, walkById, now, onDish, onBuilding, onSelect, onSeeAll }: Props) {
   const counts = new Map<DishTag, number>();
   for (const r of restaurants) for (const t of dishTags(r)) counts.set(t, (counts.get(t) ?? 0) + 1);
@@ -46,7 +46,10 @@ export function HomeView({ searchBox, ticker, nearby, restaurants, recent, build
 
       {buildings.length > 0 && (
         <section className="home-section">
-          <h3 className="section-title">🏢 건물별 모아보기</h3>
+          <div className="section-head">
+            <h3 className="section-title">📍 주요장소</h3>
+            <span className="small">옆으로 밀어보기 ›</span>
+          </div>
           <div className="building-row">
             {buildings.map((b) => (
               <button key={b.name} className="building-card" onClick={() => onBuilding(b.name)}>
@@ -54,7 +57,7 @@ export function HomeView({ searchBox, ticker, nearby, restaurants, recent, build
                   {b.emoji}
                 </span>
                 <strong>{b.name}</strong>
-                <span className="small">{b.count}곳</span>
+                <span className="building-count">식당 {b.count}곳</span>
               </button>
             ))}
           </div>

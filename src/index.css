@@ -655,6 +655,16 @@ select {
   padding: 2px 16px 6px;
   scrollbar-width: none;
 }
+.building-row.all {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  overflow-x: visible;
+  margin: 0;
+  padding: 2px 0 6px;
+}
+.building-row.all .building-card {
+  width: auto;
+}
 .building-row::-webkit-scrollbar {
   display: none;
 }

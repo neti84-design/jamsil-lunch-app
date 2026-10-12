@@ -18,8 +18,8 @@ interface Props {
 export function RestaurantCard({ r, walk, selected, favorite, budget, summary, now, onSelect, onToggleFavorite }: Props) {
   const live = summary?.liveWait ?? null;
   const liveWait = live ? WAIT_LABELS[live.waitLevel ?? 'unknown'] : null;
-  const overBudget = r.priceRange[0] > budget;
-  const partlyOver = !overBudget && r.priceRange[1] > budget;
+  const overBudget = !!r.priceRange && r.priceRange[0] > budget;
+  const partlyOver = !!r.priceRange && !overBudget && r.priceRange[1] > budget;
   const wait = WAIT_LABELS[r.waiting.level];
   const s = r.seating;
   const hours = openStatus(r, now);
@@ -55,8 +55,14 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
 
       <div className="card-body">
         <div className="price">
-          {formatWon(r.priceRange[0])}
-          {r.priceRange[1] !== r.priceRange[0] && <> ~ {formatWon(r.priceRange[1])}</>}
+          {r.priceRange ? (
+            <>
+              {formatWon(r.priceRange[0])}
+              {r.priceRange[1] !== r.priceRange[0] && <> ~ {formatWon(r.priceRange[1])}</>}
+            </>
+          ) : (
+            <span className="small">가격 미확인</span>
+          )}
           {overBudget && <span className="badge danger">예산 초과</span>}
           {partlyOver && <span className="badge warn">일부 메뉴 초과</span>}
         </div>

@@ -800,6 +800,11 @@ select {
 .ring-label::before {
   display: none;
 }
+.more-btn {
+  justify-content: center;
+  width: 100%;
+  color: var(--muted);
+}
 .empty {
   text-align: center;
   color: var(--muted);

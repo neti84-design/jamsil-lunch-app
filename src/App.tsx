@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
-import { RESTAURANTS } from './data/restaurants';
-import { DEFAULT_FILTERS, FilterBar, type Filters } from './components/FilterBar';
+import { RESTAURANTS } from './data';
+import { DEFAULT_FILTERS, FilterBar, NO_LIMIT, type Filters } from './components/FilterBar';
 import { RestaurantCard } from './components/RestaurantCard';
 import { RestaurantDetail } from './components/RestaurantDetail';
 import { AdminPanel } from './components/AdminPanel';
@@ -17,7 +17,7 @@ import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
 import { maybeOpen } from './lib/hours';
-import { makeQueryMatcher } from './lib/search';
+import { makeNameMatcher, makeQueryMatcher } from './lib/search';
 import type { ReportSummary } from './lib/reports';
 import type { Restaurant } from './types';
 
@@ -27,6 +27,8 @@ const RECENT_KEY = 'jamsil-lunch:recent';
 const SEARCH_KEY = 'jamsil-lunch:searches';
 const MAX_RECENT = 10;
 const MAX_SEARCHES = 10;
+/** 검색 목록은 한 번에 이만큼씩 그린다 (식당이 1,000곳이 넘어서) */
+const PAGE_SIZE = 40;
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
@@ -47,7 +49,8 @@ function loadJSON<T>(key: string, fallback: T): T {
 }
 
 function matches(r: Restaurant, walk: number | null, f: Filters, now: number, queryOk: (r: Restaurant) => boolean): boolean {
-  if (r.priceRange[0] > f.maxPrice) return false;
+  // 가격 미확인 가게는 예산을 고르면 숨긴다
+  if (r.priceRange ? r.priceRange[0] > f.maxPrice : f.maxPrice < NO_LIMIT) return false;
   if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false;
   if (f.dishes.length) {
     const tags = dishTags(r);
@@ -140,24 +143,33 @@ export default function App() {
     const queryOk = makeQueryMatcher(filters.query, RESTAURANTS);
     const list = RESTAURANTS.filter((r) => matches(r, walkById.get(r.id) ?? null, filters, live.now, queryOk));
     const walkOf = (r: Restaurant) => walkById.get(r.id) ?? 99;
+    const nameHit = makeNameMatcher(filters.query);
     list.sort((a, b) => {
+      // 이름으로 찾은 가게가 메뉴·종류로 걸린 가게보다 먼저
+      const byName = Number(nameHit(b)) - Number(nameHit(a));
+      if (byName) return byName;
       if (filters.sort === 'walk') return walkOf(a) - walkOf(b);
-      if (filters.sort === 'price') return a.priceRange[0] - b.priceRange[0];
+      if (filters.sort === 'price') return (a.priceRange?.[0] ?? Infinity) - (b.priceRange?.[0] ?? Infinity) || walkOf(a) - walkOf(b);
       if (filters.sort === 'rating') {
         const rt = (r: Restaurant) => live.summaries.get(r.id)?.avgRating ?? externalRating(r);
         return rt(b) - rt(a) || compareStars(a, b, live.summaries);
       }
-      return compareStars(a, b, live.summaries) || walkOf(a) - walkOf(b);
+      // 별점이 같으면 직접 정리한 곳(가격·메뉴 정보 있음)을 카카오에서 가져온 곳보다 먼저
+      return compareStars(a, b, live.summaries) || Number(!!a.source) - Number(!!b.source) || walkOf(a) - walkOf(b);
     });
     return list;
   }, [filters, walkById, live.summaries, live.now]);
+
+  const [shown, setShown] = useState(PAGE_SIZE);
+  useEffect(() => setShown(PAGE_SIZE), [results]);
 
   const selected = selectedId ? (byId.get(selectedId) ?? null) : null;
   const favoriteList = useMemo(() => RESTAURANTS.filter((r) => favorites.has(r.id)), [favorites]);
   const recentList = useMemo(() => recentIds.map((id) => byId.get(id)).filter((r): r is Restaurant => !!r), [recentIds, byId]);
   const nearbyOpen = useMemo(
     () =>
-      RESTAURANTS.filter((r) => maybeOpen(r, live.now) && walkById.get(r.id) != null)
+      // 카카오에서 가져온 곳은 영업시간을 몰라 "지금 영업 중"에 넣지 않는다
+      RESTAURANTS.filter((r) => !r.source && maybeOpen(r, live.now) && walkById.get(r.id) != null)
         .sort((a, b) => walkById.get(a.id)! - walkById.get(b.id)!)
         .slice(0, 5),
     [live.now, walkById],
@@ -291,6 +303,9 @@ export default function App() {
     const top = e.currentTarget.scrollTop;
     if (filtersOpen && top - lastScroll.current > 8) setFiltersOpen(false);
     lastScroll.current = top;
+    // 목록 끝에 가까워지면 다음 묶음을 그린다
+    const el = e.currentTarget;
+    if (tab === 'search' && shown < results.length && el.scrollHeight - top - el.clientHeight < 800) setShown((n) => n + PAGE_SIZE);
   };
 
   const backButton = depth > 0 && (
@@ -411,7 +426,14 @@ export default function App() {
                 검색어나 세부조건을 바꿔보세요.
               </div>
             ) : (
-              results.map(card)
+              <>
+                {results.slice(0, shown).map(card)}
+                {shown < results.length && (
+                  <button className="btn more-btn" onClick={() => setShown((n) => n + PAGE_SIZE)}>
+                    더 보기 ({shown}/{results.length})
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}

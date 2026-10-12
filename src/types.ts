@@ -28,8 +28,8 @@ export interface Restaurant {
   cuisine: Cuisine;
   subcategory: string;
   signature: string[];
-  /** 1인 점심 기준 최소/최대 금액 (원) */
-  priceRange: [number, number];
+  /** 1인 점심 기준 최소/최대 금액 (원). null = 미확인 (카카오에서 가져온 곳) */
+  priceRange: [number, number] | null;
   menu: MenuItem[];
   concepts: Concept[];
   seating: {
@@ -80,6 +80,8 @@ export interface Restaurant {
   };
   sources?: string[];
   dataNotes?: string | null;
+  /** 'kakao' = 카카오맵에서 자동으로 가져온 곳 (가격·메뉴·영업시간 없음) */
+  source?: 'kakao';
 }
 
 /** 음식 종류 — 캐치테이블·테이블링의 1차 분류와 같은 구분 */

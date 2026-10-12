@@ -6,9 +6,9 @@ import type { Restaurant } from '../types';
  */
 export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
   { name: '장미상가', emoji: '🌹', re: /장미\s*(아파트\s*)?[AB]?\s*상가|장미[AB]상가|장미상가|잠실장미점|올림픽로\s*35길\s*(104|112|124)(?!\d)/ },
-  { name: '롯데월드몰', emoji: '🏬', re: /롯데월드몰/ },
+  { name: '롯데월드몰', emoji: '🏬', re: /롯데월드몰|올림픽로 300(?!\d)/ },
   { name: '롯데백화점', emoji: '🛍️', re: /롯데백화점/ },
-  { name: '잠실역 지하상가', emoji: '🚇', re: /잠실역\s*지하상가|잠실지하상가|잠실역 역사 내/ },
+  { name: '잠실역 지하상가', emoji: '🚇', re: /잠실역\s*지하상가|잠실지하상가|잠실역 역사 내|올림픽로 지하 265(?!\d)/ },
   { name: '리센츠상가', emoji: '🏢', re: /리센츠/ },
   { name: '월드타워빌딩', emoji: '🏢', re: /송파대로 558|월드타워빌딩/ },
   { name: '시그마타워', emoji: '🏢', re: /시그마타워|올림픽로 289(?!\d)/ },

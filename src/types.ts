@@ -58,6 +58,8 @@ export interface Restaurant {
     naverRating?: number | null;
     naverReviewCount?: number | null;
     kakaoRating?: number | null;
+    /** 다이닝코드 평점 (네이버 평점 미수집 시 대체) */
+    diningcodeRating?: number | null;
     summary?: string | null;
     highlights?: string[];
   };

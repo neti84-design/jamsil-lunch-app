@@ -32,10 +32,27 @@ function makeIcon(r: Restaurant, selected: boolean) {
 function FlyTo({ r }: { r: Restaurant | undefined }) {
   const map = useMap();
   useEffect(() => {
-    if (r && r.lat != null && r.lng != null) {
-      map.flyTo([r.lat, r.lng], Math.max(map.getZoom(), 16), { duration: 0.5 });
+    if (!r || r.lat == null || r.lng == null) return;
+    const size = map.getSize();
+    // 모바일에서 지도 탭이 숨겨져 있으면(크기 0) 애니메이션 없이 중심만 이동
+    if (size.x === 0 || size.y === 0) {
+      map.setView([r.lat, r.lng], Math.max(map.getZoom(), 16), { animate: false });
+      return;
     }
+    map.flyTo([r.lat, r.lng], Math.max(map.getZoom(), 16), { duration: 0.5 });
   }, [r, map]);
+  return null;
+}
+
+/** 숨김 → 표시 전환 시 Leaflet 크기 재계산 */
+function AutoResize() {
+  const map = useMap();
+  useEffect(() => {
+    const el = map.getContainer();
+    const ro = new ResizeObserver(() => map.invalidateSize());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [map]);
   return null;
 }
 
@@ -72,6 +89,7 @@ export function MapView({ restaurants, selectedId, onSelect, maxWalk }: Props) {
             </Popup>
           </Marker>
         ))}
+      <AutoResize />
       <FlyTo r={selected} />
     </MapContainer>
   );

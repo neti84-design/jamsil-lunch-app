@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { CONCEPT_LABELS, CUISINES, SEATING_LABELS, type Concept, type Cuisine, type SeatingType } from '../types';
 
 export interface Filters {
@@ -23,7 +24,7 @@ export const DEFAULT_FILTERS: Filters = {
 };
 
 const PRICE_STEPS = [8000, 10000, 12000, 15000, 20000];
-const WALK_STEPS = [5, 10, 15, 20];
+const WALK_STEPS = [5, 10, 15, 20, 30];
 
 interface Props {
   filters: Filters;
@@ -36,11 +37,12 @@ function toggle<T>(list: T[], v: T): T[] {
 }
 
 export function FilterBar({ filters, onChange, resultCount }: Props) {
+  const [open, setOpen] = useState(false);
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
   const isDefault = JSON.stringify(filters) === JSON.stringify(DEFAULT_FILTERS);
 
   return (
-    <section className="filters" aria-label="필터">
+    <section className={'filters' + (open ? ' open' : '')} aria-label="필터">
       <div className="filter-row">
         <input
           className="search"
@@ -49,6 +51,9 @@ export function FilterBar({ filters, onChange, resultCount }: Props) {
           value={filters.query}
           onChange={(e) => set({ query: e.target.value })}
         />
+        <button className="chip mobile-only" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+          {open ? '필터 접기 ▲' : '필터 ▼'}
+        </button>
       </div>
 
       <div className="filter-group">
@@ -120,7 +125,7 @@ export function FilterBar({ filters, onChange, resultCount }: Props) {
         <div className="chips">
           {WALK_STEPS.map((m) => (
             <button key={m} className={'chip' + (filters.maxWalk === m ? ' on' : '')} onClick={() => set({ maxWalk: m })}>
-              {m}분 이내
+              {m === 30 ? '전체' : `${m}분 이내`}
             </button>
           ))}
         </div>

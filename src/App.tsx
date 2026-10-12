@@ -72,7 +72,8 @@ export default function App() {
     list.sort((a, b) => {
       if (filters.sort === 'walk') return walk(a) - walk(b);
       if (filters.sort === 'price') return a.priceRange[0] - b.priceRange[0];
-      return (b.reviews.naverRating ?? 0) - (a.reviews.naverRating ?? 0);
+      const rt = (r: Restaurant) => r.reviews.naverRating ?? r.reviews.diningcodeRating ?? 0;
+      return rt(b) - rt(a);
     });
     return list;
   }, [filters, favorites, walkById]);

@@ -158,9 +158,10 @@ export function RestaurantDetail({ r, walk, favorite, budget, onClose, onToggleF
                 {r.reviews.naverReviewCount != null && <> · 리뷰 {r.reviews.naverReviewCount.toLocaleString()}개</>}
               </>
             ) : (
-              <span className="small">평점 미수집</span>
+              <span className="small">네이버 평점 미수집</span>
             )}
             {r.reviews.kakaoRating != null && <> · 카카오 {r.reviews.kakaoRating.toFixed(1)}</>}
+            {r.reviews.diningcodeRating != null && <> · 다이닝코드 {r.reviews.diningcodeRating.toFixed(1)}</>}
           </p>
           {r.reviews.summary && <p>{r.reviews.summary}</p>}
           {r.reviews.highlights && r.reviews.highlights.length > 0 && (

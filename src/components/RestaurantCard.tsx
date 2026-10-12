@@ -59,11 +59,13 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, onSelect, 
         <span className="badge" style={{ borderColor: wait.color, color: wait.color }}>
           웨이팅 {wait.label}
         </span>
-        {r.reviews.naverRating != null && (
+        {r.reviews.naverRating != null ? (
           <span className="badge">
             ⭐ {r.reviews.naverRating.toFixed(1)}
             {r.reviews.naverReviewCount != null && <> ({r.reviews.naverReviewCount.toLocaleString()})</>}
           </span>
+        ) : (
+          r.reviews.diningcodeRating != null && <span className="badge">⭐ {r.reviews.diningcodeRating.toFixed(1)} (다이닝코드)</span>
         )}
         {r.seating.group && <span className="badge">👥 단체</span>}
         {r.seating.solo && <span className="badge">🧑 혼밥</span>}

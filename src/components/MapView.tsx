@@ -120,7 +120,8 @@ export function MapView({ restaurants, selectedId, onSelect, maxWalk }: Props) {
             <Popup>
               <strong>{r.name}</strong>
               <br />
-              {r.subcategory} · {formatWon(r.priceRange[0])}~
+              {r.subcategory}
+              {r.priceRange && <> · {formatWon(r.priceRange[0])}~</>}
             </Popup>
           </Marker>
         ))}

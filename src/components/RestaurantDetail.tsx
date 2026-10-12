@@ -121,11 +121,15 @@ export function RestaurantDetail({
 
         <section>
           <h4>💰 가격</h4>
-          <p className="price">
-            인당 {formatWon(r.priceRange[0])}
-            {r.priceRange[1] !== r.priceRange[0] && <> ~ {formatWon(r.priceRange[1])}</>}
-            {r.priceRange[0] > budget && <span className="badge danger">예산 {formatWon(budget)} 초과</span>}
-          </p>
+          {r.priceRange ? (
+            <p className="price">
+              인당 {formatWon(r.priceRange[0])}
+              {r.priceRange[1] !== r.priceRange[0] && <> ~ {formatWon(r.priceRange[1])}</>}
+              {r.priceRange[0] > budget && <span className="badge danger">예산 {formatWon(budget)} 초과</span>}
+            </p>
+          ) : (
+            <p className="small">가격·메뉴 정보가 아직 없어요. 카카오맵에서 확인하세요.</p>
+          )}
           {r.menu.length > 0 && (
             <ul className="menu">
               {r.menu.map((m) => (
@@ -179,16 +183,18 @@ export function RestaurantDetail({
               <p className="small">단체 인원은 후기 기반 추정값이에요. 단체 방문 전 전화로 확인하세요.</p>
             )}
           </div>
-          <div>
-            <h4>🏷️ 방문 목적</h4>
-            <p>
-              {r.concepts.map((c) => (
-                <span key={c} className="badge soft">
-                  {CONCEPT_LABELS[c].emoji} {CONCEPT_LABELS[c].label}
-                </span>
-              ))}
-            </p>
-          </div>
+          {r.concepts.length > 0 && (
+            <div>
+              <h4>🏷️ 방문 목적</h4>
+              <p>
+                {r.concepts.map((c) => (
+                  <span key={c} className="badge soft">
+                    {CONCEPT_LABELS[c].emoji} {CONCEPT_LABELS[c].label}
+                  </span>
+                ))}
+              </p>
+            </div>
+          )}
         </section>
 
         <section>

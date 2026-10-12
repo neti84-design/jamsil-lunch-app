@@ -80,6 +80,13 @@ export function queryTokens(q: string): string[] {
     .filter(Boolean);
 }
 
+/** 검색어가 가게 이름(+지점)에 그대로 들어 있는지 — 이름이 맞는 곳을 목록 맨 위로 올릴 때 */
+export function makeNameMatcher(q: string): (r: Restaurant) => boolean {
+  const needle = normalize(q).replace(/\s+/g, '');
+  if (!needle) return () => false;
+  return (r) => normalize(r.name + (r.branch ?? '')).replace(/\s+/g, '').includes(needle);
+}
+
 /**
  * 검색어의 낱말을 모두 만족하는 식당만 (낱말마다 메뉴 카테고리·종류로도 연결).
  * 어느 식당과도 안 맞는 낱말(오타 등)은 무시해, "중국집 짜장면 맛있는곳" 같은 검색도 결과가 나온다.

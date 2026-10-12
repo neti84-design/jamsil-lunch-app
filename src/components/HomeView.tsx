@@ -83,7 +83,7 @@ export function HomeView({ searchBox, ticker, nearby, restaurants, recent, build
                   </span>
                   <strong className="recent-name">{r.name}</strong>
                   <span className="small recent-meta">
-                    {formatWon(r.priceRange[0])}~{walk != null && ` · ${walk}분`}
+                    {r.priceRange ? `${formatWon(r.priceRange[0])}~` : r.subcategory}{walk != null && ` · ${walk}분`}
                   </span>
                 </button>
               );

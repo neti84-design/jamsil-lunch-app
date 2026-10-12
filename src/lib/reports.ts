@@ -1,21 +1,26 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import type { WaitLevel } from '../types';
+import type { TasteTag, WaitLevel } from '../types';
 
-export type ReportKind = 'wait' | 'review';
+export type ReportKind = 'wait' | 'review' | 'tag';
 
 export interface Report {
   id: string;
   restaurantId: string;
   kind: ReportKind;
   waitLevel?: Exclude<WaitLevel, 'unknown'> | null;
+  /** 내 앞에 몇 팀 */
+  waitTeams?: number | null;
+  /** 예상 대기 분 */
   waitMinutes?: number | null;
   rating?: number | null;
   comment?: string | null;
-  nickname?: string | null;
+  tag?: TasteTag | null;
+  /** 작성한 기기 식별자 (닉네임 대신 사용, 본인 글 표시·삭제용) */
+  deviceId?: string | null;
   createdAt: string; // ISO
 }
 
-export type NewReport = Omit<Report, 'id' | 'createdAt'>;
+export type NewReport = Omit<Report, 'id' | 'createdAt' | 'deviceId'>;
 
 export type LocalReason = 'unset' | 'invalid-url' | 'init-failed';
 
@@ -26,36 +31,83 @@ export interface ReportsBackend {
   readonly localReason?: LocalReason;
   list(): Promise<Report[]>;
   add(r: NewReport): Promise<Report>;
-  /** 새 제보가 들어오면 호출. 해제 함수 반환 */
-  subscribe(onInsert: (r: Report) => void): () => void;
+  /** 내가 쓴 글 삭제 */
+  removeOwn(id: string): Promise<void>;
+  /** 관리자 토큰 확인 */
+  checkAdmin(token: string): Promise<boolean>;
+  /** 관리자 삭제 (아무 글이나) */
+  removeAsAdmin(id: string, token: string): Promise<void>;
+  /** 새 제보/삭제가 들어오면 호출. 해제 함수 반환 */
+  subscribe(onInsert: (r: Report) => void, onDelete: (id: string) => void): () => void;
 }
 
 /** 이 시간 안의 웨이팅 제보만 "실시간"으로 취급 */
 export const LIVE_WINDOW_MS = 3 * 60 * 60 * 1000;
 
 const LOCAL_KEY = 'jamsil-lunch:reports';
-const NICK_KEY = 'jamsil-lunch:nickname';
+const DEVICE_KEY = 'jamsil-lunch:device';
+const ADMIN_KEY = 'jamsil-lunch:admin-token';
 
-export function loadNickname(): string {
+let deviceIdCache: string | null = null;
+/** 기기마다 한 번 만들어 localStorage 에 두는 익명 식별자 */
+export function deviceId(): string {
+  if (deviceIdCache) return deviceIdCache;
   try {
-    return localStorage.getItem(NICK_KEY) ?? '';
+    let id = localStorage.getItem(DEVICE_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(DEVICE_KEY, id);
+    }
+    deviceIdCache = id;
+    return id;
+  } catch {
+    deviceIdCache = 'anon';
+    return deviceIdCache;
+  }
+}
+
+export function loadAdminToken(): string {
+  try {
+    return localStorage.getItem(ADMIN_KEY) ?? '';
   } catch {
     return '';
   }
 }
-export function saveNickname(n: string) {
+export function saveAdminToken(t: string) {
   try {
-    localStorage.setItem(NICK_KEY, n);
+    if (t) localStorage.setItem(ADMIN_KEY, t);
+    else localStorage.removeItem(ADMIN_KEY);
   } catch {
     /* ignore */
   }
 }
 
+/** 팀 수·분 → 웨이팅 단계. 둘 다 없으면 null */
+export function levelFromNumbers(teams: number | null, minutes: number | null): Exclude<WaitLevel, 'unknown'> | null {
+  if (teams == null && minutes == null) return null;
+  const t = teams ?? -1;
+  const m = minutes ?? -1;
+  if (t <= 0 && m <= 0) return 'low';
+  if (t <= 3 && m <= 15) return 'medium';
+  return 'high';
+}
+
+/** "앞 3팀 · 15분" 식 표기 */
+export function waitText(r: Report): string {
+  const parts: string[] = [];
+  if (r.waitTeams != null) parts.push(r.waitTeams === 0 ? '바로 입장' : `앞 ${r.waitTeams}팀`);
+  if (r.waitMinutes != null) parts.push(r.waitMinutes === 0 ? '대기 없음' : `약 ${r.waitMinutes}분`);
+  return parts.join(' · ');
+}
+
 // ---------- local fallback ----------
+const LOCAL_ADMIN = ((import.meta.env.VITE_ADMIN_KEY as string | undefined) ?? 'admin').trim();
+
 class LocalBackend implements ReportsBackend {
   readonly mode = 'local' as const;
   readonly localReason: LocalReason;
-  private listeners = new Set<(r: Report) => void>();
+  private inserts = new Set<(r: Report) => void>();
+  private deletes = new Set<(id: string) => void>();
   constructor(reason: LocalReason = 'unset') {
     this.localReason = reason;
   }
@@ -67,24 +119,42 @@ class LocalBackend implements ReportsBackend {
       return [];
     }
   }
-  async list() {
-    return this.read().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  }
-  async add(r: NewReport) {
-    const rec: Report = { ...r, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
-    const all = this.read();
-    all.push(rec);
+  private write(all: Report[]) {
     try {
       localStorage.setItem(LOCAL_KEY, JSON.stringify(all.slice(-500)));
     } catch {
       /* ignore */
     }
-    this.listeners.forEach((fn) => fn(rec));
+  }
+  async list() {
+    return this.read().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+  async add(r: NewReport) {
+    const rec: Report = { ...r, id: crypto.randomUUID(), deviceId: deviceId(), createdAt: new Date().toISOString() };
+    const all = this.read();
+    all.push(rec);
+    this.write(all);
+    this.inserts.forEach((fn) => fn(rec));
     return rec;
   }
-  subscribe(fn: (r: Report) => void) {
-    this.listeners.add(fn);
-    return () => this.listeners.delete(fn);
+  async removeOwn(id: string) {
+    this.write(this.read().filter((r) => r.id !== id));
+    this.deletes.forEach((fn) => fn(id));
+  }
+  async checkAdmin(token: string) {
+    return token === LOCAL_ADMIN;
+  }
+  async removeAsAdmin(id: string, token: string) {
+    if (token !== LOCAL_ADMIN) throw new Error('관리자 비밀번호가 틀렸어요');
+    await this.removeOwn(id);
+  }
+  subscribe(onInsert: (r: Report) => void, onDelete: (id: string) => void) {
+    this.inserts.add(onInsert);
+    this.deletes.add(onDelete);
+    return () => {
+      this.inserts.delete(onInsert);
+      this.deletes.delete(onDelete);
+    };
   }
 }
 
@@ -94,10 +164,12 @@ interface Row {
   restaurant_id: string;
   kind: ReportKind;
   wait_level: Report['waitLevel'];
+  wait_teams: number | null;
   wait_minutes: number | null;
   rating: number | null;
   comment: string | null;
-  nickname: string | null;
+  tag: TasteTag | null;
+  device_id: string | null;
   created_at: string;
 }
 
@@ -107,10 +179,12 @@ function fromRow(r: Row): Report {
     restaurantId: r.restaurant_id,
     kind: r.kind,
     waitLevel: r.wait_level,
+    waitTeams: r.wait_teams,
     waitMinutes: r.wait_minutes,
     rating: r.rating,
     comment: r.comment,
-    nickname: r.nickname,
+    tag: r.tag,
+    deviceId: r.device_id,
     createdAt: r.created_at,
   };
 }
@@ -123,13 +197,13 @@ class SupabaseBackend implements ReportsBackend {
   }
 
   async list() {
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await this.sb
       .from('reports')
       .select('*')
       .gte('created_at', since)
       .order('created_at', { ascending: false })
-      .limit(1000);
+      .limit(2000);
     if (error) throw error;
     return (data as Row[]).map(fromRow);
   }
@@ -140,22 +214,42 @@ class SupabaseBackend implements ReportsBackend {
         restaurant_id: r.restaurantId,
         kind: r.kind,
         wait_level: r.waitLevel ?? null,
+        wait_teams: r.waitTeams ?? null,
         wait_minutes: r.waitMinutes ?? null,
         rating: r.rating ?? null,
         comment: r.comment ?? null,
-        nickname: r.nickname ?? null,
+        tag: r.tag ?? null,
+        device_id: deviceId(),
       })
       .select()
       .single();
     if (error) throw error;
     return fromRow(data as Row);
   }
-  subscribe(fn: (r: Report) => void) {
+  async removeOwn(id: string) {
+    const { error } = await this.sb.rpc('delete_own_report', { p_id: id, p_device: deviceId() });
+    if (error) throw error;
+  }
+  async checkAdmin(token: string) {
+    const { data, error } = await this.sb.rpc('admin_check', { p_token: token });
+    if (error) throw error;
+    return data === true;
+  }
+  async removeAsAdmin(id: string, token: string) {
+    const { data, error } = await this.sb.rpc('admin_delete_report', { p_id: id, p_token: token });
+    if (error) throw error;
+    if (data !== true) throw new Error('관리자 비밀번호가 틀렸어요');
+  }
+  subscribe(onInsert: (r: Report) => void, onDelete: (id: string) => void) {
     const ch = this.sb
       .channel(`reports-live-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reports' }, (payload) =>
-        fn(fromRow(payload.new as Row)),
+        onInsert(fromRow(payload.new as Row)),
       )
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'reports' }, (payload) => {
+        const id = (payload.old as Partial<Row>).id;
+        if (id) onDelete(id);
+      })
       .subscribe();
     return () => {
       void this.sb.removeChannel(ch);
@@ -196,23 +290,37 @@ export interface ReportSummary {
   liveWait: Report | null; // 최근 3시간 내 가장 최신 웨이팅 제보
   reviewCount: number;
   avgRating: number | null;
+  /** 별점 합계 — "별점 많은 순" 정렬 기준 */
+  totalStars: number;
+  hidden: number; // 🤫 숨은맛집 체크 수
+  classic: number; // 👍 역시맛집 체크 수
+  /** 이 기기에서 체크한 태그 */
+  myTags: Partial<Record<TasteTag, string>>; // tag → report id
+}
+
+export function emptySummary(): ReportSummary {
+  return { liveWait: null, reviewCount: 0, avgRating: null, totalStars: 0, hidden: 0, classic: 0, myTags: {} };
 }
 
 export function summarize(reports: Report[], now = Date.now()): Map<string, ReportSummary> {
   const m = new Map<string, ReportSummary>();
+  const me = deviceId();
   for (const r of reports) {
     let s = m.get(r.restaurantId);
     if (!s) {
-      s = { liveWait: null, reviewCount: 0, avgRating: null };
+      s = emptySummary();
       m.set(r.restaurantId, s);
     }
     if (r.kind === 'wait') {
       const fresh = now - new Date(r.createdAt).getTime() <= LIVE_WINDOW_MS;
       if (fresh && (!s.liveWait || r.createdAt > s.liveWait.createdAt)) s.liveWait = r;
     } else if (r.kind === 'review' && r.rating != null) {
-      const total = (s.avgRating ?? 0) * s.reviewCount + r.rating;
+      s.totalStars += r.rating;
       s.reviewCount += 1;
-      s.avgRating = total / s.reviewCount;
+      s.avgRating = s.totalStars / s.reviewCount;
+    } else if (r.kind === 'tag' && r.tag) {
+      s[r.tag] += 1;
+      if (r.deviceId === me && !s.myTags[r.tag]) s.myTags[r.tag] = r.id;
     }
   }
   return m;

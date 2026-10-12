@@ -1,11 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createReportsBackend, summarize, type NewReport, type Report } from '../lib/reports';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  createReportsBackend,
+  loadAdminToken,
+  saveAdminToken,
+  summarize,
+  type NewReport,
+  type Report,
+} from '../lib/reports';
 
 export function useReports() {
-  const backend = useRef(createReportsBackend()).current;
+  const [backend] = useState(createReportsBackend);
   const [reports, setReports] = useState<Report[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [now, setNow] = useState(() => Date.now());
+  const [adminToken, setAdminToken] = useState(loadAdminToken);
+  const [verifiedToken, setVerifiedToken] = useState<string | null>(null);
+  const isAdmin = !!adminToken && verifiedToken === adminToken;
 
   useEffect(() => {
     let alive = true;
@@ -19,9 +29,10 @@ export function useReports() {
       .catch(() => alive && setStatus('error'));
     let off: () => void = () => {};
     try {
-      off = backend.subscribe((r) => {
-        setReports((prev) => (prev.some((p) => p.id === r.id) ? prev : [r, ...prev]));
-      });
+      off = backend.subscribe(
+        (r) => setReports((prev) => (prev.some((p) => p.id === r.id) ? prev : [r, ...prev])),
+        (id) => setReports((prev) => prev.filter((p) => p.id !== id)),
+      );
     } catch (e) {
       console.warn('[jamsil-lunch] 실시간 구독 실패:', e);
     }
@@ -33,6 +44,19 @@ export function useReports() {
     };
   }, [backend]);
 
+  // 저장된 관리자 토큰이 있으면 유효한지 확인
+  useEffect(() => {
+    if (!adminToken) return;
+    let alive = true;
+    backend
+      .checkAdmin(adminToken)
+      .then((ok) => alive && ok && setVerifiedToken(adminToken))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [backend, adminToken]);
+
   const add = useCallback(
     async (r: NewReport) => {
       const rec = await backend.add(r);
@@ -42,7 +66,45 @@ export function useReports() {
     [backend],
   );
 
+  const remove = useCallback(
+    async (id: string, asAdmin = false) => {
+      if (asAdmin) await backend.removeAsAdmin(id, adminToken);
+      else await backend.removeOwn(id);
+      setReports((prev) => prev.filter((p) => p.id !== id));
+    },
+    [backend, adminToken],
+  );
+
+  const loginAdmin = useCallback(
+    async (token: string) => {
+      const ok = await backend.checkAdmin(token);
+      if (ok) {
+        saveAdminToken(token);
+        setAdminToken(token);
+        setVerifiedToken(token);
+      }
+      return ok;
+    },
+    [backend],
+  );
+  const logoutAdmin = useCallback(() => {
+    saveAdminToken('');
+    setAdminToken('');
+  }, []);
+
   const summaries = useMemo(() => summarize(reports, now), [reports, now]);
 
-  return { reports, add, summaries, status, mode: backend.mode, localReason: backend.localReason, now };
+  return {
+    reports,
+    add,
+    remove,
+    summaries,
+    status,
+    mode: backend.mode,
+    localReason: backend.localReason,
+    now,
+    isAdmin,
+    loginAdmin,
+    logoutAdmin,
+  };
 }

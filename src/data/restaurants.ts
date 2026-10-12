@@ -44,6 +44,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "상가 지하 소형 매장, 혼밥 리스트에 올라 있음"
     },
     "address": "서울 송파구 올림픽로35길 112 장미상가 B동 지하 44호",
@@ -127,6 +130,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "소형 매장, 메뉴 3가지만 운영, 재료 소진 시 조기 마감"
     },
     "address": "서울 송파구 올림픽로35길 112 장미상가 B동 지하 15호",
@@ -207,6 +213,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": true,
+      "groupSize": 8,
+      "room": null,
+      "estimated": true,
       "notes": "24시간 국밥집, 테이블 식"
     },
     "address": "서울 송파구 백제고분로7길 33 1층",
@@ -229,7 +238,7 @@ export const RESTAURANTS: Restaurant[] = [
     "reviews": {
       "naverRating": null,
       "naverReviewCount": null,
-      "diningcodeRating": 4.0,
+      "diningcodeRating": 4,
       "summary": "40년 전통, 다이닝코드 4.0. 국물 진하고 선지해장국 인기.",
       "highlights": [
         "24시간",
@@ -292,6 +301,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": true,
+      "groupSize": 8,
+      "room": null,
+      "estimated": true,
       "notes": "기사식당 스타일, 반찬 셀프 리필"
     },
     "address": "서울 송파구 백제고분로 148 호성빌딩",
@@ -366,6 +378,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": null,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 삼학사로 83 1층",
@@ -436,6 +451,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 백제고분로 140 1층 101호",
@@ -519,6 +537,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "혼밥 가능한 백반집"
     },
     "address": "서울 송파구 올림픽로 88 1층",
@@ -603,6 +624,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "잠실엘타워 1층"
     },
     "address": "서울 송파구 석촌호수로 74 잠실엘타워 1층",
@@ -684,6 +708,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": true,
+      "groupSize": 8,
+      "room": null,
+      "estimated": true,
       "notes": "프랜차이즈 해장국집"
     },
     "address": null,
@@ -768,6 +795,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "시장 초입 소형 백반집"
     },
     "address": "서울 송파구 석촌호수로12길 20 1층",
@@ -838,6 +868,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": null,
+      "groupSize": 10,
+      "room": null,
+      "estimated": true,
       "notes": "월드타워빌딩 지하, 쌈채소 리필 가능"
     },
     "address": "서울 송파구 송파대로 558 월드타워빌딩 지하",
@@ -907,6 +940,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 올림픽로35길 124 장미아파트 A상가 지하1층",
@@ -977,6 +1013,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": true,
+      "groupSize": 6,
+      "room": false,
+      "estimated": true,
       "notes": "무인 운영 시간대 있음(출입 인증 필요)"
     },
     "address": "서울 송파구 백제고분로9길 23 1층",
@@ -1052,6 +1091,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 올림픽로35길 112 장미아파트 B상가 지하1층",
@@ -1136,6 +1178,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "백화점 지하 푸드코트"
     },
     "address": "서울 송파구 올림픽로 240 롯데백화점 잠실점 지하1층",
@@ -1212,6 +1257,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "공깃밥 무료"
     },
     "address": "서울 송파구 올림픽로 119 지하1층",
@@ -1301,6 +1349,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "지하상가 소형 식당, 피크 시 만석"
     },
     "address": null,
@@ -1385,6 +1436,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "시장 분식집"
     },
     "address": null,
@@ -1451,6 +1505,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 올림픽로35길 112 장미아파트 B상가 1층",
@@ -1527,6 +1584,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": null,
@@ -1596,6 +1656,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": null,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": null,
@@ -1680,6 +1743,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "프랜차이즈 샐러드 매장, 테이크아웃 위주"
     },
     "address": "서울 송파구 백제고분로 187 파크인수 106호",
@@ -1748,6 +1814,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": null
     },
     "address": null,
@@ -1821,6 +1890,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "2층 매장"
     },
     "address": "서울 송파구 백제고분로 425 202호",
@@ -1910,6 +1982,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "혼밥 가능·셀프바"
     },
     "address": "서울 송파구 백제고분로 197 1층",
@@ -1998,6 +2073,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "1인 메뉴 중심"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰",
@@ -2077,6 +2155,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "일본식 셀프 시스템(튀김·주먹밥 직접 선택), 회전율 빠름"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 5층",
@@ -2148,6 +2229,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "혼밥·바 자리, 키오스크 선주문"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 5층",
@@ -2227,6 +2311,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "지하상가 분식 매장"
     },
     "address": null,
@@ -2308,6 +2395,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 올림픽로35길 112 장미상가 지하",
@@ -2330,7 +2420,7 @@ export const RESTAURANTS: Restaurant[] = [
     "reviews": {
       "naverRating": null,
       "naverReviewCount": null,
-      "diningcodeRating": 4.0,
+      "diningcodeRating": 4,
       "summary": "다이닝코드 4.0. 고기·바지락 푸짐, 삼성SDS 직원 추천 잠실 맛집(2020 한경 기사)에 포함.",
       "highlights": [
         "푸짐",
@@ -2375,6 +2465,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "테이크아웃 위주"
     },
     "address": "서울 송파구 올림픽로35길 112",
@@ -2446,6 +2539,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": true,
+      "groupSize": 12,
+      "room": null,
+      "estimated": true,
       "notes": "점심 회전율 매우 빠름, 직장인 단체 많아 시끄러움"
     },
     "address": "서울 송파구 올림픽로 293-19",
@@ -2527,6 +2623,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 올림픽로32길 57-1",
@@ -2602,6 +2701,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "1인당 인덕션 1개씩, 앉자마자 육수·야채 세팅 — 혼밥 최적"
     },
     "address": null,
@@ -2692,6 +2794,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "보리밥 셀프바 구조"
     },
     "address": "서울 송파구 백제고분로33길 29 1층",
@@ -2758,6 +2863,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": false,
+      "groupSize": 20,
+      "room": true,
+      "estimated": true,
       "notes": "6인 이상 테이블과 별도 공간, 전용 주차"
     },
     "address": null,
@@ -2839,6 +2947,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "키오스크 주문, 상가 지하 소형 매장"
     },
     "address": "서울 송파구 올림픽로35길 112 장미B상가 지하1층 6호",
@@ -2926,6 +3037,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": true,
+      "groupSize": 10,
+      "room": false,
+      "estimated": true,
       "notes": "홈플러스 1층 푸드코트 내, 좌석 넉넉"
     },
     "address": "서울 송파구 올림픽로35가길 16 홈플러스 잠실점 1층",
@@ -3016,6 +3130,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "리센츠상가 지하 소형 매장"
     },
     "address": "서울 송파구 올림픽로 145 리센츠상가 지하 A6-7호",
@@ -3103,6 +3220,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": true,
+      "groupSize": 10,
+      "room": false,
+      "estimated": true,
       "notes": "롯데월드몰 B1 푸드코트 공용 좌석"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 지하1층 푸드코트",
@@ -3182,6 +3302,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "12~14명 바테이블 + 4인석 2개; 면·밥 무료 리필"
     },
     "address": "서울 송파구 백제고분로45길 17-3 1층",
@@ -3261,6 +3384,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "소형 라멘집, 재료 소진 시 조기 마감"
     },
     "address": "서울 송파구 백제고분로46길 4 1층",
@@ -3346,6 +3472,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 백제고분로19길 17 청암빌딩",
@@ -3426,6 +3555,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 올림픽로 269 캐슬플라자 2층",
@@ -3512,6 +3644,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": null,
+      "groupSize": 8,
+      "room": null,
+      "estimated": true,
       "notes": "오피스 빌딩 지하, 평일 점심 직장인 붐빔"
     },
     "address": "서울 송파구 송파대로 570 타워730 지하1층",
@@ -3591,6 +3726,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": null,
+      "groupSize": 8,
+      "room": false,
+      "estimated": true,
       "notes": "롯데월드몰 B1 식당가"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 지하1층",
@@ -3666,6 +3804,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "지하 매장"
     },
     "address": "서울 송파구 송파대로 558 지하1층 B11호",
@@ -3741,6 +3882,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "늦게까지 영업해 혼밥하기 좋다는 평"
     },
     "address": "서울 송파구 올림픽로35가길 9 지하1층",
@@ -3821,6 +3965,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": null,
+      "groupSize": 8,
+      "room": false,
+      "estimated": true,
       "notes": "롯데월드몰 B1 식당가"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 지하1층",
@@ -3897,6 +4044,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": true,
+      "groupSize": 10,
+      "room": null,
+      "estimated": true,
       "notes": "24시간 영업 체인"
     },
     "address": "서울 송파구 올림픽로12길 4 1층",
@@ -3977,6 +4127,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "동네 중국집"
     },
     "address": "서울 송파구 오금로 58 B101호",
@@ -4057,6 +4210,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "직장인 많이 찾는 노포"
     },
     "address": null,
@@ -4140,6 +4296,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": true,
       "solo": null,
+      "groupSize": 12,
+      "room": null,
+      "estimated": true,
       "notes": "오피스 빌딩 지하 중식당"
     },
     "address": "서울 송파구 올림픽로 295 삼성생명빌딩 지하1층",
@@ -4215,6 +4374,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "상가 지하 소형 스시집"
     },
     "address": "서울 송파구 올림픽로 145 리센츠상가 지하1층",
@@ -4294,6 +4456,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": "서울 송파구 올림픽로35가길 11 103호",
@@ -4375,6 +4540,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": false,
       "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
       "notes": "지하철 역사 내 소형 매장, 서서/포장 위주"
     },
     "address": "서울 송파구 올림픽로 265 지하1층 (잠실역 역사 내)",
@@ -4464,6 +4632,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": null
     },
     "address": null,
@@ -4542,6 +4713,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": null,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "2층 매장"
     },
     "address": "서울 송파구 가락로 139 2층",
@@ -4625,6 +4799,9 @@ export const RESTAURANTS: Restaurant[] = [
     "seating": {
       "group": null,
       "solo": true,
+      "groupSize": null,
+      "room": null,
+      "estimated": true,
       "notes": "혼밥 가능, 기본찬·국 무료 리필"
     },
     "address": "서울 송파구 백제고분로45길 7",

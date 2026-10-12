@@ -1,6 +1,6 @@
-import { CONCEPT_LABELS, CUISINE_EMOJI, WAIT_LABELS, type Restaurant } from '../types';
+import { CONCEPT_LABELS, CUISINE_EMOJI, TASTE_TAG_LABELS, WAIT_LABELS, type Restaurant } from '../types';
 import { formatWon } from '../lib/links';
-import { timeAgo, type ReportSummary } from '../lib/reports';
+import { timeAgo, waitText, type ReportSummary } from '../lib/reports';
 
 interface Props {
   r: Restaurant;
@@ -16,10 +16,11 @@ interface Props {
 
 export function RestaurantCard({ r, walk, selected, favorite, budget, summary, now, onSelect, onToggleFavorite }: Props) {
   const live = summary?.liveWait ?? null;
-  const liveWait = live ? WAIT_LABELS[live.waitLevel!] : null;
+  const liveWait = live ? WAIT_LABELS[live.waitLevel ?? 'unknown'] : null;
   const overBudget = r.priceRange[0] > budget;
   const partlyOver = !overBudget && r.priceRange[1] > budget;
   const wait = WAIT_LABELS[r.waiting.level];
+  const s = r.seating;
 
   return (
     <article className={'card' + (selected ? ' selected' : '')} onClick={onSelect}>
@@ -63,8 +64,7 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
       <div className="card-foot">
         {live && liveWait ? (
           <span className="badge live" style={{ borderColor: liveWait.color, color: liveWait.color }}>
-            🔴 {timeAgo(live.createdAt, now)} 웨이팅 {liveWait.label}
-            {live.waitMinutes != null && <> {live.waitMinutes}분</>}
+            🔴 {timeAgo(live.createdAt, now)} {waitText(live) || liveWait.label}
           </span>
         ) : (
           <span className="badge" style={{ borderColor: wait.color, color: wait.color }}>
@@ -72,20 +72,35 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
           </span>
         )}
         {summary && summary.reviewCount > 0 && (
-          <span className="badge team">
-            💬 팀 {summary.avgRating!.toFixed(1)} ({summary.reviewCount})
+          <span className="badge team" title={`별점 합계 ${summary.totalStars}`}>
+            ★ {summary.avgRating!.toFixed(1)} · 후기 {summary.reviewCount}
+          </span>
+        )}
+        {summary && summary.hidden > 0 && (
+          <span className="badge tag">
+            {TASTE_TAG_LABELS.hidden.emoji} {TASTE_TAG_LABELS.hidden.label} {summary.hidden}
+          </span>
+        )}
+        {summary && summary.classic > 0 && (
+          <span className="badge tag">
+            {TASTE_TAG_LABELS.classic.emoji} {TASTE_TAG_LABELS.classic.label} {summary.classic}
           </span>
         )}
         {r.reviews.naverRating != null ? (
           <span className="badge">
-            ⭐ {r.reviews.naverRating.toFixed(1)}
+            네이버 {r.reviews.naverRating.toFixed(1)}
             {r.reviews.naverReviewCount != null && <> ({r.reviews.naverReviewCount.toLocaleString()})</>}
           </span>
         ) : (
-          r.reviews.diningcodeRating != null && <span className="badge">⭐ {r.reviews.diningcodeRating.toFixed(1)} (다이닝코드)</span>
+          r.reviews.diningcodeRating != null && <span className="badge">다이닝코드 {r.reviews.diningcodeRating.toFixed(1)}</span>
         )}
-        {r.seating.group && <span className="badge">👥 단체</span>}
-        {r.seating.solo && <span className="badge">🧑 혼밥</span>}
+        {s.group && (
+          <span className="badge">
+            👥 단체{s.groupSize != null && <> {s.groupSize}명{s.estimated ? '±' : ''}</>}
+          </span>
+        )}
+        {s.room && <span className="badge">🚪 룸</span>}
+        {s.solo && <span className="badge">🧑 혼밥</span>}
         {r.concepts.slice(0, 2).map((c) => (
           <span key={c} className="badge soft">
             {CONCEPT_LABELS[c].emoji} {CONCEPT_LABELS[c].label}

@@ -11,11 +11,13 @@ import { LiveTicker } from './components/LiveTicker';
 import { SearchBox } from './components/SearchBox';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { HomeView } from './components/HomeView';
+import { TowerLogo } from './components/TowerLogo';
 import { useReports } from './hooks/useReports';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf } from './lib/buildings';
 import { maybeOpen } from './lib/hours';
+import { makeQueryMatcher } from './lib/search';
 import type { ReportSummary } from './lib/reports';
 import type { Restaurant } from './types';
 
@@ -44,7 +46,7 @@ function loadJSON<T>(key: string, fallback: T): T {
   }
 }
 
-function matches(r: Restaurant, walk: number | null, f: Filters, now: number): boolean {
+function matches(r: Restaurant, walk: number | null, f: Filters, now: number, queryOk: (r: Restaurant) => boolean): boolean {
   if (r.priceRange[0] > f.maxPrice) return false;
   if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false;
   if (f.dishes.length) {
@@ -62,13 +64,7 @@ function matches(r: Restaurant, walk: number | null, f: Filters, now: number): b
   if (walk != null && walk > f.maxWalk) return false;
   if (f.openNow && !maybeOpen(r, now)) return false;
   if (f.building && buildingOf(r) !== f.building) return false;
-  if (f.query.trim()) {
-    const q = f.query.trim().toLowerCase();
-    const hay = [r.name, r.branch ?? '', buildingOf(r) ?? '', r.subcategory, r.cuisine, ...r.signature, ...r.menu.map((m) => m.name), ...dishTags(r)]
-      .join(' ')
-      .toLowerCase();
-    if (!hay.includes(q)) return false;
-  }
+  if (!queryOk(r)) return false;
   return true;
 }
 
@@ -141,7 +137,8 @@ export default function App() {
   const buildings = useMemo(() => bigBuildings(RESTAURANTS), []);
 
   const results = useMemo(() => {
-    const list = RESTAURANTS.filter((r) => matches(r, walkById.get(r.id) ?? null, filters, live.now));
+    const queryOk = makeQueryMatcher(filters.query, RESTAURANTS);
+    const list = RESTAURANTS.filter((r) => matches(r, walkById.get(r.id) ?? null, filters, live.now, queryOk));
     const walkOf = (r: Restaurant) => walkById.get(r.id) ?? 99;
     list.sort((a, b) => {
       if (filters.sort === 'walk') return walkOf(a) - walkOf(b);
@@ -357,9 +354,13 @@ export default function App() {
               goHome();
             }}
           >
+            <TowerLogo />
             <span className="brand-text">
               <h1>
-                오늘잠심<span className="brand-sub">잠실점심</span>
+                <span className="brand-name">
+                  오늘<em>잠심</em>
+                </span>
+                <span className="brand-sub">잠실점심</span>
               </h1>
               <span className="tagline">구내식당 공사 이슈로 인한 식사 문제 해결을 위한 어플!</span>
             </span>

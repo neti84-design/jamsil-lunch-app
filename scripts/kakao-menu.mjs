@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 카카오맵 가게 정보(메뉴·가격·영업시간·평점) 가져오기 → src/data/kakaoDetails.ts
- * 대표 사진 주소 → src/data/kakaoPhotos.ts
+ * 가게 사진(음식 → 간판 → 내부) 주소 → src/data/kakaoPhotos.ts
  *
  * 사용법:
  *   node scripts/kakao-menu.mjs            # 받아 둔 것은 다시 받지 않음
@@ -30,34 +30,53 @@ const curatedIds = [...fs.readFileSync(path.join(ROOT, 'src/data/restaurants.ts'
 const ids = [...new Set([...kakaoIds, ...curatedIds])];
 fs.mkdirSync(CACHE, { recursive: true });
 
-async function fetchPanel(id) {
-  const file = path.join(CACHE, `${id}.json`);
-  if (!FRESH && fs.existsSync(file)) {
-    const cached = JSON.parse(fs.readFileSync(file, 'utf8'));
-    // 사진을 받기 전에 저장된 캐시는 다시 받는다
-    if ('photo' in cached) return cached;
-  }
+const HEADERS = { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json', pf: 'web', Referer: 'https://place.map.kakao.com/' };
+
+/** place-api 에서 JSON 받기. 404 면 null, 실패하면 undefined */
+async function getJson(url) {
   for (let attempt = 0; attempt < 3; attempt++) {
     // 연결이 끊기면(ECONNRESET 등) 잠시 쉬고 다시 시도
-    const res = await fetch(`https://place-api.map.kakao.com/places/panel3/${id}`, {
-      headers: { 'User-Agent': 'Mozilla/5.0', Accept: 'application/json', pf: 'web', Referer: 'https://place.map.kakao.com/' },
-    }).catch(() => null);
-    if (!res) {
-      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-      continue;
-    }
-    if (res.ok) {
-      const d = await res.json();
-      // 필요한 부분만 남겨 둔다
-      const keep = { menu: d.menu?.menus?.items ?? [], open_hours: d.open_hours ?? null, score: d.kakaomap_review?.score_set ?? null, photo: d.summary?.main_photo_url ?? null };
-      fs.writeFileSync(file, JSON.stringify(keep));
-      return keep;
-    }
-    if (res.status === 404) return null;
+    const res = await fetch(url, { headers: HEADERS }).catch(() => null);
+    if (res?.ok) return res.json();
+    if (res?.status === 404) return null;
     await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
   }
-  console.warn(`  ${id}: 받기 실패`);
-  return null;
+  return undefined;
+}
+
+/** 받아 둔 게 있으면 그걸, 없으면 받아서 필요한 부분만 저장 */
+async function cached(file, load) {
+  file = path.join(CACHE, file);
+  if (!FRESH && fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
+  const keep = await load();
+  if (keep !== undefined) fs.writeFileSync(file, JSON.stringify(keep));
+  return keep ?? null;
+}
+
+async function fetchPanel(id) {
+  const keep = await cached(`${id}.json`, async () => {
+    const d = await getJson(`https://place-api.map.kakao.com/places/panel3/${id}`);
+    return d && { menu: d.menu?.menus?.items ?? [], open_hours: d.open_hours ?? null, score: d.kakaomap_review?.score_set ?? null };
+  });
+  if (keep === null) console.warn(`  ${id}: 받기 실패`);
+  return keep;
+}
+
+/**
+ * 가게 사진 고르기: 음식 사진 → 없으면 외부(간판) → 없으면 내부.
+ * 카카오맵이 사진마다 붙여 둔 분류(tag)로 고르고, 메뉴판처럼 글씨만 있는 사진은 쓰지 않는다
+ */
+const PHOTO_TAGS = ['FOOD', 'OUTDOOR', 'INDOOR'];
+async function fetchPhoto(id) {
+  return cached(`photo-${id}.json`, async () => {
+    for (const tag of PHOTO_TAGS) {
+      const d = await getJson(`https://place-api.map.kakao.com/places/tab/photos/${id}?tag=${tag}`);
+      if (d === undefined) return undefined;
+      const url = d?.photos?.find((p) => p.media_type === 'PHOTO' && p.url)?.url;
+      if (url) return { url, tag };
+    }
+    return { url: null };
+  });
 }
 
 // ---------- 메뉴 → 점심 가격 ----------
@@ -138,7 +157,7 @@ function hoursOf(open) {
   return { hours, breakTime, closedDays: off.length ? daysLabel(off) : null };
 }
 
-/** 대표 사진: https 로 (http 이미지는 https 페이지에서 막힌다) */
+/** 사진 주소: https 로 (http 이미지는 https 페이지에서 막힌다) */
 function photoOf(url) {
   return typeof url === 'string' && /^https?:\/\//.test(url) ? url.replace(/^http:/, 'https:') : null;
 }
@@ -156,9 +175,9 @@ async function worker() {
     const d = await fetchPanel(id);
     done++;
     if (done % 50 === 0) console.log(`  ${done}/${ids.length}`);
-    if (!d) continue;
-    const photo = photoOf(d.photo);
+    const photo = photoOf((await fetchPhoto(id))?.url);
     if (photo) photos[id] = photo;
+    if (!d) continue;
     const menu = menuOf(d.menu);
     const price = lunchRange(menu);
     const h = hoursOf(d.open_hours);
@@ -201,12 +220,12 @@ ${body}
 const photoKeys = Object.keys(photos).sort((a, b) => Number(a) - Number(b));
 fs.writeFileSync(
   PHOTO_OUT,
-  `// 자동 생성: scripts/kakao-menu.mjs (카카오맵 대표 사진, ${new Date().toISOString().slice(0, 10)})
+  `// 자동 생성: scripts/kakao-menu.mjs (카카오맵 가게 사진: 음식 → 간판 → 내부, ${new Date().toISOString().slice(0, 10)})
 // 직접 고치지 말고 스크립트를 다시 돌리세요. 사진은 올린 사람(카카오맵 후기·블로그·가게) 것이라 주소만 걸어 둔다
 export const KAKAO_PHOTOS: Record<string, string> = {
 ${photoKeys.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(photos[k])},`).join('\n')}
 };
 `,
 );
-console.log(`대표 사진 ${photoKeys.length}곳 → ${path.relative(ROOT, PHOTO_OUT)}`);
+console.log(`가게 사진 ${photoKeys.length}곳 → ${path.relative(ROOT, PHOTO_OUT)}`);
 console.log(`완료: ${keys.length}곳 (메뉴·가격 ${withMenu}, 영업시간 ${withHours}) → ${path.relative(ROOT, OUT)}`);

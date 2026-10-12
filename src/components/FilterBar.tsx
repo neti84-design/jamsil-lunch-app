@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef } from 'react';
 import {
   CONCEPT_LABELS,
   CUISINES,
@@ -23,7 +23,8 @@ export interface Filters {
   maxWalk: number;
   sort: 'stars' | 'walk' | 'rating' | 'price';
   query: string;
-  onlyFavorites: boolean;
+  /** 지금 영업 중(또는 영업시간 미확인)인 곳만 */
+  openNow: boolean;
 }
 
 export const NO_LIMIT = 1_000_000;
@@ -39,17 +40,19 @@ export const DEFAULT_FILTERS: Filters = {
   maxWalk: ALL_WALK,
   sort: 'stars',
   query: '',
-  onlyFavorites: false,
+  openNow: false,
 };
 
 const PRICE_STEPS = [8000, 10000, 12000, 15000, 20000, 30000, NO_LIMIT];
 const WALK_STEPS = [5, 10, 15, 20, ALL_WALK];
 
-export const SORT_LABELS: Record<Filters['sort'], string> = {
-  stars: '별점 많은 순',
-  rating: '평점 높은 순',
-  walk: '가까운 순',
-  price: '저렴한 순',
+
+/** 검색창 바로 아래 정렬 칩 */
+const SORT_LABELS: Record<Filters['sort'], string> = {
+  stars: '별점순',
+  walk: '가까운순',
+  rating: '평점순',
+  price: '저렴한순',
 };
 
 export function priceLabel(p: number): string {
@@ -68,7 +71,7 @@ export function describeFilters(f: Filters): string {
   if (f.concepts.length) parts.push(f.concepts.map((c) => CONCEPT_LABELS[c].label).join('·'));
   if (f.seating === 'group') parts.push(`단체 ${f.groupSize}명+`);
   else if (f.seating) parts.push(SEATING_LABELS[f.seating].label);
-  if (f.onlyFavorites) parts.push('찜만');
+  if (f.openNow) parts.push('영업 중');
   if (f.query.trim()) parts.push(`"${f.query.trim()}"`);
   return parts.join(' · ');
 }
@@ -78,19 +81,45 @@ interface Props {
   onChange: (f: Filters) => void;
   resultCount: number;
   totalCount: number;
+  /** 상세 조건 펼침 여부 (모바일). 목록을 위로 밀면 App 에서 접는다 */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 function toggle<T>(list: T[], v: T): T[] {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 }
 
-export function FilterBar({ filters, onChange, resultCount, totalCount }: Props) {
-  const [open, setOpen] = useState(false);
+/** 위로 이만큼(px) 쓸어 올리면 상세 조건을 접는다 */
+const SWIPE_CLOSE_PX = 40;
+
+export function FilterBar({ filters, onChange, resultCount, totalCount, open, onOpenChange }: Props) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
   const isDefault = JSON.stringify(filters) === JSON.stringify(DEFAULT_FILTERS);
+  const touch = useRef<{ y: number; atBottom: boolean } | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const atBottom = () => {
+    const el = panelRef.current;
+    return !el || el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+  };
 
   return (
-    <section className={'filters' + (open ? ' open' : '')} aria-label="필터">
+    <section
+      className={'filters' + (open ? ' open' : '')}
+      aria-label="검색"
+      onTouchStart={(e) => {
+        touch.current = open ? { y: e.touches[0].clientY, atBottom: atBottom() } : null;
+      }}
+      onTouchEnd={(e) => {
+        const t = touch.current;
+        touch.current = null;
+        if (!t) return;
+        const dy = e.changedTouches[0].clientY - t.y;
+        // 조건 목록이 더 스크롤될 게 있으면 스크롤을 우선하고, 끝까지 본 상태에서 위로 쓸면 접는다
+        if (dy < -SWIPE_CLOSE_PX && t.atBottom && atBottom()) onOpenChange(false);
+      }}
+    >
       <div className="filter-row">
         <input
           className="search"
@@ -99,11 +128,34 @@ export function FilterBar({ filters, onChange, resultCount, totalCount }: Props)
           value={filters.query}
           onChange={(e) => set({ query: e.target.value })}
         />
-        <button className="chip mobile-only" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          {open ? '필터 접기 ▲' : '필터 ▼'}
-        </button>
       </div>
 
+      <div className="quick-row">
+        {(Object.keys(SORT_LABELS) as Filters['sort'][]).map((k) => (
+          <button key={k} className={'chip sm' + (filters.sort === k ? ' on' : '')} onClick={() => set({ sort: k })}>
+            {SORT_LABELS[k]}
+          </button>
+        ))}
+        <button
+          className={'chip sm' + (filters.openNow ? ' on' : '')}
+          title="지금 영업 중인 곳만 (영업시간이 확인 안 된 곳은 포함)"
+          onClick={() => set({ openNow: !filters.openNow })}
+        >
+          🟢 영업 중
+        </button>
+        <button
+          className={'chip sm' + (filters.seating === 'solo' ? ' on' : '')}
+          onClick={() => set({ seating: filters.seating === 'solo' ? null : 'solo' })}
+        >
+          🧑 혼밥
+        </button>
+        <span className="result-meta">
+          <strong>{resultCount}</strong>
+          <span className="small">/{totalCount}곳</span>
+        </span>
+      </div>
+
+      <div className="filter-panel" ref={panelRef}>
       <div className="filter-group">
         <span className="filter-label">인당 예산</span>
         <div className="chips">
@@ -210,33 +262,23 @@ export function FilterBar({ filters, onChange, resultCount, totalCount }: Props)
       </div>
 
       <div className="filter-row between">
-        <div className="chips">
-          <span className="filter-label">정렬</span>
-          <select value={filters.sort} onChange={(e) => set({ sort: e.target.value as Filters['sort'] })}>
-            {(Object.keys(SORT_LABELS) as Filters['sort'][]).map((k) => (
-              <option key={k} value={k}>
-                {SORT_LABELS[k]}
-              </option>
-            ))}
-          </select>
-          <button
-            className={'chip' + (filters.onlyFavorites ? ' on' : '')}
-            onClick={() => set({ onlyFavorites: !filters.onlyFavorites })}
-          >
-            ⭐ 찜만
+        <div className="filter-desc small">기준: {describeFilters(filters)}</div>
+        {!isDefault && (
+          <button className="link" onClick={() => onChange(DEFAULT_FILTERS)}>
+            초기화
           </button>
-        </div>
-        <div className="result-meta">
-          <strong>{resultCount}</strong>
-          <span className="small"> / {totalCount}곳</span>
-          {!isDefault && (
-            <button className="link" onClick={() => onChange(DEFAULT_FILTERS)}>
-              초기화
-            </button>
-          )}
-        </div>
+        )}
       </div>
-      <div className="filter-desc small">기준: {describeFilters(filters)}</div>
+      </div>
+
+      <button
+        className="filter-handle"
+        onClick={() => onOpenChange(!open)}
+        aria-expanded={open}
+        aria-label={open ? '상세 조건 접기' : '상세 조건 펼치기'}
+      >
+        <span className={'chevron' + (open ? ' up' : '')} aria-hidden />
+      </button>
     </section>
   );
 }

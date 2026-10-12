@@ -1,6 +1,7 @@
 import { CONCEPT_LABELS, CUISINE_EMOJI, TASTE_TAG_LABELS, WAIT_LABELS, type Restaurant } from '../types';
 import { formatWon } from '../lib/links';
 import { timeAgo, waitText, type ReportSummary } from '../lib/reports';
+import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 
 interface Props {
   r: Restaurant;
@@ -21,6 +22,7 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
   const partlyOver = !overBudget && r.priceRange[1] > budget;
   const wait = WAIT_LABELS[r.waiting.level];
   const s = r.seating;
+  const hours = openStatus(r, now);
 
   return (
     <article className={'card' + (selected ? ' selected' : '')} onClick={onSelect}>
@@ -62,6 +64,15 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
       </div>
 
       <div className="card-foot">
+        {hours.state !== 'unknown' && (
+          <span
+            className="badge"
+            title={hours.detail}
+            style={{ borderColor: OPEN_STATE_COLOR[hours.state], color: OPEN_STATE_COLOR[hours.state] }}
+          >
+            {hours.label}
+          </span>
+        )}
         {live && liveWait ? (
           <span className="badge live" style={{ borderColor: liveWait.color, color: liveWait.color }}>
             🔴 {timeAgo(live.createdAt, now)} {waitText(live) || liveWait.label}

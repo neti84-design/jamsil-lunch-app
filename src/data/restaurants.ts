@@ -2445,6 +2445,76 @@ export const RESTAURANTS: Restaurant[] = [
     "dataNotes": "한경 기사는 2020년."
   },
   {
+    "id": "뽀빠이분식-장미상가",
+    "name": "뽀빠이분식",
+    "branch": "장미상가",
+    "cuisine": "분식",
+    "subcategory": "즉석떡볶이/분식",
+    "signature": [
+      "즉석떡볶이",
+      "떡볶이",
+      "튀김"
+    ],
+    "priceRange": [
+      7000,
+      12000
+    ],
+    "menu": [],
+    "concepts": [
+      "filling"
+    ],
+    "seating": {
+      "group": null,
+      "solo": null,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로35길 104 장미상가",
+    "lat": 37.5162,
+    "lng": 127.1047,
+    "approxLocation": true,
+    "phone": null,
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": 1460,
+      "diningcodeRating": null,
+      "summary": "30년 전통 즉석떡볶이집. 잠실 토박이들 사이에 유명하고 KBS 2TV 생생정보(2025.05.29, 떡볶이)에 나왔다. 맛이 자극적이라 호불호가 있다는 후기도 있다.",
+      "highlights": [
+        "즉석떡볶이",
+        "30년 전통",
+        "2TV 생생정보"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8번 출구 → 장미상가",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": [
+        "https://hotplacehunter.co.kr/?p=69959"
+      ]
+    },
+    "sources": [
+      "https://hotplacehunter.co.kr/?p=69959",
+      "https://polle.com/place/1y2B9e/%EB%BD%80%EB%B9%A0%EC%9D%B4%20%EB%B6%84%EC%8B%9D"
+    ],
+    "dataNotes": "주소는 네이버 지도(올림픽로35길 104, 신천동 7) 기준. 가격·메뉴는 미확인 추정값 — 방문 전 확인."
+  },
+  {
     "id": "한솥도시락-잠실장미상가점",
     "name": "한솥도시락",
     "branch": "잠실장미상가점",

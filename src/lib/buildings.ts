@@ -5,7 +5,7 @@ import type { Restaurant } from '../types';
  * 필터에는 MIN_BUILDING_COUNT 곳 이상 모인 건물만 보여준다(데이터가 늘면 자동으로 추가됨).
  */
 export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
-  { name: '장미상가', emoji: '🌹', re: /장미\s*(아파트\s*)?[AB]?\s*상가|장미[AB]상가|장미상가|잠실장미점/ },
+  { name: '장미상가', emoji: '🌹', re: /장미\s*(아파트\s*)?[AB]?\s*상가|장미[AB]상가|장미상가|잠실장미점|올림픽로\s*35길\s*(104|112|124)(?!\d)/ },
   { name: '롯데월드몰', emoji: '🏬', re: /롯데월드몰/ },
   { name: '롯데백화점', emoji: '🛍️', re: /롯데백화점/ },
   { name: '잠실역 지하상가', emoji: '🚇', re: /잠실역\s*지하상가|잠실지하상가|잠실역 역사 내/ },

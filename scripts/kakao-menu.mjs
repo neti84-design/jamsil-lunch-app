@@ -64,15 +64,17 @@ async function fetchPanel(id) {
 
 /**
  * 가게 사진 고르기: 음식 사진 → 없으면 외부(간판) → 없으면 내부.
- * 카카오맵이 사진마다 붙여 둔 분류(tag)로 고르고, 메뉴판처럼 글씨만 있는 사진은 쓰지 않는다
+ * 카카오맵이 사진마다 붙여 둔 분류(tag)로 고르고, 메뉴판·가격표처럼 글씨만 있는 사진은 쓰지 않는다
  */
 const PHOTO_TAGS = ['FOOD', 'OUTDOOR', 'INDOOR'];
+/** PNG·GIF 는 대개 가격표·할인 안내 같은 편집 이미지라 건너뛴다 (찍은 사진은 JPEG) */
+const GRAPHIC = /\.(png|gif)(\?|$)/i;
 async function fetchPhoto(id) {
   return cached(`photo-${id}.json`, async () => {
     for (const tag of PHOTO_TAGS) {
       const d = await getJson(`https://place-api.map.kakao.com/places/tab/photos/${id}?tag=${tag}`);
       if (d === undefined) return undefined;
-      const url = d?.photos?.find((p) => p.media_type === 'PHOTO' && p.url)?.url;
+      const url = d?.photos?.find((p) => p.media_type === 'PHOTO' && p.url && !GRAPHIC.test(p.url))?.url;
       if (url) return { url, tag };
     }
     return { url: null };

@@ -1492,3 +1492,248 @@ input.mini.grow {
 .small.error {
   color: var(--danger);
 }
+
+/* 오늘의 추천 (날씨·요일) */
+.today-box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.today-reason {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 14px;
+}
+.today-weather,
+.today-day {
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+.today-box .recent-row {
+  margin: 0 -12px;
+  padding: 0 12px;
+  scrollbar-width: none;
+}
+.today-box .recent-row::-webkit-scrollbar {
+  display: none;
+}
+.today-vote {
+  align-self: flex-start;
+}
+
+/* 점심 투표: 홈 */
+.vote-home {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vote-home-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px 8px 12px;
+  min-width: 0;
+}
+.vote-home-open {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.vote-home-open strong,
+.vote-home-open .small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vote-home-item .link.del {
+  float: none;
+  flex: none;
+}
+.vote-new {
+  align-self: flex-start;
+}
+
+/* 점심 투표: 패널 */
+.btn.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.vote-head h3 {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+.vote-head .btn {
+  margin-top: 6px;
+}
+input.mini.vote-title-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 15px;
+}
+.vote-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vote-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.vote-row.static {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.vote-row.static .link.del {
+  float: none;
+  flex: none;
+}
+.vote-pick {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: left;
+  overflow: hidden;
+}
+.vote-row.on .vote-pick {
+  border-color: var(--accent);
+}
+.vote-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--accent-soft);
+  transition: width 0.25s ease-out;
+}
+.vote-row.lead .vote-bar {
+  background: #ffe1d3;
+}
+.vote-check {
+  position: relative;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--surface);
+}
+.vote-row.on .vote-check {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.vote-name {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.vote-meta {
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vote-count {
+  position: relative;
+  flex: none;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 20px;
+  text-align: right;
+}
+.vote-info {
+  flex: none;
+  font-size: 12.5px;
+}
+.vote-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.vote-search {
+  width: 100%;
+  padding: 8px 12px;
+}
+.vote-found {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.vote-found li + li {
+  border-top: 1px solid var(--line);
+}
+.vote-found button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: var(--surface);
+  padding: 9px 12px;
+  text-align: left;
+}
+.vote-add {
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.vote-suggest {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vote-create {
+  justify-content: center;
+  padding: 12px 14px;
+}

@@ -21,7 +21,7 @@ export interface Filters {
   groupSize: number;
   /** 도보 상한(분). 99 = 전체 */
   maxWalk: number;
-  /** 지도 탭의 도보 상한(분). 지도는 처음에 5분 이내만 */
+  /** 지도 탭의 도보 상한(분). 검색 목록과 따로 저장 */
   mapMaxWalk: number;
   /** 배달 되는 곳만 */
   delivery: boolean;
@@ -36,15 +36,16 @@ export interface Filters {
 export const NO_LIMIT = 1_000_000;
 export const ALL_WALK = 99;
 
+/** 처음 기준: 인당 1.2만원 · 도보 10분 이내 */
 export const DEFAULT_FILTERS: Filters = {
-  maxPrice: NO_LIMIT,
+  maxPrice: 12000,
   cuisines: [],
   dishes: [],
   concepts: [],
   seating: null,
   groupSize: 6,
-  maxWalk: ALL_WALK,
-  mapMaxWalk: 5,
+  maxWalk: 10,
+  mapMaxWalk: 10,
   delivery: false,
   sort: 'stars',
   query: '',
@@ -250,6 +251,17 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
       </div>
 
       <div className="filter-group">
+        <span className="filter-label">도보</span>
+        <div className="chips">
+          {WALK_STEPS.map((m) => (
+            <button key={m} className={'chip' + (filters[walkKey] === m ? ' on' : '')} onClick={() => set({ [walkKey]: m })}>
+              {m >= ALL_WALK ? '전체' : `${m}분 이내`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="filter-group">
         <span className="filter-label">종류</span>
         <div className="chips">
           <button className={'chip' + (filters.cuisines.length === 0 ? ' on' : '')} onClick={() => set({ cuisines: [] })}>
@@ -325,17 +337,6 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
               ))}
             </span>
           )}
-        </div>
-      </div>
-
-      <div className="filter-group">
-        <span className="filter-label">도보</span>
-        <div className="chips">
-          {WALK_STEPS.map((m) => (
-            <button key={m} className={'chip' + (filters[walkKey] === m ? ' on' : '')} onClick={() => set({ [walkKey]: m })}>
-              {m >= ALL_WALK ? '전체' : `${m}분 이내`}
-            </button>
-          ))}
         </div>
       </div>
 

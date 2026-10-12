@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 import { RESTAURANTS } from './data';
-import { DEFAULT_FILTERS, FilterBar, NO_LIMIT, type Filters } from './components/FilterBar';
+import { ALL_WALK, DEFAULT_FILTERS, FilterBar, NO_LIMIT, type Filters } from './components/FilterBar';
 import { RestaurantCard } from './components/RestaurantCard';
 import { RestaurantDetail } from './components/RestaurantDetail';
 import { AdminPanel } from './components/AdminPanel';
@@ -14,8 +14,14 @@ import { HomeView } from './components/HomeView';
 import { TowerLogo } from './components/TowerLogo';
 import { MapSheet } from './components/MapSheet';
 import { ShareTalk } from './components/ShareTalk';
+import { TodayPick } from './components/TodayPick';
+import { VoteHome } from './components/VoteHome';
+import { VotePanel, type VoteView } from './components/VotePanel';
 import { useReports } from './hooks/useReports';
 import { useTalk } from './hooks/useTalk';
+import { useVotes } from './hooks/useVotes';
+import { fetchLunchWeather, type LunchWeather } from './lib/weather';
+import { dayTheme, pickForToday } from './lib/recommend';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
@@ -25,9 +31,13 @@ import type { ReportSummary } from './lib/reports';
 import { SEATING_LABELS, hasDelivery, type Restaurant } from './types';
 
 const FAV_KEY = 'jamsil-lunch:favorites';
-const FILTER_KEY = 'jamsil-lunch:filters-v3';
+// 기본값(1.2만원·도보 10분)이 바뀌어 저장 키도 새로 — 예전 저장본은 버린다
+const FILTER_KEY = 'jamsil-lunch:filters-v4';
 const RECENT_KEY = 'jamsil-lunch:recent';
 const SEARCH_KEY = 'jamsil-lunch:searches';
+const VOTE_DRAFT_KEY = 'jamsil-lunch:vote-draft';
+/** 오늘의 추천을 "이 중에서 투표"로 담을 때 몇 곳까지 */
+const VOTE_FROM_PICKS = 4;
 const MAX_RECENT = 10;
 const MAX_SEARCHES = 10;
 /** 검색 목록은 한 번에 이만큼씩 그린다 (식당이 1,000곳이 넘어서) */
@@ -142,11 +152,40 @@ export default function App() {
   const talk = useTalk(live.adminToken);
   /** 지도에서 누른 식당 (아래 패널로 보여줌, 새 창으로 열지 않음) */
   const [mapSelId, setMapSelId] = useState<string | null>(null);
+  /** 점심 투표 화면. 공유 링크(?vote=…)로 들어오면 바로 그 투표를 연다 */
+  const [voteView, setVoteView] = useState<VoteView | null>(() => {
+    const id = new URLSearchParams(location.search).get('vote');
+    return id ? { mode: 'poll', id } : null;
+  });
+  const [voteDraft, setVoteDraft] = useState<string[]>(() => loadJSON<string[]>(VOTE_DRAFT_KEY, []));
+  const votes = useVotes(voteView?.mode === 'poll' ? voteView.id : null);
+  const [weather, setWeather] = useState<LunchWeather | null>(null);
 
   useEffect(() => saveJSON(FILTER_KEY, filters), [filters]);
   useEffect(() => saveJSON(FAV_KEY, [...favorites]), [favorites]);
   useEffect(() => saveJSON(RECENT_KEY, recentIds), [recentIds]);
   useEffect(() => saveJSON(SEARCH_KEY, searches), [searches]);
+  useEffect(() => saveJSON(VOTE_DRAFT_KEY, voteDraft), [voteDraft]);
+
+  // 링크로 받은 투표는 내 목록에 남기고, 주소창의 ?vote= 는 지운다
+  const { remember: rememberPoll } = votes;
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('vote');
+    if (!id) return;
+    rememberPoll(id);
+    history.replaceState(history.state, '', location.pathname);
+  }, [rememberPoll]);
+
+  // 점심때 날씨 (실패하면 요일 추천만)
+  useEffect(() => {
+    const ac = new AbortController();
+    fetchLunchWeather(ac.signal)
+      .then(setWeather)
+      .catch((e: unknown) => {
+        if (!ac.signal.aborted) console.warn('[jamsil-lunch] 날씨 불러오기 실패:', e);
+      });
+    return () => ac.abort();
+  }, []);
 
   const walkById = useMemo(() => {
     const m = new Map<string, number | null>();
@@ -211,6 +250,18 @@ export default function App() {
       }).sort((a, b) => recommendScore(live.summaries.get(b.id)) - recommendScore(live.summaries.get(a.id))),
     [live.summaries],
   );
+  /** 오늘의 추천: 날씨가 특별하면 날씨, 아니면 요일 주제. 예산·도보는 지금 조건을 따른다 */
+  const theme = useMemo(
+    () => dayTheme(live.now, weather, filters.maxWalk >= ALL_WALK ? 15 : filters.maxWalk),
+    [live.now, weather, filters.maxWalk],
+  );
+  const todayPicks = useMemo(() => {
+    const base = { theme, now: live.now, budget: filters.maxPrice, walkById, summaries: live.summaries };
+    const open = pickForToday(RESTAURANTS, { ...base, isOpen: (r) => maybeOpen(r, live.now) });
+    // 영업 끝난 시간(저녁·주말)엔 영업시간과 상관없이 — 다음 점심 고민용
+    return open.length >= 3 ? open : pickForToday(RESTAURANTS, { ...base, isOpen: () => true });
+  }, [theme, live.now, live.summaries, filters.maxPrice, walkById]);
+
   const topRated = useMemo(
     () => [...RESTAURANTS].filter((r) => externalRating(r) > 0).sort((a, b) => externalRating(b) - externalRating(a)).slice(0, 10),
     [],
@@ -283,6 +334,10 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live.status]);
 
+  /** 식당 상세의 "투표에 담기" — 다음에 만들 투표의 후보 */
+  const toggleDraft = (id: string) =>
+    setVoteDraft((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
   const toggleFav = (id: string) => {
     const on = !favorites.has(id);
     setFavorites((prev) => {
@@ -313,6 +368,7 @@ export default function App() {
   /** 제목을 누르면 처음 화면으로 */
   const goHome = () => {
     setAdminOpen(false);
+    setVoteView(null);
     setFiltersOpen(false);
     setFilters(DEFAULT_FILTERS);
     if (depth > 0) history.go(-depth);
@@ -440,6 +496,30 @@ export default function App() {
           <HomeView
             searchBox={searchBox}
             talk={<ShareTalk talk={talk} now={live.now} isAdmin={live.isAdmin} />}
+            today={
+              <TodayPick
+                theme={theme}
+                weather={weather}
+                picks={todayPicks}
+                walkById={walkById}
+                now={live.now}
+                onSelect={open}
+                onSeeAll={() => searchWith({ dishes: theme.dishes, maxWalk: theme.maxWalk, openNow: true })}
+                onVote={() => {
+                  setVoteDraft(todayPicks.slice(0, VOTE_FROM_PICKS).map((r) => r.id));
+                  setVoteView({ mode: 'create' });
+                }}
+              />
+            }
+            vote={
+              <VoteHome
+                votes={votes}
+                byId={byId}
+                draftCount={voteDraft.length}
+                onCreate={() => setVoteView({ mode: 'create' })}
+                onOpen={(id) => setVoteView({ mode: 'poll', id })}
+              />
+            }
             ticker={ticker}
             nearby={nearbyOpen.map(card)}
             restaurants={RESTAURANTS}
@@ -502,6 +582,8 @@ export default function App() {
                   onRemoveReport={live.remove}
                   onClose={() => setMapSelId(null)}
                   onToggleFavorite={() => toggleFav(mapSelected.id)}
+                  inVote={voteDraft.includes(mapSelected.id)}
+                  onToggleVote={() => toggleDraft(mapSelected.id)}
                 />
               </MapSheet>
             )}
@@ -570,6 +652,29 @@ export default function App() {
 
       <BottomNav tab={tab} favCount={favorites.size} onChange={goTab} />
 
+      {voteView && (
+        <>
+          <div className="backdrop" onClick={() => setVoteView(null)} />
+          <VotePanel
+            view={voteView}
+            votes={votes}
+            restaurants={RESTAURANTS}
+            byId={byId}
+            walkById={walkById}
+            draft={voteDraft}
+            onDraftChange={setVoteDraft}
+            suggestions={[
+              { label: '오늘의 추천', list: todayPicks },
+              { label: '관심매장', list: favoriteList },
+              { label: '최근 본 식당', list: recentList },
+            ]}
+            onCreated={(p) => setVoteView({ mode: 'poll', id: p.id })}
+            onSelect={open}
+            onClose={() => setVoteView(null)}
+          />
+        </>
+      )}
+
       {selected && (
         <>
           <div className="backdrop" onClick={() => open(null)} />
@@ -588,6 +693,8 @@ export default function App() {
             onRemoveReport={live.remove}
             onClose={() => open(null)}
             onToggleFavorite={() => toggleFav(selected.id)}
+            inVote={voteDraft.includes(selected.id)}
+            onToggleVote={() => toggleDraft(selected.id)}
           />
         </>
       )}

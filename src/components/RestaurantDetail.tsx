@@ -31,6 +31,9 @@ interface Props {
   onToggleFavorite: () => void;
   /** 'sheet' = 지도 아래에서 끌어 올리는 패널 안에 들어갈 때 (작은 지도 생략) */
   variant?: 'panel' | 'sheet';
+  /** 점심 투표 후보로 담겨 있는지 */
+  inVote?: boolean;
+  onToggleVote?: () => void;
 }
 
 const REPO_ISSUES = 'https://github.com/neti84-design/jamsil-lunch-app/issues/new';
@@ -51,6 +54,8 @@ export function RestaurantDetail({
   onClose,
   onToggleFavorite,
   variant = 'panel',
+  inVote = false,
+  onToggleVote,
 }: Props) {
   const wait = WAIT_LABELS[r.waiting.level];
   const res = RESERVATION_LABELS[r.reservation.method];
@@ -108,6 +113,11 @@ export function RestaurantDetail({
             </a>
           ) : (
             <span className="btn disabled">📞 번호 미확인</span>
+          )}
+          {onToggleVote && (
+            <button className={'btn' + (inVote ? ' on' : '')} onClick={onToggleVote} aria-pressed={inVote}>
+              🗳️ {inVote ? '투표에 담김 ✓' : '투표에 담기'}
+            </button>
           )}
         </div>
 

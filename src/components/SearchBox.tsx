@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 interface Props {
   value: string;
@@ -8,10 +8,12 @@ interface Props {
   history: string[];
   onRemoveHistory: (q: string) => void;
   onClearHistory: () => void;
+  /** 검색창 왼쪽에 붙일 것 (뒤로가기 버튼) */
+  leading?: ReactNode;
 }
 
 /** 검색창 + 검색 버튼 + (입력 중) 최근 검색어 */
-export function SearchBox({ value, onChange, onSubmit, history, onRemoveHistory, onClearHistory }: Props) {
+export function SearchBox({ value, onChange, onSubmit, history, onRemoveHistory, onClearHistory, leading }: Props) {
   const [focused, setFocused] = useState(false);
   const showHistory = focused && !value.trim() && history.length > 0;
 
@@ -24,31 +26,34 @@ export function SearchBox({ value, onChange, onSubmit, history, onRemoveHistory,
 
   return (
     <div className="searchbox">
-      <form
-        className="search-form"
-        role="search"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit(value, e.currentTarget.querySelector('input'));
-        }}
-      >
-        <span className="search-icon" aria-hidden>
-          🔍
-        </span>
-        <input
-          className="search"
-          type="search"
-          enterKeyHint="search"
-          placeholder="가게명·메뉴 검색"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-        />
-        <button type="submit" className="btn primary search-btn">
-          검색
-        </button>
-      </form>
+      <div className="search-line">
+        {leading}
+        <form
+          className="search-form"
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit(value, e.currentTarget.querySelector('input'));
+          }}
+        >
+          <span className="search-icon" aria-hidden>
+            🔍
+          </span>
+          <input
+            className="search"
+            type="search"
+            enterKeyHint="search"
+            placeholder="가게명·메뉴 검색"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+          />
+          <button type="submit" className="btn primary search-btn">
+            검색
+          </button>
+        </form>
+      </div>
       {showHistory && (
         <div className="search-history" onMouseDown={(e) => e.preventDefault()}>
           <div className="search-history-head">

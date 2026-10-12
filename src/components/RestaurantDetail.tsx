@@ -9,6 +9,7 @@ import {
 } from '../types';
 import { formatWon, kakaoMapLink, naverBlogSearchLink, naverMapLink, telLink } from '../lib/links';
 import { ReportPanel } from './ReportPanel';
+import { useTileStatus } from '../hooks/useTileStatus';
 import type { NewReport, Report } from '../lib/reports';
 
 interface Props {
@@ -30,6 +31,7 @@ export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMod
   const wait = WAIT_LABELS[r.waiting.level];
   const res = RESERVATION_LABELS[r.reservation.method];
   const hasCoords = r.lat != null && r.lng != null;
+  const tiles = useTileStatus();
   const icon = L.divIcon({ className: 'pin selected', html: `<span>${CUISINE_EMOJI[r.cuisine]}</span>`, iconSize: [34, 34], iconAnchor: [17, 34] });
 
   return (
@@ -58,9 +60,10 @@ export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMod
         {hasCoords ? (
           <div className="mini-map">
             <MapContainer center={[r.lat!, r.lng!]} zoom={16} scrollWheelZoom={false} dragging={false} zoomControl={false} attributionControl={false} style={{ height: 180 }}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" eventHandlers={tiles.handlers} />
               <Marker position={[r.lat!, r.lng!]} icon={icon} />
             </MapContainer>
+            {tiles.blocked && <div className="note">※ 이 환경에서는 지도 타일이 차단되어 위치 핀만 표시됩니다.</div>}
             {r.approxLocation && <div className="note">※ 좌표는 주소 기준 근사치입니다. 정확한 위치는 네이버지도에서 확인하세요.</div>}
           </div>
         ) : (

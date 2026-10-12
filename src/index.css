@@ -240,9 +240,47 @@ select {
   top: 0;
   height: calc(100vh - 60px);
 }
+.map-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
 .map {
   width: 100%;
   height: 100%;
+}
+.map-shell.schematic .leaflet-container {
+  background: #f3efe9
+    repeating-linear-gradient(0deg, transparent 0 39px, #e9e3da 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 39px, #e9e3da 39px 40px);
+}
+.map-shell.schematic .leaflet-tile-pane {
+  display: none;
+}
+.map-notice {
+  position: absolute;
+  top: 10px;
+  left: 56px;
+  right: 10px;
+  z-index: 500;
+  background: var(--surface);
+  border: 1px solid var(--warn);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  box-shadow: var(--shadow);
+}
+.ring-label {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #9a917f;
+  font-size: 11px;
+  font-weight: 600;
+}
+.ring-label::before {
+  display: none;
 }
 .mobile-tabs,
 .mobile-only {

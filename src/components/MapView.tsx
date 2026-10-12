@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { Circle, MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { CUISINE_EMOJI, type Restaurant } from '../types';
 import { JAMSIL_STATION, minutesToMeters } from '../lib/geo';
 import { formatWon } from '../lib/links';
+import { useTileStatus } from '../hooks/useTileStatus';
 
 interface Props {
   restaurants: Restaurant[];
@@ -56,14 +57,38 @@ function AutoResize() {
   return null;
 }
 
+const RING_MINUTES = [5, 10, 15, 20];
+
 export function MapView({ restaurants, selectedId, onSelect, maxWalk }: Props) {
   const selected = restaurants.find((r) => r.id === selectedId);
+  const tiles = useTileStatus();
   return (
+    <div className={'map-shell' + (tiles.blocked ? ' schematic' : '')}>
+      {tiles.blocked && (
+        <div className="map-notice">
+          지도 타일을 불러올 수 없는 환경이라 <strong>거리 약도</strong>로 표시 중입니다. 정식 배포 주소에서는 실제 지도가 보입니다.
+        </div>
+      )}
     <MapContainer center={[JAMSIL_STATION.lat, JAMSIL_STATION.lng]} zoom={15} className="map" scrollWheelZoom>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        eventHandlers={tiles.handlers}
       />
+      {tiles.blocked &&
+        RING_MINUTES.map((m) => (
+          <Circle
+            key={m}
+            center={[JAMSIL_STATION.lat, JAMSIL_STATION.lng]}
+            radius={minutesToMeters(m)}
+            pathOptions={{ color: '#b8b0a6', weight: 1, fill: false, dashArray: '2 6' }}
+            interactive={false}
+          >
+            <Tooltip permanent direction="right" offset={[0, -minutesToMeters(m) / 14]} className="ring-label">
+              도보 {m}분
+            </Tooltip>
+          </Circle>
+        ))}
       <Circle
         center={[JAMSIL_STATION.lat, JAMSIL_STATION.lng]}
         radius={minutesToMeters(maxWalk)}
@@ -92,5 +117,6 @@ export function MapView({ restaurants, selectedId, onSelect, maxWalk }: Props) {
       <AutoResize />
       <FlyTo r={selected} />
     </MapContainer>
+    </div>
   );
 }

@@ -105,6 +105,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   /** 도보 칩이 바꿀 칸 (지도 탭은 mapMaxWalk) */
   walkKey?: WalkKey;
+  /** PC 화면: 세부조건을 늘 펼쳐 두고 접기·끌기 없이 */
+  pinned?: boolean;
 }
 
 function toggle<T>(list: T[], v: T): T[] {
@@ -116,7 +118,8 @@ const SWIPE_CLOSE_PX = 50;
 /** 세부조건 영역 최대 높이 (화면 높이 비율) */
 const PANEL_MAX_VH = 0.5;
 
-export function FilterBar({ filters, onChange, resultCount, totalCount, buildings, searchBox, open, onOpenChange, walkKey = 'maxWalk' }: Props) {
+export function FilterBar({ filters, onChange, resultCount, totalCount, buildings, searchBox, open: openProp, onOpenChange, walkKey = 'maxWalk', pinned = false }: Props) {
+  const open = pinned || openProp;
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
   // 지금 화면에서 안 쓰는 도보 칸은 비교에서 뺀다
   const other: WalkKey = walkKey === 'maxWalk' ? 'mapMaxWalk' : 'maxWalk';
@@ -153,9 +156,10 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
 
   return (
     <section
-      className={'filters' + (open ? ' open' : '')}
+      className={'filters' + (open ? ' open' : '') + (pinned ? ' pinned' : '')}
       aria-label="검색"
       onTouchStart={(e) => {
+        if (pinned) return;
         const free = !innerRef.current?.contains(e.target as Node);
         touch.current = { y: e.touches[0].clientY, free, startedAtBottom: innerAtBottom(), dragging: false };
       }}
@@ -231,10 +235,14 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
       <div
         className={'filter-panel' + (dragging ? ' dragging' : '')}
         ref={panelRef}
-        style={{ height }}
+        style={pinned ? undefined : { height }}
         aria-hidden={!open}
       >
-        <div className="filter-panel-inner" ref={innerRef} style={{ maxHeight: fullHeight || undefined, transform: `translateY(${shift}px)` }}>
+        <div
+          className="filter-panel-inner"
+          ref={innerRef}
+          style={pinned ? undefined : { maxHeight: fullHeight || undefined, transform: `translateY(${shift}px)` }}
+        >
       <div className="filter-group">
         <span className="filter-label">인당 예산</span>
         <div className="chips">
@@ -374,6 +382,7 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
         </div>
       </div>
 
+      {!pinned && (
       <div className="filter-foot">
         <button
           className={'filter-handle' + (open ? ' open' : '')}
@@ -388,6 +397,7 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
           <span className="small">/{totalCount}곳</span>
         </span>
       </div>
+      )}
     </section>
   );
 }

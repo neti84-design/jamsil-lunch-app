@@ -20,6 +20,7 @@ import { VotePanel, type VoteView } from './components/VotePanel';
 import { useReports } from './hooks/useReports';
 import { useTalk } from './hooks/useTalk';
 import { useVotes } from './hooks/useVotes';
+import { isWide, useWide } from './hooks/useWide';
 import { fetchLunchWeather, type LunchWeather } from './lib/weather';
 import { dayTheme, pickForToday } from './lib/recommend';
 import { walkMinutesFrom } from './lib/geo';
@@ -140,7 +141,12 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [tab, setTab] = useState<Tab>('home');
+  const wide = useWide();
+  /** 처음 화면: PC 는 지도·조건 화면, 휴대폰은 홈 */
+  const [startTab] = useState<Tab>(() => (isWide() ? 'map' : 'home'));
+  const [tab, setTab] = useState<Tab>(startTab);
+  /** PC 의 지도·검색 화면: 지도 왼쪽 크게, 오른쪽에 조건과 식당 */
+  const split = wide && (tab === 'map' || tab === 'search');
   /** 홈에서 몇 단계 들어왔는지 (0 이면 뒤로가기 버튼 없음) */
   const [depth, setDepth] = useState(0);
   const mainRef = useRef<HTMLElement>(null);
@@ -224,9 +230,9 @@ export default function App() {
     [filters, walkById, live.summaries, live.now],
   );
   const mapResults = useMemo(
-    () => (tab === 'map' ? run({ ...filters, maxWalk: filters.mapMaxWalk }) : []),
+    () => (tab === 'map' && !wide ? run({ ...filters, maxWalk: filters.mapMaxWalk }) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tab, filters, walkById, live.summaries, live.now],
+    [tab, wide, filters, walkById, live.summaries, live.now],
   );
 
   const [shown, setShown] = useState(PAGE_SIZE);
@@ -271,9 +277,9 @@ export default function App() {
 
   // ---------- 화면 이동 (브라우저/휴대폰 뒤로가기와 연동) ----------
   useEffect(() => {
-    history.replaceState({ tab: 'home', depth: 0 } satisfies NavState, '');
+    history.replaceState({ tab: startTab, depth: 0 } satisfies NavState, '');
     const onPop = (e: PopStateEvent) => {
-      const st = (e.state as NavState | null) ?? { tab: 'home', depth: 0 };
+      const st = (e.state as NavState | null) ?? { tab: startTab, depth: 0 };
       setTab((cur) => {
         if (cur !== st.tab) {
           if (mainRef.current) scrollByTab.current.set(cur, mainRef.current.scrollTop);
@@ -287,7 +293,7 @@ export default function App() {
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, []);
+  }, [startTab]);
 
   useLayoutEffect(() => {
     mainRef.current?.scrollTo({ top: nextScroll.current });
@@ -352,12 +358,12 @@ export default function App() {
   };
 
   const goTab = (t: Tab) => {
-    if (t === tab) {
+    if (t === tab || (wide && t === 'search' && tab === 'map')) {
       mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    // 홈은 쌓인 기록을 모두 되돌려 처음 상태로
-    if (t === 'home' && depth > 0) {
+    // 처음 화면(휴대폰은 홈, PC 는 지도)은 쌓인 기록을 모두 되돌려 처음 상태로
+    if (t === startTab && depth > 0) {
       history.go(-depth);
       return;
     }
@@ -409,7 +415,7 @@ export default function App() {
 
   const searchBox = (
     <SearchBox
-      leading={tab === 'home' ? null : backButton}
+      leading={tab === 'home' || wide ? null : backButton}
       value={filters.query}
       onChange={(q) => setFilters((f) => ({ ...f, query: q }))}
       onSubmit={submitSearch}
@@ -460,6 +466,12 @@ export default function App() {
     </div>
   );
 
+  /** PC 지도 화면 오른쪽 목록: 끝에 가까워지면 다음 묶음 */
+  const onSideScroll = (e: UIEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    if (shown < results.length && el.scrollHeight - el.scrollTop - el.clientHeight < 600) setShown((n) => n + PAGE_SIZE);
+  };
+
   const ticker = <LiveTicker reports={live.reports} restaurants={RESTAURANTS} now={live.now} mode={live.mode} onSelect={open} />;
 
   const filterBar = (
@@ -476,10 +488,7 @@ export default function App() {
     />
   );
 
-  return (
-    <div className="app">
-      {tab === 'home' && (
-        <header className="topbar">
+  const brand = (
           <a
             className="brand"
             href="/"
@@ -500,10 +509,116 @@ export default function App() {
               <span className="tagline">구내식당 공사 이슈로 인한 식사 문제 해결을 위한 어플!</span>
             </span>
           </a>
+  );
+
+  /** PC 지도 화면 오른쪽 목록 카드: 누르면 지도에서 찾아 주고 바로 아래에 상세 */
+  const sideCard = (r: Restaurant) => (
+    <RestaurantCard
+      key={r.id}
+      r={r}
+      walk={walkById.get(r.id) ?? null}
+      selected={r.id === mapSelId}
+      favorite={favorites.has(r.id)}
+      budget={filters.maxPrice}
+      summary={live.summaries.get(r.id)}
+      now={live.now}
+      onSelect={() => selectOnMap(r.id)}
+      onToggleFavorite={() => toggleFav(r.id)}
+    />
+  );
+
+  /** PC: 지도(왼쪽, 크게) | 조건 + 식당 목록·상세(오른쪽) */
+  const splitView = (
+    <div className="split">
+      <div className="split-map map-wrap">
+        <MapView restaurants={results} selectedId={mapSelId} onSelect={selectOnMap} maxWalk={filters.maxWalk} walkById={walkById} />
+      </div>
+      <aside className="split-side">
+        <div className="split-cond">
+          <FilterBar
+            pinned
+            filters={filters}
+            onChange={setFilters}
+            walkKey="maxWalk"
+            resultCount={results.length}
+            totalCount={RESTAURANTS.length}
+            buildings={buildings}
+            searchBox={searchBox}
+            open
+            onOpenChange={setFiltersOpen}
+          />
+        </div>
+        <div className="split-results">
+          <div className="split-results-head">
+            {mapSelected ? (
+              <button className="link-more" onClick={() => setMapSelId(null)}>
+                ‹ 목록으로
+              </button>
+            ) : (
+              <span className="small">카드나 지도 핀을 누르면 여기서 바로 자세히 볼 수 있어요</span>
+            )}
+            <span className="result-meta">
+              <strong>{results.length}</strong>
+              <span className="small">/{RESTAURANTS.length}곳</span>
+            </span>
+          </div>
+          <div className="card-list split-list" hidden={!!mapSelected} onScroll={onSideScroll}>
+            {results.length === 0 ? (
+              <div className="empty">
+                조건에 맞는 식당이 없어요.
+                <br />
+                검색어나 조건을 바꿔보세요.
+              </div>
+            ) : (
+              <>
+                {results.slice(0, shown).map(sideCard)}
+                {shown < results.length && (
+                  <button className="btn more-btn" onClick={() => setShown((n) => n + PAGE_SIZE)}>
+                    더 보기 ({shown}/{results.length})
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+          {mapSelected && (
+            <RestaurantDetail
+              key={mapSelected.id}
+              variant="sheet"
+              r={mapSelected}
+              walk={walkById.get(mapSelected.id) ?? null}
+              favorite={favorites.has(mapSelected.id)}
+              budget={filters.maxPrice}
+              reports={live.reports}
+              summary={live.summaries.get(mapSelected.id)}
+              reportMode={live.mode}
+              reportLocalReason={live.localReason}
+              now={live.now}
+              isAdmin={live.isAdmin}
+              onAddReport={live.add}
+              onRemoveReport={live.remove}
+              onClose={() => setMapSelId(null)}
+              onToggleFavorite={() => toggleFav(mapSelected.id)}
+              inVote={voteDraft.includes(mapSelected.id)}
+              onToggleVote={() => toggleDraft(mapSelected.id)}
+            />
+          )}
+        </div>
+      </aside>
+    </div>
+  );
+
+  return (
+    <div className={'app' + (wide ? ' wide' : '')}>
+      {wide ? (
+        <header className="wide-top">
+          {brand}
+          <BottomNav variant="top" tab={tab} favCount={favorites.size} onChange={goTab} />
         </header>
+      ) : (
+        tab === 'home' && <header className="topbar">{brand}</header>
       )}
-      {tab === 'search' && filterBar}
-      {tab === 'map' && filterBar}
+      {!wide && tab === 'search' && filterBar}
+      {!wide && tab === 'map' && filterBar}
       {tab === 'today' && (
         <header className="page-head">
           {backButton}
@@ -529,7 +644,9 @@ export default function App() {
         </header>
       )}
 
-      <main ref={mainRef} className={'main tab-' + tab} onScroll={onMainScroll}>
+      <main ref={mainRef} className={'main tab-' + tab + (split ? ' tab-split' : '')} onScroll={onMainScroll}>
+        {split && splitView}
+
         {tab === 'home' && (
           <HomeView
             searchBox={searchBox}
@@ -548,7 +665,7 @@ export default function App() {
           />
         )}
 
-        {tab === 'search' && (
+        {tab === 'search' && !wide && (
           <div className="card-list">
             {results.length === 0 ? (
               <div className="empty">
@@ -569,7 +686,7 @@ export default function App() {
           </div>
         )}
 
-        {tab === 'map' && (
+        {tab === 'map' && !wide && (
           <div className="map-wrap">
             <MapView
               restaurants={mapResults}
@@ -652,7 +769,7 @@ export default function App() {
           </div>
         )}
 
-        {tab !== 'map' && (
+        {!split && tab !== 'map' && (
           <footer className="foot small">
             데이터는 블로그·지도 후기 기반 수집본입니다. 가격·영업시간은 방문 전 확인하세요. ·{' '}
             <a href="https://github.com/neti84-design/jamsil-lunch-app" target="_blank" rel="noreferrer">
@@ -666,7 +783,7 @@ export default function App() {
         )}
       </main>
 
-      <BottomNav tab={tab} favCount={favorites.size} onChange={goTab} />
+      {!wide && <BottomNav tab={tab} favCount={favorites.size} onChange={goTab} />}
 
       {voteView && (
         <>

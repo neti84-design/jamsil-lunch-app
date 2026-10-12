@@ -1793,3 +1793,175 @@ input.mini.vote-title-input {
   white-space: nowrap;
   letter-spacing: -0.03em;
 }
+
+/* ---------- PC 화면 (1024px 이상): 지도 왼쪽 크게 | 오른쪽에 조건 → 식당 ---------- */
+.app.wide {
+  max-width: none;
+  box-shadow: none;
+  background: #eee9e2;
+}
+.wide-top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 10px 24px;
+  background: linear-gradient(180deg, #fff3ea 0%, var(--surface) 100%);
+  border-bottom: 1px solid var(--line);
+  z-index: 20;
+}
+.top-nav {
+  display: flex;
+  gap: 4px;
+}
+.top-nav button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  background: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.top-nav button:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.top-nav button.on {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.top-nav .nav-icon {
+  font-size: 17px;
+}
+.top-nav button.on .nav-icon {
+  filter: none;
+  opacity: 1;
+}
+
+/* 지도 외 화면(홈·오늘의 추천·관심매장)은 가운데 읽기 좋은 폭으로 */
+.app.wide .main:not(.tab-split) > *,
+.app.wide > .page-head {
+  width: 100%;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.app.wide > .page-head {
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+}
+.app.wide .main:not(.tab-split) > * {
+  background: var(--bg);
+}
+/* 상세·투표·관리자 창은 오른쪽 서랍으로 */
+.app.wide .detail:not(.sheet-detail) {
+  width: 480px;
+}
+
+.main.tab-split {
+  overflow: hidden;
+  display: flex;
+}
+.split {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 460px;
+}
+.split-map {
+  min-width: 0;
+}
+.split-side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--line);
+  background: var(--bg);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.05);
+  z-index: 1;
+}
+/* 조건: 늘 펼쳐 둔다. 너무 길면 이 칸만 스크롤 */
+.split-cond {
+  flex: none;
+  max-height: 56%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.filters.pinned {
+  border-bottom: none;
+  padding: 14px 18px 10px;
+}
+.filters.pinned .filter-panel {
+  height: auto;
+  margin: 2px -18px 0;
+}
+.filters.pinned .filter-panel-inner {
+  gap: 6px;
+  padding: 8px 18px 0;
+  border-top: 1px dashed var(--line);
+  overflow: visible;
+}
+.filters.pinned .chips {
+  gap: 4px 5px;
+}
+.filters.pinned .chip {
+  padding: 3px 9px;
+  font-size: 12.5px;
+}
+.filters.pinned .filter-group .filter-label {
+  padding-top: 4px;
+}
+.filters.pinned .chip:hover {
+  border-color: var(--accent);
+}
+/* 조건 아래: 식당 목록 → 누르면 그 자리에 상세 */
+.split-results {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.split-results-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.split-results-head .result-meta {
+  white-space: nowrap;
+}
+.split-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 18px 18px;
+}
+.split-list[hidden] {
+  display: none;
+}
+.split-results .detail.sheet-detail {
+  border-top: none;
+}
+@media (max-height: 820px) {
+  .split-cond {
+    max-height: 48%;
+  }
+}
+@media (min-width: 1440px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr) 520px;
+  }
+}

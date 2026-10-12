@@ -1,11 +1,11 @@
-export type Tab = 'home' | 'search' | 'map' | 'favorites' | 'recommend';
+export type Tab = 'home' | 'search' | 'map' | 'today' | 'favorites';
 
 const TABS: { key: Tab; icon: string; label: string }[] = [
   { key: 'home', icon: '🏠', label: '홈' },
   { key: 'search', icon: '🔍', label: '검색' },
   { key: 'map', icon: '🗺️', label: '지도' },
+  { key: 'today', icon: '☀️', label: '오늘의 추천' },
   { key: 'favorites', icon: '⭐', label: '관심매장' },
-  { key: 'recommend', icon: '👍', label: '추천매장' },
 ];
 
 interface Props {

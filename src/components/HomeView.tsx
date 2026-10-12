@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { CUISINE_EMOJI, type Restaurant } from '../types';
 import { DISH_EMOJI, DISH_TAGS, dishTags, type DishTag } from '../lib/dish';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
@@ -9,10 +9,6 @@ interface Props {
   searchBox: ReactNode;
   /** 공유톡 (검색창 바로 아래) */
   talk: ReactNode;
-  /** 오늘의 추천 (날씨·요일) */
-  today: ReactNode;
-  /** 점심 투표 */
-  vote: ReactNode;
   /** 실시간 웨이팅 */
   ticker: ReactNode;
   /** 가까운 매장 카드들 */
@@ -28,8 +24,24 @@ interface Props {
   onSeeAll: () => void;
 }
 
+/** 옆으로 넘기는 줄의 위치 — 식당·건물을 보고 돌아와도 보던 곳에서 이어지게 (홈은 탭을 옮기면 다시 그려진다) */
+const scrollXByRow = new Map<string, number>();
+
+function useKeepScrollX(key: string) {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (ref.current) ref.current.scrollLeft = scrollXByRow.get(key) ?? 0;
+  }, [key]);
+  const onScroll = () => {
+    if (ref.current) scrollXByRow.set(key, ref.current.scrollLeft);
+  };
+  return { ref, onScroll };
+}
+
 /** 홈: 검색 · 음식 카테고리 · 주요장소 · 최근 본 식당 · 실시간 웨이팅 · 가까운 매장 */
-export function HomeView({ searchBox, talk, today, vote, ticker, nearby, restaurants, recent, buildings, walkById, now, onDish, onBuilding, onSelect, onSeeAll }: Props) {
+export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent, buildings, walkById, now, onDish, onBuilding, onSelect, onSeeAll }: Props) {
+  const { ref: buildingRef, onScroll: onBuildingScroll } = useKeepScrollX('buildings');
+  const { ref: recentRef, onScroll: onRecentScroll } = useKeepScrollX('recent');
   const counts = new Map<DishTag, number>();
   for (const r of restaurants) for (const t of dishTags(r)) counts.set(t, (counts.get(t) ?? 0) + 1);
 
@@ -38,8 +50,6 @@ export function HomeView({ searchBox, talk, today, vote, ticker, nearby, restaur
       <div className="home-search">{searchBox}</div>
 
       {talk}
-      {today}
-      {vote}
 
       <section className="home-section">
         <div className="category-grid">
@@ -60,7 +70,7 @@ export function HomeView({ searchBox, talk, today, vote, ticker, nearby, restaur
             <h3 className="section-title">📍 주요장소</h3>
             <span className="small">옆으로 밀어보기 ›</span>
           </div>
-          <div className="building-row">
+          <div className="building-row" ref={buildingRef} onScroll={onBuildingScroll}>
             {buildings.map((b) => (
               <button key={b.name} className="building-card" onClick={() => onBuilding(b.name)}>
                 <span className="building-emoji" aria-hidden>
@@ -77,7 +87,7 @@ export function HomeView({ searchBox, talk, today, vote, ticker, nearby, restaur
       {recent.length > 0 && (
         <section className="home-section">
           <h3 className="section-title">최근 본 식당</h3>
-          <div className="recent-row">
+          <div className="recent-row" ref={recentRef} onScroll={onRecentScroll}>
             {recent.map((r) => {
               const st = openStatus(r, now);
               const walk = walkById.get(r.id);

@@ -16,7 +16,7 @@ interface Props {
   onVote: () => void;
 }
 
-/** 홈: 오늘 날씨·요일에 맞춘 추천 */
+/** 오늘의 추천 탭: 오늘 날씨·요일에 맞춘 추천 */
 export function TodayPick({ theme, weather, picks, walkById, now, onSelect, onSeeAll, onVote }: Props) {
   if (picks.length === 0) return null;
   return (

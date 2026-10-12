@@ -107,7 +107,7 @@ function compareStars(a: Restaurant, b: Restaurant, s: Map<string, ReportSummary
   return externalRating(b) - externalRating(a);
 }
 
-/** 추천매장 점수: 다른 사람들의 관심 저장 + 숨은/역시맛집 체크 + 별점 */
+/** 동료 추천매장 점수: 다른 사람들의 관심 저장 + 숨은/역시맛집 체크 + 별점 */
 function recommendScore(x?: ReportSummary): number {
   return x ? x.favs * 3 + (x.hidden + x.classic) * 2 + x.totalStars : 0;
 }
@@ -152,6 +152,8 @@ export default function App() {
   const talk = useTalk(live.adminToken);
   /** 지도에서 누른 식당 (아래 패널로 보여줌, 새 창으로 열지 않음) */
   const [mapSelId, setMapSelId] = useState<string | null>(null);
+  /** 관심매장 탭: 나의 관심매장 / 동료 추천매장 */
+  const [favView, setFavView] = useState<'mine' | 'peers'>('mine');
   /** 점심 투표 화면. 공유 링크(?vote=…)로 들어오면 바로 그 투표를 연다 */
   const [voteView, setVoteView] = useState<VoteView | null>(() => {
     const id = new URLSearchParams(location.search).get('vote');
@@ -432,6 +434,32 @@ export default function App() {
     />
   );
 
+  /** 오늘의 추천 탭: 날씨·요일 추천 + 점심 투표 */
+  const todayView = (
+    <div className="today-tab">
+      <TodayPick
+        theme={theme}
+        weather={weather}
+        picks={todayPicks}
+        walkById={walkById}
+        now={live.now}
+        onSelect={open}
+        onSeeAll={() => searchWith({ dishes: theme.dishes, maxWalk: theme.maxWalk, openNow: true })}
+        onVote={() => {
+          setVoteDraft(todayPicks.slice(0, VOTE_FROM_PICKS).map((r) => r.id));
+          setVoteView({ mode: 'create' });
+        }}
+      />
+      <VoteHome
+        votes={votes}
+        byId={byId}
+        draftCount={voteDraft.length}
+        onCreate={() => setVoteView({ mode: 'create' })}
+        onOpen={(id) => setVoteView({ mode: 'poll', id })}
+      />
+    </div>
+  );
+
   const ticker = <LiveTicker reports={live.reports} restaurants={RESTAURANTS} now={live.now} mode={live.mode} onSelect={open} />;
 
   const filterBar = (
@@ -476,18 +504,28 @@ export default function App() {
       )}
       {tab === 'search' && filterBar}
       {tab === 'map' && filterBar}
+      {tab === 'today' && (
+        <header className="page-head">
+          {backButton}
+          <h2>☀️ 오늘의 추천</h2>
+          <span className="small">날씨·요일에 맞춘 추천과 점심 투표</span>
+        </header>
+      )}
       {tab === 'favorites' && (
         <header className="page-head">
           {backButton}
-          <h2>⭐ 나의 관심매장</h2>
-          <span className="small">{favoriteList.length}곳 · 카드의 ☆ 를 누르면 여기에 모여요</span>
-        </header>
-      )}
-      {tab === 'recommend' && (
-        <header className="page-head">
-          {backButton}
-          <h2>👍 추천매장</h2>
-          <span className="small">다른 사람들이 관심 저장·맛집 체크·별점을 남긴 곳</span>
+          <h2>⭐ 관심매장</h2>
+          <span className="small">
+            {favView === 'mine' ? '카드의 ☆ 를 누르면 여기에 모여요' : '동료들이 관심 저장·맛집 체크·별점을 남긴 곳'}
+          </span>
+          <div className="chips fav-switch">
+            <button className={'chip' + (favView === 'mine' ? ' on' : '')} onClick={() => setFavView('mine')}>
+              ⭐ 나의 관심매장 {favoriteList.length}
+            </button>
+            <button className={'chip' + (favView === 'peers' ? ' on' : '')} onClick={() => setFavView('peers')}>
+              👍 동료 추천매장 {recommended.length > 0 && recommended.length}
+            </button>
+          </div>
         </header>
       )}
 
@@ -496,30 +534,6 @@ export default function App() {
           <HomeView
             searchBox={searchBox}
             talk={<ShareTalk talk={talk} now={live.now} isAdmin={live.isAdmin} />}
-            today={
-              <TodayPick
-                theme={theme}
-                weather={weather}
-                picks={todayPicks}
-                walkById={walkById}
-                now={live.now}
-                onSelect={open}
-                onSeeAll={() => searchWith({ dishes: theme.dishes, maxWalk: theme.maxWalk, openNow: true })}
-                onVote={() => {
-                  setVoteDraft(todayPicks.slice(0, VOTE_FROM_PICKS).map((r) => r.id));
-                  setVoteView({ mode: 'create' });
-                }}
-              />
-            }
-            vote={
-              <VoteHome
-                votes={votes}
-                byId={byId}
-                draftCount={voteDraft.length}
-                onCreate={() => setVoteView({ mode: 'create' })}
-                onOpen={(id) => setVoteView({ mode: 'poll', id })}
-              />
-            }
             ticker={ticker}
             nearby={nearbyOpen.map(card)}
             restaurants={RESTAURANTS}
@@ -590,7 +604,9 @@ export default function App() {
           </div>
         )}
 
-        {tab === 'favorites' && (
+        {tab === 'today' && todayView}
+
+        {tab === 'favorites' && favView === 'mine' && (
           <div className="card-list">
             {favoriteList.length === 0 ? (
               <div className="empty">
@@ -604,12 +620,12 @@ export default function App() {
           </div>
         )}
 
-        {tab === 'recommend' && (
+        {tab === 'favorites' && favView === 'peers' && (
           <div className="card-list">
             {recommended.length === 0 ? (
               <>
                 <div className="empty small">
-                  아직 다른 사람의 추천이 없어요.
+                  아직 동료들의 추천이 없어요.
                   <br />
                   관심 저장(☆)·숨은맛집/역시맛집 체크·별점이 모이면 여기에 떠요.
                 </div>

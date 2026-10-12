@@ -6,19 +6,26 @@ function errMsg(e: unknown): string {
   return String(e);
 }
 import { WAIT_LABELS, type WaitLevel } from '../types';
-import { LIVE_WINDOW_MS, loadNickname, saveNickname, timeAgo, type NewReport, type Report } from '../lib/reports';
+import { LIVE_WINDOW_MS, loadNickname, saveNickname, timeAgo, type LocalReason, type NewReport, type Report } from '../lib/reports';
 
 interface Props {
   restaurantId: string;
   reports: Report[];
   mode: 'supabase' | 'local';
+  localReason?: LocalReason;
   now: number;
   onAdd: (r: NewReport) => Promise<unknown>;
 }
 
+const LOCAL_REASON_LABEL: Record<LocalReason, string> = {
+  unset: '키 없음',
+  'invalid-url': 'URL 형식 오류',
+  'init-failed': '연결 초기화 실패',
+};
+
 const LEVELS: Exclude<WaitLevel, 'unknown'>[] = ['low', 'medium', 'high'];
 
-export function ReportPanel({ restaurantId, reports, mode, now, onAdd }: Props) {
+export function ReportPanel({ restaurantId, reports, mode, localReason, now, onAdd }: Props) {
   const mine = reports.filter((r) => r.restaurantId === restaurantId);
   const waits = mine.filter((r) => r.kind === 'wait').slice(0, 5);
   const reviews = mine.filter((r) => r.kind === 'review');
@@ -77,7 +84,7 @@ export function ReportPanel({ restaurantId, reports, mode, now, onAdd }: Props) 
           🔴 실시간 웨이팅 제보
           {mode === 'local' && (
             <span className="badge warn" title="Supabase 키를 설정하면 팀원과 공유됩니다">
-              이 기기에만 저장
+              이 기기에만 저장{localReason ? ` · ${LOCAL_REASON_LABEL[localReason]}` : ''}
             </span>
           )}
         </h4>

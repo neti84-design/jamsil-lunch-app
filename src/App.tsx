@@ -168,6 +168,7 @@ export default function App() {
             budget={filters.maxPrice}
             reports={live.reports}
             reportMode={live.mode}
+            reportLocalReason={live.localReason}
             now={live.now}
             onAddReport={live.add}
             onClose={() => setSelectedId(null)}

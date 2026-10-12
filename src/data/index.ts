@@ -1,6 +1,7 @@
 import type { Cuisine, Restaurant } from '../types';
 import { RESTAURANTS as CURATED } from './restaurants';
 import { KAKAO_ROWS } from './kakaoPlaces';
+import { MENU_PRICES } from './menuPrices';
 
 /** 카카오 1차 분류 → 앱의 음식 종류 */
 const CUISINE_OF: Record<string, Cuisine> = {
@@ -24,6 +25,19 @@ function splitBranch(placeName: string): [string, string | null] {
   return m ? [m[1], m[2]] : [placeName, null];
 }
 
+/** 동료 조사 메뉴·가격이 있으면 메뉴·가격대·대표 메뉴로 */
+function menuFields(key: string): Pick<Restaurant, 'priceRange' | 'menu' | 'signature' | 'dataNotes'> | null {
+  const rows = MENU_PRICES[key];
+  if (!rows?.length) return null;
+  const prices = rows.map(([, p]) => p);
+  return {
+    priceRange: [Math.min(...prices), Math.max(...prices)],
+    menu: rows.map(([name, price]) => ({ name, price })),
+    signature: rows.slice(0, 3).map(([name]) => name),
+    dataNotes: '메뉴·가격은 동료가 정리한 "오늘 뭐 먹지" 자료 기준이에요. 방문 전 확인하세요.',
+  };
+}
+
 function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof KAKAO_ROWS)[number]): Restaurant {
   const cat = category.split('>');
   const [name, branch] = splitBranch(placeName);
@@ -37,6 +51,7 @@ function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof 
     signature: [],
     priceRange: null,
     menu: [],
+    ...menuFields(id),
     concepts: [],
     seating: { group: null, solo: null },
     address,
@@ -52,4 +67,8 @@ function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof 
 }
 
 /** 직접 정리한 식당 + 카카오맵에서 가져온 주변 음식점 */
-export const RESTAURANTS: Restaurant[] = [...CURATED, ...KAKAO_ROWS.map(fromKakao)];
+export const RESTAURANTS: Restaurant[] = [
+  // 직접 정리한 곳 중 메뉴가 비어 있던 곳만 채운다 (조사한 가격대는 그대로)
+  ...CURATED.map((r) => (r.menu.length === 0 && MENU_PRICES[r.id] ? { ...r, menu: menuFields(r.id)!.menu } : r)),
+  ...KAKAO_ROWS.map(fromKakao),
+];

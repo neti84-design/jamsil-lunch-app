@@ -31,6 +31,8 @@ import { makeNameMatcher, makeQueryMatcher } from './lib/search';
 import type { ReportSummary } from './lib/reports';
 import { SEATING_LABELS, hasDelivery, type Restaurant } from './types';
 
+/** 만든 사람 (화면 맨 아래 작게) */
+const MAKER = 'cjy1***';
 const FAV_KEY = 'jamsil-lunch:favorites';
 // 기본값(1.2만원·도보 10분)이 바뀌어 저장 키도 새로 — 예전 저장본은 버린다
 const FILTER_KEY = 'jamsil-lunch:filters-v4';
@@ -579,6 +581,7 @@ export default function App() {
                 )}
               </>
             )}
+            <div className="credit">made by {MAKER}</div>
           </div>
           {mapSelected && (
             <RestaurantDetail
@@ -779,6 +782,7 @@ export default function App() {
             <button className="link" onClick={() => setAdminOpen(true)}>
               {live.isAdmin ? '관리자 모드' : '관리자'}
             </button>
+            <div className="credit">made by {MAKER}</div>
           </footer>
         )}
       </main>

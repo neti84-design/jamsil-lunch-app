@@ -17,9 +17,14 @@ export function useReports() {
         setStatus('ready');
       })
       .catch(() => alive && setStatus('error'));
-    const off = backend.subscribe((r) => {
-      setReports((prev) => (prev.some((p) => p.id === r.id) ? prev : [r, ...prev]));
-    });
+    let off: () => void = () => {};
+    try {
+      off = backend.subscribe((r) => {
+        setReports((prev) => (prev.some((p) => p.id === r.id) ? prev : [r, ...prev]));
+      });
+    } catch (e) {
+      console.warn('[jamsil-lunch] 실시간 구독 실패:', e);
+    }
     const tick = setInterval(() => setNow(Date.now()), 60_000);
     return () => {
       alive = false;

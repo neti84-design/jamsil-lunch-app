@@ -9,9 +9,8 @@ import {
 } from '../types';
 import { formatWon, kakaoMapLink, naverBlogSearchLink, naverMapLink, telLink } from '../lib/links';
 import { ReportPanel } from './ReportPanel';
-import type { LocalReason } from '../lib/reports';
 import { useTileStatus } from '../hooks/useTileStatus';
-import type { NewReport, Report } from '../lib/reports';
+import type { LocalReason, NewReport, Report, ReportSummary } from '../lib/reports';
 
 interface Props {
   r: Restaurant;
@@ -19,17 +18,38 @@ interface Props {
   favorite: boolean;
   budget: number;
   reports: Report[];
+  summary?: ReportSummary;
   reportMode: 'supabase' | 'local';
   reportLocalReason?: LocalReason;
   now: number;
+  isAdmin: boolean;
+  /** "오늘 뭐 먹지?"로 뽑힌 경우 그 기준 설명 */
+  pickNote?: string | null;
   onAddReport: (r: NewReport) => Promise<unknown>;
+  onRemoveReport: (id: string, asAdmin?: boolean) => Promise<unknown>;
   onClose: () => void;
   onToggleFavorite: () => void;
 }
 
 const REPO_ISSUES = 'https://github.com/neti84-design/jamsil-lunch-app/issues/new';
 
-export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMode, reportLocalReason, now, onAddReport, onClose, onToggleFavorite }: Props) {
+export function RestaurantDetail({
+  r,
+  walk,
+  favorite,
+  budget,
+  reports,
+  summary,
+  reportMode,
+  reportLocalReason,
+  now,
+  isAdmin,
+  pickNote,
+  onAddReport,
+  onRemoveReport,
+  onClose,
+  onToggleFavorite,
+}: Props) {
   const wait = WAIT_LABELS[r.waiting.level];
   const res = RESERVATION_LABELS[r.reservation.method];
   const hasCoords = r.lat != null && r.lng != null;
@@ -59,6 +79,7 @@ export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMod
       </header>
 
       <div className="detail-body">
+        {pickNote && <div className="pick-note">🎲 {pickNote}</div>}
         {hasCoords ? (
           <div className="mini-map">
             <MapContainer center={[r.lat!, r.lng!]} zoom={16} scrollWheelZoom={false} dragging={false} zoomControl={false} attributionControl={false} style={{ height: 180 }}>
@@ -88,7 +109,17 @@ export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMod
           )}
         </div>
 
-        <ReportPanel restaurantId={r.id} reports={reports} mode={reportMode} localReason={reportLocalReason} now={now} onAdd={onAddReport} />
+        <ReportPanel
+          restaurantId={r.id}
+          reports={reports}
+          summary={summary}
+          mode={reportMode}
+          localReason={reportLocalReason}
+          now={now}
+          isAdmin={isAdmin}
+          onAdd={onAddReport}
+          onRemove={onRemoveReport}
+        />
 
         <section>
           <h4>💰 가격</h4>
@@ -132,16 +163,26 @@ export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMod
 
         <section className="two-col">
           <div>
-            <h4>🪑 좌석</h4>
+            <h4>🪑 좌석·편의</h4>
             <p>
-              {r.seating.group && <span className="badge">👥 단체석</span>}
+              {r.seating.group && (
+                <span className="badge">
+                  👥 단체석{r.seating.groupSize != null && <> 최대 {r.seating.groupSize}명{r.seating.estimated ? ' (추정)' : ''}</>}
+                </span>
+              )}
+              {r.seating.room === true && <span className="badge">🚪 룸 있음</span>}
+              {r.seating.room === false && <span className="badge soft">룸 없음</span>}
+              {r.seating.room == null && <span className="badge soft">룸 미확인</span>}
               {r.seating.solo && <span className="badge">🧑 혼밥 OK</span>}
-              {r.seating.group === false && r.seating.solo === false && <span className="small">정보 없음</span>}
+              {r.seating.group == null && r.seating.solo == null && <span className="small">정보 없음</span>}
             </p>
             {r.seating.notes && <p className="small">{r.seating.notes}</p>}
+            {r.seating.estimated && r.seating.group && (
+              <p className="small">단체 인원은 후기 기반 추정값이에요. 단체 방문 전 전화로 확인하세요.</p>
+            )}
           </div>
           <div>
-            <h4>🏷️ 컨셉</h4>
+            <h4>🏷️ 방문 목적</h4>
             <p>
               {r.concepts.map((c) => (
                 <span key={c} className="badge soft">

@@ -23,8 +23,13 @@ body,
 #root {
   margin: 0;
   height: 100%;
+  overscroll-behavior: none;
+}
+html {
+  -webkit-text-size-adjust: 100%;
 }
 body {
+  overflow: hidden;
   font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   background: var(--bg);
   color: var(--text);
@@ -59,7 +64,9 @@ h4 {
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 /* top bar */
@@ -71,8 +78,7 @@ h4 {
   padding: 14px 16px 10px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
-  position: sticky;
-  top: 0;
+  flex: none;
   z-index: 20;
 }
 .brand {
@@ -85,13 +91,22 @@ h4 {
   font-size: 30px;
 }
 .brand h1 {
-  font-size: 20px;
+  font-size: 24px;
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.brand-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
 }
 .tagline {
   margin: 2px 0 0;
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -157,6 +172,24 @@ h4 {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: none;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+.filter-desc {
+  font-size: 12px;
+}
+.sub-chips {
+  padding-left: 6px;
+  border-left: 2px solid var(--accent-soft);
+}
+.chip.sm {
+  padding: 3px 8px;
+  font-size: 12px;
+}
+.chip.tag {
+  font-size: 14px;
+  padding: 7px 14px;
 }
 .filter-row {
   display: flex;
@@ -174,8 +207,9 @@ h4 {
 .filter-label {
   font-size: 12px;
   color: var(--muted);
-  min-width: 52px;
+  min-width: 56px;
   font-weight: 600;
+  white-space: nowrap;
 }
 .chips {
   display: flex;
@@ -184,6 +218,7 @@ h4 {
   align-items: center;
 }
 .chip {
+  white-space: nowrap;
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--text);
@@ -234,11 +269,17 @@ select {
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  min-height: 0;
 }
 .map-wrap {
-  position: sticky;
-  top: 0;
-  height: calc(100vh - 60px);
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  /* Leaflet 내부 z-index(400~1000)가 상세 패널 위로 올라오지 않도록 격리 */
+  isolation: isolate;
+  z-index: 0;
 }
 .map-shell {
   position: relative;
@@ -300,7 +341,7 @@ select {
   padding: 12px 14px;
   box-shadow: var(--shadow);
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.1s;
+  transition: border-color 0.15s;
 }
 .card:hover {
   border-color: var(--accent);
@@ -448,7 +489,11 @@ select {
   display: flex;
   flex-direction: column;
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
-  animation: slide-in 0.2s ease-out;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .detail {
+    animation: slide-in 0.18s ease-out;
+  }
 }
 @keyframes slide-in {
   from {
@@ -531,10 +576,9 @@ select {
 }
 
 .foot {
-  padding: 12px 16px 20px;
+  padding: 12px 0 8px;
   text-align: center;
   border-top: 1px solid var(--line);
-  background: var(--surface);
 }
 
 /* mobile */
@@ -547,7 +591,13 @@ select {
     white-space: normal;
   }
   .filter-label {
-    min-width: 40px;
+    min-width: 52px;
+  }
+  .filter-group {
+    align-items: flex-start;
+  }
+  .filter-group .filter-label {
+    padding-top: 6px;
   }
   .mobile-only {
     display: inline-flex;
@@ -556,10 +606,15 @@ select {
   .filters:not(.open) .filter-row.between .chips {
     display: none;
   }
+  .filters {
+    max-height: 60vh;
+  }
+  .brand h1 {
+    font-size: 21px;
+  }
   .mobile-tabs {
     display: flex;
-    position: sticky;
-    top: 0;
+    flex: none;
     z-index: 15;
     background: var(--surface);
     border-bottom: 1px solid var(--line);
@@ -586,43 +641,63 @@ select {
   .layout.tab-map .list {
     display: none;
   }
-  .map-wrap {
-    height: calc(100vh - 100px);
-    position: relative;
-  }
   .two-col {
     grid-template-columns: 1fr;
   }
 }
 
-/* live reports */
+/* live reports — 세로 목록, 최대 5줄 */
 .ticker {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  overflow-x: auto;
+  flex-direction: column;
+  gap: 6px;
   padding: 8px 10px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   font-size: 13px;
-  scrollbar-width: none;
 }
-.ticker.empty {
-  color: var(--muted);
-  flex-wrap: wrap;
+.ticker-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .ticker-label {
   font-weight: 700;
   white-space: nowrap;
 }
+.ticker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .ticker-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  text-align: left;
   border: 1px solid var(--line);
   background: var(--bg);
-  border-radius: 999px;
-  padding: 4px 10px;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.ticker-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12.5px;
+}
+.ticker-wait {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ticker-time {
+  white-space: nowrap;
 }
 .ticker-item:hover {
   border-color: var(--accent);
@@ -709,4 +784,77 @@ input.mini.wide {
 }
 .star-btn.on {
   color: #f5b301;
+}
+
+/* 한 줄 입력 폼 (웨이팅 제보 / 한 줄 후기) */
+.one-line-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin-top: 6px;
+}
+.one-line-form .small {
+  white-space: nowrap;
+}
+input.mini.grow {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+.stars-input {
+  display: inline-flex;
+  flex: none;
+}
+.stars-input .star-btn {
+  font-size: 20px;
+}
+.badge.tag {
+  color: #8a5a00;
+  border-color: #f0c36d;
+  background: #fff8e6;
+}
+.badge.mine {
+  margin-left: 4px;
+  color: var(--accent);
+  border-color: var(--accent);
+  font-size: 10.5px;
+  padding: 0 6px;
+}
+.report-list li.own {
+  background: var(--accent-soft);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+.link.del {
+  float: right;
+  font-size: 12px;
+  color: var(--danger);
+}
+.pick-note {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  color: #8a3a12;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.btn.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.admin-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.admin-row .grow {
+  flex: 1;
+  min-width: 0;
+}
+.admin-list li {
+  padding: 8px 0;
+}
+.result-meta .link {
+  margin-left: 6px;
 }

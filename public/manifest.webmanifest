@@ -1,7 +1,7 @@
 {
-  "name": "잠실점심",
-  "short_name": "잠실점심",
-  "description": "잠실역 도보 20분, 인당 1.2만원 점심 식당 찾기",
+  "name": "잠심 — 잠실점심",
+  "short_name": "잠심",
+  "description": "먹고 나누자! 잠실역 점심 식당 찾기와 실시간 웨이팅 공유",
   "lang": "ko",
   "start_url": "/",
   "scope": "/",

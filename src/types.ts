@@ -2,7 +2,8 @@ export type Cuisine = '한식' | '일식' | '중식' | '양식' | '아시안' | 
 
 export type Concept = 'heavy' | 'hangover' | 'diet' | 'salad' | 'filling' | 'light' | 'quick';
 
-export type SeatingType = 'group' | 'solo';
+/** 좌석·편의 필터 (테이블링/캐치테이블의 "편의시설" 항목 참고) */
+export type SeatingType = 'solo' | 'group' | 'room';
 
 export type ReservationMethod =
   | 'phone'
@@ -34,6 +35,12 @@ export interface Restaurant {
   seating: {
     group: boolean | null;
     solo: boolean | null;
+    /** 단체로 한 번에 앉을 수 있는 최대 인원 (추정값이면 estimated: true) */
+    groupSize?: number | null;
+    /** 별도 룸(프라이빗 공간) 유무. null = 미확인 */
+    room?: boolean | null;
+    /** 단체 인원·룸 정보가 후기 기반 추정인지 */
+    estimated?: boolean;
     notes?: string | null;
   };
   address: string | null;
@@ -75,22 +82,28 @@ export interface Restaurant {
   dataNotes?: string | null;
 }
 
+/** 음식 종류 — 캐치테이블·테이블링의 1차 분류와 같은 구분 */
 export const CUISINES: Cuisine[] = ['한식', '일식', '중식', '양식', '아시안', '샐러드', '분식', '기타'];
 
+/** 방문 목적 — 캐치테이블의 "방문 목적", 테이블링의 "이런 분께 추천" 태그 방식을 따름 */
 export const CONCEPT_LABELS: Record<Concept, { label: string; emoji: string; desc: string }> = {
-  heavy: { label: '헤비하게', emoji: '🍖', desc: '고기·기름진 든든한 한 끼' },
+  quick: { label: '빠른 점심', emoji: '⚡', desc: '회전 빠름, 30분 안에 먹고 나오기' },
+  filling: { label: '든든한 한 끼', emoji: '🍚', desc: '양 많고 리필 되는 곳' },
+  heavy: { label: '고기·육식', emoji: '🍖', desc: '고기·튀김 등 묵직한 메뉴' },
   hangover: { label: '해장', emoji: '🍲', desc: '국물로 속 풀기' },
-  diet: { label: '다이어트', emoji: '🥗', desc: '저칼로리·가벼운 구성' },
-  salad: { label: '샐러드', emoji: '🥬', desc: '샐러드·포케 전문' },
-  filling: { label: '배부르게', emoji: '🍚', desc: '양 많고 리필 되는 곳' },
   light: { label: '가볍게', emoji: '🍜', desc: '부담 없는 한 그릇' },
-  quick: { label: '빨리', emoji: '⚡', desc: '회전 빠름, 30분 컷' },
+  diet: { label: '건강식', emoji: '🥗', desc: '저칼로리·채소 위주' },
+  salad: { label: '샐러드·포케', emoji: '🥬', desc: '샐러드·포케 전문점' },
 };
 
-export const SEATING_LABELS: Record<SeatingType, { label: string; emoji: string }> = {
-  group: { label: '단체석', emoji: '👥' },
-  solo: { label: '혼밥', emoji: '🧑' },
+export const SEATING_LABELS: Record<SeatingType, { label: string; emoji: string; desc: string }> = {
+  solo: { label: '혼밥', emoji: '🧑', desc: '1인 좌석·바 좌석 등 혼자 먹기 편한 곳' },
+  group: { label: '단체석', emoji: '👥', desc: '여러 명이 한 번에 앉을 수 있는 곳' },
+  room: { label: '룸', emoji: '🚪', desc: '별도 룸(프라이빗 공간)이 있는 곳' },
 };
+
+/** 단체석 인원 선택지 */
+export const GROUP_SIZES = [4, 6, 8, 10, 12, 15, 20];
 
 export const RESERVATION_LABELS: Record<ReservationMethod, { label: string; desc: string }> = {
   phone: { label: '전화 예약', desc: '전화로 미리 자리 잡기' },
@@ -107,6 +120,13 @@ export const WAIT_LABELS: Record<WaitLevel, { label: string; color: string }> = 
   medium: { label: '보통', color: 'var(--warn)' },
   high: { label: '길어요', color: 'var(--danger)' },
   unknown: { label: '미확인', color: 'var(--muted)' },
+};
+
+/** 먹어본 사람이 남기는 한 줄 평가 태그 */
+export type TasteTag = 'hidden' | 'classic';
+export const TASTE_TAG_LABELS: Record<TasteTag, { label: string; emoji: string; desc: string }> = {
+  hidden: { label: '숨은맛집', emoji: '🤫', desc: '알려진 것보다 훨씬 맛있는 곳' },
+  classic: { label: '역시맛집', emoji: '👍', desc: '기대한 만큼 맛있는 곳' },
 };
 
 export const CUISINE_EMOJI: Record<Cuisine, string> = {

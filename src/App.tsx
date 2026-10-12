@@ -2,17 +2,20 @@ import { useEffect, useMemo, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 import { RESTAURANTS } from './data/restaurants';
-import { DEFAULT_FILTERS, FilterBar, type Filters } from './components/FilterBar';
+import { DEFAULT_FILTERS, FilterBar, describeFilters, type Filters } from './components/FilterBar';
 import { RestaurantCard } from './components/RestaurantCard';
 import { RestaurantDetail } from './components/RestaurantDetail';
+import { AdminPanel } from './components/AdminPanel';
 import { MapView } from './components/MapView';
 import { LiveTicker } from './components/LiveTicker';
 import { useReports } from './hooks/useReports';
 import { walkMinutesFrom } from './lib/geo';
+import { dishTags } from './lib/dish';
+import type { ReportSummary } from './lib/reports';
 import type { Restaurant } from './types';
 
 const FAV_KEY = 'jamsil-lunch:favorites';
-const FILTER_KEY = 'jamsil-lunch:filters';
+const FILTER_KEY = 'jamsil-lunch:filters-v2';
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
@@ -30,14 +33,23 @@ function loadJSON<T>(key: string, fallback: T): T {
 function matches(r: Restaurant, walk: number | null, f: Filters, favs: Set<string>): boolean {
   if (r.priceRange[0] > f.maxPrice) return false;
   if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false;
+  if (f.dishes.length) {
+    const tags = dishTags(r);
+    if (!f.dishes.some((d) => tags.includes(d))) return false;
+  }
   if (f.concepts.length && !f.concepts.some((c) => r.concepts.includes(c))) return false;
-  if (f.seating === 'group' && !r.seating.group) return false;
   if (f.seating === 'solo' && !r.seating.solo) return false;
+  if (f.seating === 'room' && !r.seating.room) return false;
+  if (f.seating === 'group') {
+    if (!r.seating.group) return false;
+    // 인원 정보가 없는 곳은 "가능" 쪽으로 보여주되, 숫자가 있으면 그 이하만
+    if (r.seating.groupSize != null && r.seating.groupSize < f.groupSize) return false;
+  }
   if (walk != null && walk > f.maxWalk) return false;
   if (f.onlyFavorites && !favs.has(r.id)) return false;
   if (f.query.trim()) {
     const q = f.query.trim().toLowerCase();
-    const hay = [r.name, r.branch ?? '', r.subcategory, r.cuisine, ...r.signature, ...r.menu.map((m) => m.name)]
+    const hay = [r.name, r.branch ?? '', r.subcategory, r.cuisine, ...r.signature, ...r.menu.map((m) => m.name), ...dishTags(r)]
       .join(' ')
       .toLowerCase();
     if (!hay.includes(q)) return false;
@@ -45,10 +57,28 @@ function matches(r: Restaurant, walk: number | null, f: Filters, favs: Set<strin
   return true;
 }
 
+function externalRating(r: Restaurant): number {
+  return r.reviews.naverRating ?? r.reviews.diningcodeRating ?? r.reviews.kakaoRating ?? 0;
+}
+
+/** "별점 많은 순": 팀 별점 합계 → 맛집 체크 수 → 평균 → 외부 평점 */
+function compareStars(a: Restaurant, b: Restaurant, s: Map<string, ReportSummary>): number {
+  const sa = s.get(a.id);
+  const sb = s.get(b.id);
+  const score = (x?: ReportSummary) => (x ? x.totalStars + (x.hidden + x.classic) * 2 : 0);
+  const d = score(sb) - score(sa);
+  if (d) return d;
+  const avg = (sb?.avgRating ?? 0) - (sa?.avgRating ?? 0);
+  if (avg) return avg;
+  return externalRating(b) - externalRating(a);
+}
+
 export default function App() {
   const [filters, setFilters] = useState<Filters>(() => loadJSON(FILTER_KEY, DEFAULT_FILTERS));
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set(loadJSON<string[]>(FAV_KEY, [])));
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pickNote, setPickNote] = useState<string | null>(null);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
   const live = useReports();
 
@@ -79,14 +109,21 @@ export default function App() {
     list.sort((a, b) => {
       if (filters.sort === 'walk') return walk(a) - walk(b);
       if (filters.sort === 'price') return a.priceRange[0] - b.priceRange[0];
-      const rt = (r: Restaurant) =>
-        live.summaries.get(r.id)?.avgRating ?? r.reviews.naverRating ?? r.reviews.diningcodeRating ?? 0;
-      return rt(b) - rt(a);
+      if (filters.sort === 'rating') {
+        const rt = (r: Restaurant) => live.summaries.get(r.id)?.avgRating ?? externalRating(r);
+        return rt(b) - rt(a) || compareStars(a, b, live.summaries);
+      }
+      return compareStars(a, b, live.summaries) || walk(a) - walk(b);
     });
     return list;
   }, [filters, favorites, walkById, live.summaries]);
 
   const selected = RESTAURANTS.find((r) => r.id === selectedId) ?? null;
+
+  const open = (id: string | null) => {
+    setPickNote(null);
+    setSelectedId(id);
+  };
 
   const toggleFav = (id: string) =>
     setFavorites((prev) => {
@@ -99,6 +136,7 @@ export default function App() {
   const pickRandom = () => {
     if (!results.length) return;
     const r = results[Math.floor(Math.random() * results.length)];
+    setPickNote(`지금 조건(${describeFilters(filters)})에 맞는 ${results.length}곳 중에서 무작위로 뽑았어요. 조건을 바꾸면 후보도 달라져요.`);
     setSelectedId(r.id);
   };
 
@@ -108,16 +146,23 @@ export default function App() {
         <div className="brand">
           <span className="logo">🍱</span>
           <div>
-            <h1>잠실점심</h1>
-            <p className="tagline">구내식당 공사 기간, 잠실역 도보 20분 안에서 인당 1.2만원으로 해결</p>
+            <h1>
+              잠심<span className="brand-sub">잠실점심</span>
+            </h1>
+            <p className="tagline">먹고 나누자!</p>
           </div>
         </div>
-        <button className="btn primary" onClick={pickRandom} disabled={!results.length}>
+        <button
+          className="btn primary"
+          onClick={pickRandom}
+          disabled={!results.length}
+          title={`현재 조건에 맞는 ${results.length}곳 중 무작위`}
+        >
           🎲 오늘 뭐 먹지?
         </button>
       </header>
 
-      <FilterBar filters={filters} onChange={setFilters} resultCount={results.length} />
+      <FilterBar filters={filters} onChange={setFilters} resultCount={results.length} totalCount={RESTAURANTS.length} />
 
       <div className="mobile-tabs">
         <button className={mobileTab === 'list' ? 'on' : ''} onClick={() => setMobileTab('list')}>
@@ -130,7 +175,7 @@ export default function App() {
 
       <main className={'layout tab-' + mobileTab}>
         <section className="list" aria-label="식당 목록">
-          <LiveTicker reports={live.reports} restaurants={RESTAURANTS} now={live.now} mode={live.mode} onSelect={setSelectedId} />
+          <LiveTicker reports={live.reports} restaurants={RESTAURANTS} now={live.now} mode={live.mode} onSelect={open} />
           {results.length === 0 && (
             <div className="empty">
               조건에 맞는 식당이 없어요.
@@ -148,41 +193,64 @@ export default function App() {
               budget={filters.maxPrice}
               summary={live.summaries.get(r.id)}
               now={live.now}
-              onSelect={() => setSelectedId(r.id)}
+              onSelect={() => open(r.id)}
               onToggleFavorite={() => toggleFav(r.id)}
             />
           ))}
+          <footer className="foot small">
+            데이터는 블로그·지도 후기 기반 수집본입니다. 가격·영업시간은 방문 전 확인하세요. ·{' '}
+            <a href="https://github.com/neti84-design/jamsil-lunch-app" target="_blank" rel="noreferrer">
+              GitHub
+            </a>{' '}
+            ·{' '}
+            <button className="link" onClick={() => setAdminOpen(true)}>
+              {live.isAdmin ? '관리자 모드' : '관리자'}
+            </button>
+          </footer>
         </section>
         <section className="map-wrap" aria-label="지도">
-          <MapView restaurants={results} selectedId={selectedId} onSelect={setSelectedId} maxWalk={filters.maxWalk} />
+          <MapView restaurants={results} selectedId={selectedId} onSelect={open} maxWalk={filters.maxWalk} />
         </section>
       </main>
 
       {selected && (
         <>
-          <div className="backdrop" onClick={() => setSelectedId(null)} />
+          <div className="backdrop" onClick={() => open(null)} />
           <RestaurantDetail
             r={selected}
             walk={walkById.get(selected.id) ?? null}
             favorite={favorites.has(selected.id)}
             budget={filters.maxPrice}
             reports={live.reports}
+            summary={live.summaries.get(selected.id)}
             reportMode={live.mode}
             reportLocalReason={live.localReason}
             now={live.now}
+            isAdmin={live.isAdmin}
+            pickNote={pickNote}
             onAddReport={live.add}
-            onClose={() => setSelectedId(null)}
+            onRemoveReport={live.remove}
+            onClose={() => open(null)}
             onToggleFavorite={() => toggleFav(selected.id)}
           />
         </>
       )}
 
-      <footer className="foot small">
-        데이터는 블로그·지도 후기 기반 수집본입니다. 가격·영업시간은 방문 전 확인하세요. ·{' '}
-        <a href="https://github.com/neti84-design/jamsil-lunch-app" target="_blank" rel="noreferrer">
-          GitHub
-        </a>
-      </footer>
+      {adminOpen && (
+        <>
+          <div className="backdrop" onClick={() => setAdminOpen(false)} />
+          <AdminPanel
+            reports={live.reports}
+            restaurants={RESTAURANTS}
+            now={live.now}
+            isAdmin={live.isAdmin}
+            onLogin={live.loginAdmin}
+            onLogout={live.logoutAdmin}
+            onRemove={live.remove}
+            onClose={() => setAdminOpen(false)}
+          />
+        </>
+      )}
     </div>
   );
 }

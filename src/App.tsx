@@ -237,8 +237,8 @@ export default function App() {
   const recentList = useMemo(() => recentIds.map((id) => byId.get(id)).filter((r): r is Restaurant => !!r), [recentIds, byId]);
   const nearbyOpen = useMemo(
     () =>
-      // 카카오에서 가져온 곳은 영업시간을 몰라 "지금 영업 중"에 넣지 않는다
-      RESTAURANTS.filter((r) => !r.source && maybeOpen(r, live.now) && walkById.get(r.id) != null)
+      // 카카오에서 가져온 곳은 영업시간을 아는 곳만 "지금 영업 중"에 넣는다
+      RESTAURANTS.filter((r) => (!r.source || r.hours) && maybeOpen(r, live.now) && walkById.get(r.id) != null)
         .sort((a, b) => walkById.get(a.id)! - walkById.get(b.id)!)
         .slice(0, 5),
     [live.now, walkById],

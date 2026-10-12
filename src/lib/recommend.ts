@@ -109,8 +109,8 @@ export function pickForToday(list: Restaurant[], o: PickOptions): Restaurant[] {
   const date = kstDate(o.now);
   const scored: { r: Restaurant; score: number }[] = [];
   for (const r of list) {
-    // 가격·영업시간을 아는 곳(직접 정리한 곳)만
-    if (r.source || !r.priceRange || r.priceRange[0] > o.budget) continue;
+    // 가격을 알고, 카카오에서 가져온 곳은 영업시간도 아는 곳만
+    if ((r.source && !r.hours) || !r.priceRange || r.priceRange[0] > o.budget) continue;
     if (o.exclude?.has(r.id)) continue;
     const walk = o.walkById.get(r.id);
     if (walk == null || walk > o.theme.maxWalk) continue;

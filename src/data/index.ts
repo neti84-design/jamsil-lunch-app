@@ -2,6 +2,7 @@ import type { Cuisine, Restaurant } from '../types';
 import { RESTAURANTS as CURATED } from './restaurants';
 import { KAKAO_ROWS } from './kakaoPlaces';
 import { MENU_PRICES } from './menuPrices';
+import { KAKAO_DETAILS } from './kakaoDetails';
 
 /** 카카오 1차 분류 → 앱의 음식 종류 */
 const CUISINE_OF: Record<string, Cuisine> = {
@@ -25,8 +26,30 @@ function splitBranch(placeName: string): [string, string | null] {
   return m ? [m[1], m[2]] : [placeName, null];
 }
 
+type MenuFields = Pick<Restaurant, 'priceRange' | 'menu' | 'signature' | 'dataNotes'>;
+
+/** 카카오맵 가게 정보(메뉴·가격) → 메뉴·가격대·대표 메뉴. 없으면 동료 자료 */
+function kakaoMenuFields(kakaoId: string): MenuFields | null {
+  const d = KAKAO_DETAILS[kakaoId];
+  if (!d?.price || !d.menu?.length) return menuFields(kakaoId);
+  const [lo, hi] = d.price;
+  return {
+    priceRange: [lo, hi],
+    menu: d.menu.map(([name, price]) => ({ name, price })),
+    // 대표 메뉴는 점심 가격대 안의 것으로
+    signature: d.menu.filter(([, p]) => p >= lo && p <= hi).slice(0, 3).map(([name]) => name),
+    dataNotes: '메뉴·가격·영업시간은 카카오맵 기준(2026-10)이에요. 방문 전 확인하세요.',
+  };
+}
+
+/** 카카오맵 영업시간·별점 */
+function kakaoHoursFields(kakaoId: string): Pick<Restaurant, 'hours' | 'breakTime' | 'closedDays'> | null {
+  const d = KAKAO_DETAILS[kakaoId];
+  return d?.hours ? { hours: d.hours, breakTime: d.breakTime ?? null, closedDays: d.closedDays ?? null } : null;
+}
+
 /** 동료 조사 메뉴·가격이 있으면 메뉴·가격대·대표 메뉴로 */
-function menuFields(key: string): Pick<Restaurant, 'priceRange' | 'menu' | 'signature' | 'dataNotes'> | null {
+function menuFields(key: string): MenuFields | null {
   const rows = MENU_PRICES[key];
   if (!rows?.length) return null;
   const prices = rows.map(([, p]) => p);
@@ -51,7 +74,8 @@ function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof 
     signature: [],
     priceRange: null,
     menu: [],
-    ...menuFields(id),
+    ...kakaoMenuFields(id),
+    ...kakaoHoursFields(id),
     concepts: [],
     seating: { group: null, solo: null },
     address,
@@ -60,15 +84,28 @@ function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof 
     phone: phone || null,
     reservation: { method: 'unknown' },
     waiting: { level: 'unknown' },
-    reviews: {},
+    reviews: KAKAO_DETAILS[id]?.rating != null ? { kakaoRating: KAKAO_DETAILS[id].rating } : {},
     links: { kakaoMap: `https://place.map.kakao.com/${id}` },
     source: 'kakao',
   };
 }
 
+/** 직접 정리한 곳은 조사값을 그대로 두고, 비어 있는 메뉴·영업시간·카카오 별점만 채운다 */
+function fillCurated(r: Restaurant): Restaurant {
+  const kakaoId = r.links.kakaoMap?.match(/place\.map\.kakao\.com\/(\d+)/)?.[1];
+  const out = { ...r };
+  if (r.menu.length === 0) {
+    const m = (kakaoId && kakaoMenuFields(kakaoId)) || menuFields(r.id);
+    if (m) out.menu = m.menu;
+  }
+  if (!r.hours && kakaoId) Object.assign(out, kakaoHoursFields(kakaoId));
+  const rating = kakaoId ? KAKAO_DETAILS[kakaoId]?.rating : undefined;
+  if (rating != null && r.reviews.kakaoRating == null) out.reviews = { ...r.reviews, kakaoRating: rating };
+  return out;
+}
+
 /** 직접 정리한 식당 + 카카오맵에서 가져온 주변 음식점 */
 export const RESTAURANTS: Restaurant[] = [
-  // 직접 정리한 곳 중 메뉴가 비어 있던 곳만 채운다 (조사한 가격대는 그대로)
-  ...CURATED.map((r) => (r.menu.length === 0 && MENU_PRICES[r.id] ? { ...r, menu: menuFields(r.id)!.menu } : r)),
+  ...CURATED.map(fillCurated),
   ...KAKAO_ROWS.map(fromKakao),
 ];

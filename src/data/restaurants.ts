@@ -1,5 +1,5 @@
 // 자동 생성: scratchpad/merge.py (조사 데이터 → TS). 수정은 이 파일을 직접 편집해도 됩니다.
-// 좌표는 approxLocation: true 인 경우 주소/랜드마크 기준 근사치입니다. scripts/geocode.mjs 로 보정 가능.
+// 좌표·카카오맵 링크·빈 전화번호는 scripts/kakao-enrich.mjs (카카오 장소 검색)로 보정. approxLocation: true 는 아직 근사치.
 import type { Restaurant } from '../types';
 
 export const RESTAURANTS: Restaurant[] = [
@@ -50,9 +50,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "상가 지하 소형 매장, 혼밥 리스트에 올라 있음"
     },
     "address": "서울 송파구 올림픽로35길 112 장미상가 B동 지하 44호",
-    "lat": 37.5162,
-    "lng": 127.1047,
-    "approxLocation": true,
+    "lat": 37.517912,
+    "lng": 127.101833,
+    "approxLocation": false,
     "phone": "02-424-6233",
     "hours": "월~토 10:30~21:30",
     "breakTime": "15:30~17:00",
@@ -81,7 +81,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구 → 장미상가",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/12052839",
       "others": [
         "https://www.tabling.co.kr/place/677ccc6666de5f06987f0605",
         "https://www.diningcode.com/profile.php?rid=VsoXxi3nixv3"
@@ -136,9 +136,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "소형 매장, 메뉴 3가지만 운영, 재료 소진 시 조기 마감"
     },
     "address": "서울 송파구 올림픽로35길 112 장미상가 B동 지하 15호",
-    "lat": 37.5162,
-    "lng": 127.1047,
-    "approxLocation": true,
+    "lat": 37.517795,
+    "lng": 127.101692,
+    "approxLocation": false,
     "phone": "02-415-8254",
     "hours": "11:00-15:00 (L.O 14:15) 점심만",
     "breakTime": null,
@@ -168,7 +168,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구 → 장미상가",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/10537108",
       "others": [
         "https://www.diningcode.com/profile.php?rid=Bt3VJgGqmxU3",
         "https://www.siksinhot.com/P/742645"
@@ -219,9 +219,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "24시간 국밥집, 테이블 식"
     },
     "address": "서울 송파구 백제고분로7길 33 1층",
-    "lat": 37.51,
-    "lng": 127.0887,
-    "approxLocation": true,
+    "lat": 37.510930,
+    "lng": 127.082644,
+    "approxLocation": false,
     "phone": "02-412-7495",
     "hours": "24시간",
     "breakTime": null,
@@ -250,7 +250,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실새내역 4번 출구 뒷 먹자골목",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/11309631",
       "others": [
         "https://www.diningcode.com/profile.php?rid=MIN48v2QXAMz"
       ]
@@ -307,9 +307,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "기사식당 스타일, 반찬 셀프 리필"
     },
     "address": "서울 송파구 백제고분로 148 호성빌딩",
-    "lat": 37.5063,
-    "lng": 127.0907,
-    "approxLocation": true,
+    "lat": 37.505495,
+    "lng": 127.083141,
+    "approxLocation": false,
     "phone": "02-415-1472",
     "hours": "24시간",
     "breakTime": null,
@@ -338,7 +338,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "삼전역 4번 출구 도보 6분",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/9416891",
       "others": [
         "https://www.diningcode.com/profile.php?rid=Tcl9qaZSJK1b"
       ]
@@ -384,9 +384,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 삼학사로 83 1층",
-    "lat": 37.5031,
-    "lng": 127.0907,
-    "approxLocation": true,
+    "lat": 37.504577,
+    "lng": 127.096923,
+    "approxLocation": false,
     "phone": "0507-1322-8729",
     "hours": "24시간",
     "breakTime": null,
@@ -414,7 +414,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/2099116820",
       "others": [
         "https://www.diningcode.com/profile.php?rid=kHfxY4sM62um"
       ]
@@ -457,9 +457,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 백제고분로 140 1층 101호",
-    "lat": 37.5063,
-    "lng": 127.0899,
-    "approxLocation": true,
+    "lat": 37.505895,
+    "lng": 127.081782,
+    "approxLocation": false,
     "phone": "0507-1367-7746",
     "hours": "09:00~23:00 (L.O 22:30)",
     "breakTime": null,
@@ -486,7 +486,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/90095383",
       "others": [
         "https://www.diningcode.com/profile.php?rid=sU2VmfNPo5qG"
       ]
@@ -543,9 +543,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "혼밥 가능한 백반집"
     },
     "address": "서울 송파구 올림픽로 88 1층",
-    "lat": 37.5126,
-    "lng": 127.0842,
-    "approxLocation": true,
+    "lat": 37.511353,
+    "lng": 127.080369,
+    "approxLocation": false,
     "phone": "02-423-9600",
     "hours": "평일 11:00~21:00, 토 11:00~16:00",
     "breakTime": "16:00~16:30 (평일)",
@@ -573,7 +573,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/18347913",
       "others": [
         "https://www.diningcode.com/profile.php?rid=3O4DKCWWumg9"
       ]
@@ -630,9 +630,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "잠실엘타워 1층"
     },
     "address": "서울 송파구 석촌호수로 74 잠실엘타워 1층",
-    "lat": 37.5094,
-    "lng": 127.0962,
-    "approxLocation": true,
+    "lat": 37.509643,
+    "lng": 127.085467,
+    "approxLocation": false,
     "phone": "02-417-0060",
     "hours": "화~토 11:00~21:00, 일 11:00~20:30",
     "breakTime": null,
@@ -660,7 +660,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/14878561",
       "others": [
         "https://www.tabling.co.kr/restaurant/11178",
         "https://www.diningcode.com/profile.php?rid=Fz7vNGa2CL9r"
@@ -801,9 +801,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "시장 초입 소형 백반집"
     },
     "address": "서울 송파구 석촌호수로12길 20 1층",
-    "lat": 37.5101,
-    "lng": 127.089,
-    "approxLocation": true,
+    "lat": 37.509004,
+    "lng": 127.084194,
+    "approxLocation": false,
     "phone": "02-413-5721",
     "hours": "월~토 10:00~19:00; 가정식백반은 10:00~15:00만",
     "breakTime": null,
@@ -831,7 +831,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실새내역 3번 출구 도보 7분",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/21297571",
       "others": [
         "https://www.diningcode.com/profile.php?rid=JA5gTKEsAleL"
       ]
@@ -874,9 +874,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "월드타워빌딩 지하, 쌈채소 리필 가능"
     },
     "address": "서울 송파구 송파대로 558 월드타워빌딩 지하",
-    "lat": 37.5119,
-    "lng": 127.1037,
-    "approxLocation": true,
+    "lat": 37.515130,
+    "lng": 127.099679,
+    "approxLocation": false,
     "phone": "02-3434-0022",
     "hours": "11:00~24:00",
     "breakTime": null,
@@ -904,7 +904,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 6번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/12807536",
       "others": [
         "https://www.diningcode.com/profile.php?rid=q0WlJ4H2Bqyp"
       ]
@@ -946,10 +946,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로35길 124 장미아파트 A상가 지하1층",
-    "lat": 37.5168,
-    "lng": 127.1052,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.517340,
+    "lng": 127.100716,
+    "approxLocation": false,
+    "phone": "02-423-6895",
     "hours": "월~금 11:00~22:00",
     "breakTime": "15:00~17:00",
     "closedDays": "토·일",
@@ -976,7 +976,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/857697008",
       "others": [
         "https://www.diningcode.com/profile.php?rid=twYj4stVOZeD"
       ]
@@ -1019,9 +1019,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "무인 운영 시간대 있음(출입 인증 필요)"
     },
     "address": "서울 송파구 백제고분로9길 23 1층",
-    "lat": 37.5095,
-    "lng": 127.0906,
-    "approxLocation": true,
+    "lat": 37.509713,
+    "lng": 127.081653,
+    "approxLocation": false,
     "phone": "0507-1430-2475",
     "hours": "24시간 (유인 09:00~20:00)",
     "breakTime": null,
@@ -1097,9 +1097,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로35길 112 장미아파트 B상가 지하1층",
-    "lat": 37.5162,
-    "lng": 127.1047,
-    "approxLocation": true,
+    "lat": 37.517881,
+    "lng": 127.101805,
+    "approxLocation": false,
     "phone": null,
     "hours": null,
     "breakTime": null,
@@ -1127,7 +1127,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/962730472",
       "others": [
         "https://www.tabling.co.kr/place/67eb74cb03740c14d3994ea1"
       ]
@@ -1184,10 +1184,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "백화점 지하 푸드코트"
     },
     "address": "서울 송파구 올림픽로 240 롯데백화점 잠실점 지하1층",
-    "lat": 37.5116,
-    "lng": 127.0984,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.511310,
+    "lng": 127.098142,
+    "approxLocation": false,
+    "phone": "02-411-2500",
     "hours": "10:30~20:30",
     "breakTime": null,
     "closedDays": "백화점 휴점일",
@@ -1215,7 +1215,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 롯데백화점 직결",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/299165617",
       "others": [
         "https://www.diningcode.com/profile.php?rid=PYfhXEfND7Ob"
       ]
@@ -1263,9 +1263,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "공깃밥 무료"
     },
     "address": "서울 송파구 올림픽로 119 지하1층",
-    "lat": 37.5118,
-    "lng": 127.0887,
-    "approxLocation": true,
+    "lat": 37.512086,
+    "lng": 127.084188,
+    "approxLocation": false,
     "phone": "02-412-6638",
     "hours": null,
     "breakTime": null,
@@ -1293,7 +1293,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실새내역 인근",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/9245715",
       "others": [
         "https://www.diningcode.com/profile.php?rid=kOiSMC7clRF9"
       ]
@@ -1355,10 +1355,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "지하상가 소형 식당, 피크 시 만석"
     },
     "address": null,
-    "lat": 37.5134,
-    "lng": 127.0998,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.513859,
+    "lng": 127.101858,
+    "approxLocation": false,
+    "phone": "02-421-5602",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -1385,7 +1385,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 지하상가",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1117173480",
       "others": [
         "https://www.diningcode.com/profile.php?rid=WFzfmNS54KpE"
       ]
@@ -1442,10 +1442,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "시장 분식집"
     },
     "address": null,
-    "lat": 37.5098,
-    "lng": 127.0893,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.514335,
+    "lng": 127.104535,
+    "approxLocation": false,
+    "phone": "0507-1489-1371",
     "hours": "06:00~23:00",
     "breakTime": null,
     "closedDays": null,
@@ -1472,7 +1472,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실새내역 새마을시장",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1407488395",
       "others": [
         "https://www.diningcode.com/profile.php?rid=NpbiajXXkkXS"
       ]
@@ -1511,9 +1511,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로35길 112 장미아파트 B상가 1층",
-    "lat": 37.5162,
-    "lng": 127.1047,
-    "approxLocation": true,
+    "lat": 37.517887,
+    "lng": 127.101917,
+    "approxLocation": false,
     "phone": "02-424-2141",
     "hours": null,
     "breakTime": null,
@@ -1590,9 +1590,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": null,
-    "lat": 37.5105,
-    "lng": 127.0885,
-    "approxLocation": true,
+    "lat": 37.509113,
+    "lng": 127.083235,
+    "approxLocation": false,
     "phone": "02-424-2461",
     "hours": "24시간",
     "breakTime": null,
@@ -1620,7 +1620,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/17811923",
       "others": [
         "https://www.diningcode.com/profile.php?rid=PWxMvxVNxf93"
       ]
@@ -1662,10 +1662,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": null,
-    "lat": 37.509,
-    "lng": 127.105,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.508038,
+    "lng": 127.104065,
+    "approxLocation": false,
+    "phone": "0507-1353-4970",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -1692,7 +1692,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/141887728",
       "others": [
         "https://www.diningcode.com/profile.php?rid=BUjSIqeQCayz"
       ]
@@ -1749,9 +1749,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "프랜차이즈 샐러드 매장, 테이크아웃 위주"
     },
     "address": "서울 송파구 백제고분로 187 파크인수 106호",
-    "lat": 37.5056,
-    "lng": 127.0937,
-    "approxLocation": true,
+    "lat": 37.504745,
+    "lng": 127.087782,
+    "approxLocation": false,
     "phone": null,
     "hours": "월~목 10:00~20:00, 금 10:00~19:00, 토·일 10:00~20:00",
     "breakTime": null,
@@ -1820,10 +1820,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": null,
-    "lat": 37.5125,
-    "lng": 127.0905,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.517249,
+    "lng": 127.102408,
+    "approxLocation": false,
+    "phone": "02-415-9991",
     "hours": "08:00~21:00 (L.O 20:30)",
     "breakTime": null,
     "closedDays": null,
@@ -1847,7 +1847,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/671154619",
       "others": [
         "https://www.diningcode.com/profile.php?rid=6J5pgioiQtqr"
       ]
@@ -1896,9 +1896,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "2층 매장"
     },
     "address": "서울 송파구 백제고분로 425 202호",
-    "lat": 37.5071,
-    "lng": 127.1086,
-    "approxLocation": true,
+    "lat": 37.509160,
+    "lng": 127.111114,
+    "approxLocation": false,
     "phone": "0507-0284-4221",
     "hours": "평일·토 10:00~20:30, 일 10:00~19:30",
     "breakTime": "15:00~16:00",
@@ -1927,7 +1927,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/37812492",
       "others": [
         "https://www.diningcode.com/profile.php?rid=Z4MPesvYnXE7"
       ]
@@ -1988,9 +1988,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "혼밥 가능·셀프바"
     },
     "address": "서울 송파구 백제고분로 197 1층",
-    "lat": 37.5056,
-    "lng": 127.0947,
-    "approxLocation": true,
+    "lat": 37.504353,
+    "lng": 127.088792,
+    "approxLocation": false,
     "phone": "0507-1308-8836",
     "hours": "평일 11:00~20:30, 토 11:00~15:30",
     "breakTime": "14:00~16:00 (평일)",
@@ -2015,7 +2015,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1331837634",
       "others": [
         "https://www.diningcode.com/profile.php?rid=FsVkalNAGYIP"
       ]
@@ -2079,9 +2079,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "1인 메뉴 중심"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰",
-    "lat": 37.5125,
-    "lng": 127.1025,
-    "approxLocation": true,
+    "lat": 37.513713,
+    "lng": 127.104302,
+    "approxLocation": false,
     "phone": null,
     "hours": "10:00~21:00",
     "breakTime": null,
@@ -2161,9 +2161,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "일본식 셀프 시스템(튀김·주먹밥 직접 선택), 회전율 빠름"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 5층",
-    "lat": 37.5125,
-    "lng": 127.1025,
-    "approxLocation": true,
+    "lat": 37.513581,
+    "lng": 127.104259,
+    "approxLocation": false,
     "phone": null,
     "hours": "10:30~22:00",
     "breakTime": null,
@@ -2192,7 +2192,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 10·11번 출구 (롯데월드몰 지하 직결)",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/498055551",
       "others": [
         "https://www.lwt.co.kr/fnb/restaurant-guide.do"
       ]
@@ -2235,10 +2235,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "혼밥·바 자리, 키오스크 선주문"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 5층",
-    "lat": 37.5125,
-    "lng": 127.1025,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.513310,
+    "lng": 127.104018,
+    "approxLocation": false,
+    "phone": "02-3213-4525",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -2266,7 +2266,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 10·11번 출구 (롯데월드몰 지하 직결)",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1073513189",
       "others": [
         "https://www.trvlogue.com/ko/oreno-ramen-jamsil-review"
       ]
@@ -2401,10 +2401,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로35길 112 장미상가 지하",
-    "lat": 37.5162,
-    "lng": 127.1047,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.517090,
+    "lng": 127.100478,
+    "approxLocation": false,
+    "phone": "02-412-7789",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -2432,7 +2432,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구 → 장미상가",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/16066861",
       "others": [
         "https://www.diningcode.com/profile.php?rid=EUy6hN1haBMO",
         "https://www.hankyung.com/article/2020072736251"
@@ -2472,10 +2472,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로35길 104 장미상가",
-    "lat": 37.5162,
-    "lng": 127.1047,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.517863,
+    "lng": 127.101823,
+    "approxLocation": false,
+    "phone": "02-416-7235",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -2503,7 +2503,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구 → 장미상가",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/15735525",
       "others": [
         "https://hotplacehunter.co.kr/?p=69959"
       ]
@@ -2544,10 +2544,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 269 롯데캐슬 캐슬플라자",
-    "lat": 37.5141,
-    "lng": 127.1017,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.514219,
+    "lng": 127.100276,
+    "approxLocation": false,
+    "phone": "02-425-2223",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -2575,7 +2575,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 7번 출구 → 캐슬플라자",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/269839709",
       "others": [
         "https://polle.com/place/1dCS5j/%EC%89%90%EC%9D%B4%ED%81%AC%EC%89%91"
       ]
@@ -2628,10 +2628,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 269 롯데캐슬골드 캐슬플라자 지하1층",
-    "lat": 37.5141,
-    "lng": 127.1017,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.513889,
+    "lng": 127.100737,
+    "approxLocation": false,
+    "phone": "02-323-8064",
     "hours": "11:00~21:00 (라스트오더 20:00)",
     "breakTime": null,
     "closedDays": null,
@@ -2659,7 +2659,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 7번 출구 → 캐슬플라자",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/349685917",
       "others": [
         "https://www.diningcode.com/profile.php?rid=AsDPNgC9Fd1a"
       ]
@@ -2697,10 +2697,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "테이크아웃 위주"
     },
     "address": "서울 송파구 올림픽로35길 112",
-    "lat": 37.5162,
-    "lng": 127.1047,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.517863,
+    "lng": 127.101800,
+    "approxLocation": false,
+    "phone": "02-2203-4653",
     "hours": "08:00~21:00",
     "breakTime": null,
     "closedDays": null,
@@ -2727,7 +2727,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구 → 장미상가",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/11634926",
       "others": [
         "https://www.hsd.co.kr/menu/menu_order"
       ]
@@ -2771,10 +2771,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "점심 회전율 매우 빠름, 직장인 단체 많아 시끄러움"
     },
     "address": "서울 송파구 올림픽로 293-19",
-    "lat": 37.5148,
-    "lng": 127.1031,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.515124,
+    "lng": 127.102480,
+    "approxLocation": false,
+    "phone": "02-416-0809",
     "hours": "11:00~21:30",
     "breakTime": null,
     "closedDays": null,
@@ -2802,7 +2802,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/13290974",
       "others": [
         "https://polle.com/place/2KNQhS/",
         "https://www.hankyung.com/article/2020072736251"
@@ -2855,10 +2855,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로32길 57-1",
-    "lat": 37.5152,
-    "lng": 127.1116,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.512331,
+    "lng": 127.112566,
+    "approxLocation": false,
+    "phone": "0507-1368-8326",
     "hours": "11:00~22:00",
     "breakTime": null,
     "closedDays": null,
@@ -2885,7 +2885,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1793901781",
       "others": [
         "https://www.diningcode.com/profile.php?rid=AiUpRS97M2Y0"
       ]
@@ -2933,10 +2933,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "1인당 인덕션 1개씩, 앉자마자 육수·야채 세팅 — 혼밥 최적"
     },
     "address": null,
-    "lat": 37.514,
-    "lng": 127.1125,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.512342,
+    "lng": 127.111930,
+    "approxLocation": false,
+    "phone": "02-420-8849",
     "hours": "11:00~16:00 (점심 전용)",
     "breakTime": null,
     "closedDays": null,
@@ -2963,7 +2963,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1010830928",
       "others": [
         "https://www.diningcode.com/profile.php?rid=naQTFE0HlUvL"
       ]
@@ -3026,9 +3026,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "보리밥 셀프바 구조"
     },
     "address": "서울 송파구 백제고분로33길 29 1층",
-    "lat": 37.5047,
-    "lng": 127.1001,
-    "approxLocation": true,
+    "lat": 37.505256,
+    "lng": 127.098585,
+    "approxLocation": false,
     "phone": "0507-1346-8374",
     "hours": "24시간 (미검증)",
     "breakTime": null,
@@ -3057,7 +3057,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "석촌고분역 2번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/442337483",
       "others": [
         "https://www.tabling.co.kr/place/677cd76f66de5f069892bff6"
       ]
@@ -3095,10 +3095,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "6인 이상 테이블과 별도 공간, 전용 주차"
     },
     "address": null,
-    "lat": 37.515,
-    "lng": 127.111,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.506852,
+    "lng": 127.089591,
+    "approxLocation": false,
+    "phone": "02-423-8053",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -3125,7 +3125,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/12347827",
       "others": [
         "https://www.siksinhot.com/theme/magazine/16615"
       ]
@@ -3179,9 +3179,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "키오스크 주문, 상가 지하 소형 매장"
     },
     "address": "서울 송파구 올림픽로35길 112 장미B상가 지하1층 6호",
-    "lat": 37.5162,
-    "lng": 127.1047,
-    "approxLocation": true,
+    "lat": 37.517881,
+    "lng": 127.101805,
+    "approxLocation": false,
     "phone": "02-412-6745",
     "hours": "월~금 11:00-19:30, 토 11:00-14:30",
     "breakTime": null,
@@ -3210,7 +3210,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구 → 장미상가",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1440544217",
       "others": [
         "https://www.diningcode.com/profile.php?rid=HPssE8qQlsJn",
         "https://www.tabling.co.kr/place/677ccbc266de5f06987dd209"
@@ -3269,9 +3269,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "홈플러스 1층 푸드코트 내, 좌석 넉넉"
     },
     "address": "서울 송파구 올림픽로35가길 16 홈플러스 잠실점 1층",
-    "lat": 37.5156,
-    "lng": 127.1027,
-    "approxLocation": true,
+    "lat": 37.516252,
+    "lng": 127.103006,
+    "approxLocation": false,
     "phone": "0507-1396-5204",
     "hours": "매일 11:00-21:00 (L.O 20:00)",
     "breakTime": null,
@@ -3362,9 +3362,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "리센츠상가 지하 소형 매장"
     },
     "address": "서울 송파구 올림픽로 145 리센츠상가 지하 A6-7호",
-    "lat": 37.512,
-    "lng": 127.0917,
-    "approxLocation": true,
+    "lat": 37.511997,
+    "lng": 127.087025,
+    "approxLocation": false,
     "phone": "02-425-2366",
     "hours": "11:00-21:00 (L.O 20:30)",
     "breakTime": null,
@@ -3392,7 +3392,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/23981442",
       "others": [
         "https://www.diningcode.com/profile.php?rid=b7itCV3uCUj5"
       ]
@@ -3452,10 +3452,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "롯데월드몰 B1 푸드코트 공용 좌석"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 지하1층 푸드코트",
-    "lat": 37.5125,
-    "lng": 127.1025,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.514371,
+    "lng": 127.104580,
+    "approxLocation": false,
+    "phone": "02-3213-2839",
     "hours": "매일 10:30-22:00 (L.O 21:00)",
     "breakTime": null,
     "closedDays": null,
@@ -3483,7 +3483,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 10·11번 출구 (롯데월드몰 지하 직결)",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/669829732",
       "others": [
         "https://www.diningcode.com/profile.php?rid=tVXPu53OaQc6"
       ]
@@ -3534,9 +3534,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "12~14명 바테이블 + 4인석 2개; 면·밥 무료 리필"
     },
     "address": "서울 송파구 백제고분로45길 17-3 1층",
-    "lat": 37.5076,
-    "lng": 127.1091,
-    "approxLocation": true,
+    "lat": 37.509575,
+    "lng": 127.109456,
+    "approxLocation": false,
     "phone": "02-418-3539",
     "hours": "11:00-21:00 (L.O 20:30)",
     "breakTime": "15:00-17:00",
@@ -3565,7 +3565,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1087614547",
       "others": [
         "https://www.diningcode.com/profile.php?rid=QH20ZpCMAMS8"
       ]
@@ -3616,9 +3616,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "소형 라멘집, 재료 소진 시 조기 마감"
     },
     "address": "서울 송파구 백제고분로46길 4 1층",
-    "lat": 37.5061,
-    "lng": 127.1101,
-    "approxLocation": true,
+    "lat": 37.508489,
+    "lng": 127.111838,
+    "approxLocation": false,
     "phone": "02-423-5253",
     "hours": "화·수·금·토·일 11:30-20:30",
     "breakTime": "15:00-17:30",
@@ -3647,7 +3647,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1859039708",
       "others": [
         "https://www.tabling.co.kr/place/677cd7f666de5f069893a945",
         "https://www.diningcode.com/profile.php?rid=DKxmoZVVRO53"
@@ -3704,9 +3704,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 백제고분로19길 17 청암빌딩",
-    "lat": 37.5081,
-    "lng": 127.0932,
-    "approxLocation": true,
+    "lat": 37.506451,
+    "lng": 127.087015,
+    "approxLocation": false,
     "phone": "070-8691-3869",
     "hours": null,
     "breakTime": null,
@@ -3787,9 +3787,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 269 캐슬플라자 2층",
-    "lat": 37.5141,
-    "lng": 127.1017,
-    "approxLocation": true,
+    "lat": 37.514571,
+    "lng": 127.100385,
+    "approxLocation": false,
     "phone": "02-422-3773",
     "hours": "매일 11:00-20:30",
     "breakTime": "15:00-17:00",
@@ -3818,7 +3818,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 7·8번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1407273723",
       "others": [
         "https://www.diningcode.com/profile.php?rid=6DW4V0hPYaAw",
         "https://www.tabling.co.kr/place/677cce3366de5f06988274bf"
@@ -3876,9 +3876,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "오피스 빌딩 지하, 평일 점심 직장인 붐빔"
     },
     "address": "서울 송파구 송파대로 570 타워730 지하1층",
-    "lat": 37.5109,
-    "lng": 127.1034,
-    "approxLocation": true,
+    "lat": 37.515775,
+    "lng": 127.099060,
+    "approxLocation": false,
     "phone": "02-415-2500",
     "hours": "10:30-22:00 (L.O 21:00)",
     "breakTime": "평일 15:00-17:00",
@@ -3907,7 +3907,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 6번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/336900647",
       "others": [
         "https://www.diningcode.com/profile.php?rid=utr2oZZoYTnY"
       ]
@@ -3958,9 +3958,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "롯데월드몰 B1 식당가"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 지하1층",
-    "lat": 37.5125,
-    "lng": 127.1025,
-    "approxLocation": true,
+    "lat": 37.514412,
+    "lng": 127.104673,
+    "approxLocation": false,
     "phone": null,
     "hours": null,
     "breakTime": null,
@@ -3987,7 +3987,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 10·11번 출구 (롯데월드몰 지하 직결)",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/126870100",
       "others": [
         "https://www.diningcode.com/profile.php?rid=m2ZAHWoYMEZm"
       ]
@@ -4036,9 +4036,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "지하 매장"
     },
     "address": "서울 송파구 송파대로 558 지하1층 B11호",
-    "lat": 37.5119,
-    "lng": 127.1037,
-    "approxLocation": true,
+    "lat": 37.515095,
+    "lng": 127.099712,
+    "approxLocation": false,
     "phone": "02-2039-9667",
     "hours": "11:00-22:00 (L.O 21:30)",
     "breakTime": "15:00-16:00",
@@ -4066,7 +4066,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 7번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1853685230",
       "others": [
         "https://www.diningcode.com/profile.php?rid=X30jbqm62wFf"
       ]
@@ -4114,9 +4114,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "늦게까지 영업해 혼밥하기 좋다는 평"
     },
     "address": "서울 송파구 올림픽로35가길 9 지하1층",
-    "lat": 37.5152,
-    "lng": 127.1022,
-    "approxLocation": true,
+    "lat": 37.517478,
+    "lng": 127.103445,
+    "approxLocation": false,
     "phone": null,
     "hours": "11:00-22:00 (L.O 21:30)",
     "breakTime": null,
@@ -4145,7 +4145,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/162188961",
       "others": [
         "https://www.diningcode.com/profile.php?rid=bHWfjr7lnfmC"
       ]
@@ -4197,10 +4197,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "롯데월드몰 B1 식당가"
     },
     "address": "서울 송파구 올림픽로 300 롯데월드몰 지하1층",
-    "lat": 37.5125,
-    "lng": 127.1025,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.514430,
+    "lng": 127.104997,
+    "approxLocation": false,
+    "phone": "02-3213-2845",
     "hours": "10:30-22:00",
     "breakTime": null,
     "closedDays": null,
@@ -4227,7 +4227,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 10·11번 출구 (롯데월드몰 지하 직결)",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1524013338",
       "others": [
         "https://www.diningcode.com/profile.php?rid=kF07tBHYsPSW"
       ]
@@ -4276,9 +4276,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "24시간 영업 체인"
     },
     "address": "서울 송파구 올림픽로12길 4 1층",
-    "lat": 37.5109,
-    "lng": 127.0862,
-    "approxLocation": true,
+    "lat": 37.511248,
+    "lng": 127.082858,
+    "approxLocation": false,
     "phone": "02-415-3552",
     "hours": "24시간",
     "breakTime": null,
@@ -4306,7 +4306,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/27109494",
       "others": [
         "https://www.diningcode.com/profile.php?rid=2LOpjkZsLHyS"
       ]
@@ -4359,9 +4359,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "동네 중국집"
     },
     "address": "서울 송파구 오금로 58 B101호",
-    "lat": 37.5118,
-    "lng": 127.1063,
-    "approxLocation": true,
+    "lat": 37.516783,
+    "lng": 127.105455,
+    "approxLocation": false,
     "phone": null,
     "hours": "10:00-20:30",
     "breakTime": null,
@@ -4390,7 +4390,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 1번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/12657461",
       "others": [
         "https://www.diningcode.com/profile.php?rid=blpCOtR8f2Zw"
       ]
@@ -4442,9 +4442,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "직장인 많이 찾는 노포"
     },
     "address": null,
-    "lat": 37.515,
-    "lng": 127.104,
-    "approxLocation": true,
+    "lat": 37.517120,
+    "lng": 127.100424,
+    "approxLocation": false,
     "phone": "02-422-1516",
     "hours": "10:40-20:40",
     "breakTime": null,
@@ -4472,7 +4472,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/9195432",
       "others": [
         "https://www.diningcode.com/profile.php?rid=B43nzpd3sW5N"
       ]
@@ -4528,9 +4528,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "오피스 빌딩 지하 중식당"
     },
     "address": "서울 송파구 올림픽로 295 삼성생명빌딩 지하1층",
-    "lat": 37.5144,
-    "lng": 127.1036,
-    "approxLocation": true,
+    "lat": 37.514924,
+    "lng": 127.103225,
+    "approxLocation": false,
     "phone": null,
     "hours": "11:20-21:40",
     "breakTime": null,
@@ -4558,7 +4558,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 9번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/464518799",
       "others": [
         "https://www.diningcode.com/profile.php?rid=HoFwLH0R9a4b"
       ]
@@ -4606,9 +4606,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "상가 지하 소형 스시집"
     },
     "address": "서울 송파구 올림픽로 145 리센츠상가 지하1층",
-    "lat": 37.512,
-    "lng": 127.0917,
-    "approxLocation": true,
+    "lat": 37.511993,
+    "lng": 127.087025,
+    "approxLocation": false,
     "phone": "02-422-6358",
     "hours": "11:00-20:40 (L.O 20:10)",
     "breakTime": "15:00-17:00",
@@ -4635,7 +4635,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/27609075",
       "others": [
         "https://www.diningcode.com/profile.php?rid=7FKZQYFOIzF3"
       ]
@@ -4688,9 +4688,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로35가길 11 103호",
-    "lat": 37.5153,
-    "lng": 127.1024,
-    "approxLocation": true,
+    "lat": 37.516324,
+    "lng": 127.104054,
+    "approxLocation": false,
     "phone": "02-422-4533",
     "hours": "매일 11:00-01:00",
     "breakTime": null,
@@ -4719,7 +4719,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1922722557",
       "others": [
         "https://www.diningcode.com/profile.php?rid=XwwQeOwtdh8l",
         "https://www.siksinhot.com/P/1587447"
@@ -4772,9 +4772,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "지하철 역사 내 소형 매장, 서서/포장 위주"
     },
     "address": "서울 송파구 올림픽로 265 지하1층 (잠실역 역사 내)",
-    "lat": 37.5136,
-    "lng": 127.1004,
-    "approxLocation": true,
+    "lat": 37.513857,
+    "lng": 127.101856,
+    "approxLocation": false,
     "phone": null,
     "hours": null,
     "breakTime": null,
@@ -4803,7 +4803,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구 방향 지하 통로",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1413331665",
       "others": [
         "https://www.diningcode.com/profile.php?rid=fLgOzzmWn6rI",
         "https://www.siksinhot.com/P/1747168"
@@ -4864,9 +4864,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": null,
-    "lat": 37.5112,
-    "lng": 127.0895,
-    "approxLocation": true,
+    "lat": 37.516159,
+    "lng": 127.106660,
+    "approxLocation": false,
     "phone": null,
     "hours": "10:30-22:00",
     "breakTime": null,
@@ -4893,7 +4893,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1858350091",
       "others": [
         "https://www.diningcode.com/profile.php?rid=ZoHaGygxr5yt"
       ]
@@ -4945,9 +4945,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "2층 매장"
     },
     "address": "서울 송파구 가락로 139 2층",
-    "lat": 37.5041,
-    "lng": 127.1076,
-    "approxLocation": true,
+    "lat": 37.502422,
+    "lng": 127.111164,
+    "approxLocation": false,
     "phone": "02-6338-0203",
     "hours": "매일 11:00-21:00",
     "breakTime": null,
@@ -5031,10 +5031,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "혼밥 가능, 기본찬·국 무료 리필"
     },
     "address": "서울 송파구 백제고분로45길 7",
-    "lat": 37.5078,
-    "lng": 127.1084,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.509231,
+    "lng": 127.110344,
+    "approxLocation": false,
+    "phone": "02-412-5335",
     "hours": "매일 11:30-21:30",
     "breakTime": "15:00-17:00 (주말 없음)",
     "closedDays": null,
@@ -5063,7 +5063,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/603376150",
       "others": [
         "https://app.catchtable.co.kr/ct/shop/dandi_jamsil",
         "https://www.diningcode.com/profile.php?rid=Bj3A3mcif8jT"
@@ -5117,9 +5117,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "방 예약 가능하다는 후기"
     },
     "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층",
-    "lat": 37.5147,
-    "lng": 127.103,
-    "approxLocation": true,
+    "lat": 37.514615,
+    "lng": 127.102522,
+    "approxLocation": false,
     "phone": "02-423-5532",
     "hours": "11:00~22:00",
     "breakTime": null,
@@ -5192,10 +5192,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층",
-    "lat": 37.5147,
-    "lng": 127.103,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.514561,
+    "lng": 127.102579,
+    "approxLocation": false,
+    "phone": "02-414-5012",
     "hours": "월~금 11:00~21:10",
     "breakTime": null,
     "closedDays": "토·일",
@@ -5222,7 +5222,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/12256489",
       "others": []
     },
     "sources": [
@@ -5280,9 +5280,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층 B108호",
-    "lat": 37.5147,
-    "lng": 127.103,
-    "approxLocation": true,
+    "lat": 37.514615,
+    "lng": 127.102522,
+    "approxLocation": false,
     "phone": "02-420-3455",
     "hours": null,
     "breakTime": null,
@@ -5368,10 +5368,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층",
-    "lat": 37.5147,
-    "lng": 127.103,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.514522,
+    "lng": 127.102533,
+    "approxLocation": false,
+    "phone": "02-3431-8170",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -5399,7 +5399,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/14550117",
       "others": []
     },
     "sources": [
@@ -5440,10 +5440,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "좌석이 많아 점심에도 웨이팅 없었다는 후기"
     },
     "address": "서울 송파구 올림픽로 289 잠실시그마타워 지하1층 101호",
-    "lat": 37.5147,
-    "lng": 127.103,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.514616,
+    "lng": 127.102522,
+    "approxLocation": false,
+    "phone": "02-423-5532",
     "hours": "11:00~22:00",
     "breakTime": "15:00~17:00",
     "closedDays": "일요일",
@@ -5470,7 +5470,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8·9번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1145064937",
       "others": []
     },
     "sources": [
@@ -5511,9 +5511,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 293-19 현대타워 지하1층",
-    "lat": 37.5146,
-    "lng": 127.1033,
-    "approxLocation": true,
+    "lat": 37.515228,
+    "lng": 127.102380,
+    "approxLocation": false,
     "phone": "02-2202-4282",
     "hours": "월~토 10:30~21:30",
     "breakTime": null,
@@ -5542,7 +5542,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8·9번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/2046215734",
       "others": []
     },
     "sources": [
@@ -5600,9 +5600,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 293-19 현대타워 지하1층 26호",
-    "lat": 37.5146,
-    "lng": 127.1033,
-    "approxLocation": true,
+    "lat": 37.515124,
+    "lng": 127.102480,
+    "approxLocation": false,
     "phone": "02-422-3868",
     "hours": null,
     "breakTime": null,
@@ -5630,7 +5630,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8·9번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/16498611",
       "others": []
     },
     "sources": [
@@ -5689,9 +5689,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 293-19 현대타워 지하1층",
-    "lat": 37.5146,
-    "lng": 127.1033,
-    "approxLocation": true,
+    "lat": 37.515145,
+    "lng": 127.102498,
+    "approxLocation": false,
     "phone": "02-422-0091",
     "hours": "07:30~21:00",
     "breakTime": "15:00~17:00",
@@ -5720,7 +5720,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 8·9번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/13294183",
       "others": []
     },
     "sources": [
@@ -5770,9 +5770,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 송파대로 558 월드타워빌딩 지하1층",
-    "lat": 37.5119,
-    "lng": 127.1037,
-    "approxLocation": true,
+    "lat": 37.515126,
+    "lng": 127.099684,
+    "approxLocation": false,
     "phone": "02-3434-0088",
     "hours": "10:30~22:30",
     "breakTime": null,
@@ -5800,7 +5800,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 6·7번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/8138486",
       "others": []
     },
     "sources": [
@@ -5860,10 +5860,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "혼밥하기 좋은 분식집"
     },
     "address": "서울 송파구 송파대로 558 월드타워빌딩 지하1층 B08호",
-    "lat": 37.5119,
-    "lng": 127.1037,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.515094,
+    "lng": 127.099711,
+    "approxLocation": false,
+    "phone": "02-3434-0004",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -5890,7 +5890,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 6·7번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/488604085",
       "others": []
     },
     "sources": [
@@ -5948,9 +5948,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 송파대로 570 타워730 지하1층",
-    "lat": 37.5109,
-    "lng": 127.1034,
-    "approxLocation": true,
+    "lat": 37.515787,
+    "lng": 127.099112,
+    "approxLocation": false,
     "phone": "0507-1412-2385",
     "hours": "월~토 10:50~21:00",
     "breakTime": "15:00~17:00",
@@ -5978,7 +5978,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 7번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1110746926",
       "others": []
     },
     "sources": [
@@ -6024,10 +6024,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "회식·모임 가능, 양 많다는 후기"
     },
     "address": "서울 송파구 송파대로 570 타워730 지하1층",
-    "lat": 37.5109,
-    "lng": 127.1034,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.515698,
+    "lng": 127.099161,
+    "approxLocation": false,
+    "phone": "02-422-6446",
     "hours": "11:15~21:45",
     "breakTime": null,
     "closedDays": null,
@@ -6055,7 +6055,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 7번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/2108338822",
       "others": []
     },
     "sources": [
@@ -6111,10 +6111,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 송파대로 570 타워730 지하1층",
-    "lat": 37.5109,
-    "lng": 127.1034,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.515786,
+    "lng": 127.099115,
+    "approxLocation": false,
+    "phone": "02-412-2525",
     "hours": "11:00~22:00",
     "breakTime": "15:00~17:00",
     "closedDays": null,
@@ -6141,7 +6141,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 7번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1462029452",
       "others": []
     },
     "sources": [
@@ -6185,9 +6185,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "11석 카운터, 런치 1·2·3부(11:30/12:30/13:30)"
     },
     "address": "서울 송파구 올림픽로 295 삼성생명빌딩 지하1층",
-    "lat": 37.5144,
-    "lng": 127.1036,
-    "approxLocation": true,
+    "lat": 37.514860,
+    "lng": 127.103180,
+    "approxLocation": false,
     "phone": "0507-1419-4624",
     "hours": "11:30~21:30",
     "breakTime": "15:00~17:00",
@@ -6216,7 +6216,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 9번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/867711908",
       "others": []
     },
     "sources": [
@@ -6262,9 +6262,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "아파트 상가 1층 소규모 스시집으로 추정"
     },
     "address": "서울 송파구 올림픽로 145 리센츠상가 1층",
-    "lat": 37.512,
-    "lng": 127.0917,
-    "approxLocation": true,
+    "lat": 37.511980,
+    "lng": 127.087042,
+    "approxLocation": false,
     "phone": null,
     "hours": null,
     "breakTime": null,
@@ -6348,9 +6348,9 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "참치 전문점 특성상 룸/단체석 가능성 있으나 미확인"
     },
     "address": "서울 송파구 올림픽로 269 롯데캐슬 캐슬플라자 2층",
-    "lat": 37.5141,
-    "lng": 127.1017,
-    "approxLocation": true,
+    "lat": 37.514530,
+    "lng": 127.100799,
+    "approxLocation": false,
     "phone": "0507-1392-4558",
     "hours": "11:00~23:30",
     "breakTime": "14:30~16:30",
@@ -6379,7 +6379,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": "잠실역 7번 출구",
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1252715131",
       "others": []
     },
     "sources": [
@@ -6426,10 +6426,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "대형 뷔페 매장, 단체 수용 용이 추정"
     },
     "address": "서울 송파구 올림픽로 269 롯데캐슬 캐슬플라자",
-    "lat": 37.5141,
-    "lng": 127.1017,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.514556,
+    "lng": 127.099764,
+    "approxLocation": false,
+    "phone": "0507-1418-2235",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -6457,7 +6457,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/21302210",
       "others": []
     },
     "sources": [
@@ -6500,10 +6500,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "코스요리·프라이빗 공간 특화 'Chai797 다이닝'으로 리뉴얼"
     },
     "address": "서울 송파구 올림픽로 269 롯데캐슬 캐슬플라자 2층",
-    "lat": 37.5141,
-    "lng": 127.1017,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.514298,
+    "lng": 127.100797,
+    "approxLocation": false,
+    "phone": "02-417-7972",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -6531,7 +6531,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/224458123",
       "others": []
     },
     "sources": [
@@ -6577,10 +6577,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": null
     },
     "address": "서울 송파구 올림픽로 240 롯데백화점 잠실점 본관 11층",
-    "lat": 37.5116,
-    "lng": 127.0984,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.512028,
+    "lng": 127.099340,
+    "approxLocation": false,
+    "phone": "02-2143-1985",
     "hours": null,
     "breakTime": null,
     "closedDays": null,
@@ -6608,7 +6608,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/878942136",
       "others": []
     },
     "sources": [
@@ -6656,10 +6656,10 @@ export const RESTAURANTS: Restaurant[] = [
       "notes": "34테이블 148석, 14인 프라이빗룸, 창가석"
     },
     "address": "서울 송파구 올림픽로 240 롯데백화점 잠실점 2층",
-    "lat": 37.5116,
-    "lng": 127.0984,
-    "approxLocation": true,
-    "phone": null,
+    "lat": 37.511760,
+    "lng": 127.097870,
+    "approxLocation": false,
+    "phone": "02-2143-7290",
     "hours": "10:30~21:00",
     "breakTime": null,
     "closedDays": "연중무휴",
@@ -6687,7 +6687,7 @@ export const RESTAURANTS: Restaurant[] = [
     "nearestExit": null,
     "links": {
       "naverPlace": null,
-      "kakaoMap": null,
+      "kakaoMap": "https://place.map.kakao.com/1766053303",
       "others": []
     },
     "sources": [

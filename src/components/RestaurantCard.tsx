@@ -29,7 +29,7 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
     <article className={'card' + (selected ? ' selected' : '')} onClick={onSelect}>
       <div className="card-head">
         <span className={'cuisine-emoji' + (r.photo ? ' card-thumb' : '')} aria-hidden>
-          <Thumb r={r} />
+          <Thumb r={r} width={52} height={52} />
         </span>
         <div className="card-title">
           <h3>

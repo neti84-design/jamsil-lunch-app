@@ -1737,3 +1737,16 @@ input.mini.vote-title-input {
   justify-content: center;
   padding: 12px 14px;
 }
+
+/* 관심매장: 나의 관심매장 / 동료 추천매장 */
+.page-head .fav-switch {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+}
+.today-tab {
+  padding-bottom: 8px;
+}
+.nav-label {
+  white-space: nowrap;
+  letter-spacing: -0.03em;
+}

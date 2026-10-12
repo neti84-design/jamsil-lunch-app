@@ -11,7 +11,7 @@ interface Props {
   onOpen: (id: string) => void;
 }
 
-/** 홈: 점심 투표 — 새 투표 만들기 + 내가 만들었거나 받은 투표 */
+/** 오늘의 추천 탭: 점심 투표 — 새 투표 만들기 + 내가 만들었거나 받은 투표 */
 export function VoteHome({ votes, byId, draftCount, onCreate, onOpen }: Props) {
   const recent = votes.myPolls.slice(0, 3);
   return (

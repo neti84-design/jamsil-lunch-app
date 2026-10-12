@@ -113,7 +113,7 @@ export function AdminPanel({ reports, restaurants, now, isAdmin, onLogin, onLogo
                             </>
                           )}
                           {r.kind === 'wait' && <>{waitText(r)}</>}
-                          {r.kind === 'tag' && <>{r.tag === 'hidden' ? '🤫 숨은맛집' : '👍 역시맛집'}</>}
+                          {r.kind === 'tag' && <>{r.tag === 'hidden' ? '🤫 숨은맛집' : r.tag === 'fav' ? '⭐ 관심 저장' : '👍 역시맛집'}</>}
                         </div>
                         <div className="small">기기 {r.deviceId?.slice(0, 8) ?? '-'}</div>
                       </div>

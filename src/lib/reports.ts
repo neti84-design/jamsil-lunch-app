@@ -2,6 +2,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { TasteTag, WaitLevel } from '../types';
 
 export type ReportKind = 'wait' | 'review' | 'tag';
+/** 'fav' = 관심 저장 (추천매장 집계용, 기기당 식당마다 한 번) */
+export type ReportTag = TasteTag | 'fav';
 
 export interface Report {
   id: string;
@@ -14,7 +16,7 @@ export interface Report {
   waitMinutes?: number | null;
   rating?: number | null;
   comment?: string | null;
-  tag?: TasteTag | null;
+  tag?: ReportTag | null;
   /** 작성한 기기 식별자 (닉네임 대신 사용, 본인 글 표시·삭제용) */
   deviceId?: string | null;
   createdAt: string; // ISO
@@ -168,7 +170,7 @@ interface Row {
   wait_minutes: number | null;
   rating: number | null;
   comment: string | null;
-  tag: TasteTag | null;
+  tag: ReportTag | null;
   device_id: string | null;
   created_at: string;
 }
@@ -294,12 +296,13 @@ export interface ReportSummary {
   totalStars: number;
   hidden: number; // 🤫 숨은맛집 체크 수
   classic: number; // 👍 역시맛집 체크 수
+  favs: number; // ⭐ 관심 저장한 기기 수
   /** 이 기기에서 체크한 태그 */
-  myTags: Partial<Record<TasteTag, string>>; // tag → report id
+  myTags: Partial<Record<ReportTag, string>>; // tag → report id
 }
 
 export function emptySummary(): ReportSummary {
-  return { liveWait: null, reviewCount: 0, avgRating: null, totalStars: 0, hidden: 0, classic: 0, myTags: {} };
+  return { liveWait: null, reviewCount: 0, avgRating: null, totalStars: 0, hidden: 0, classic: 0, favs: 0, myTags: {} };
 }
 
 export function summarize(reports: Report[], now = Date.now()): Map<string, ReportSummary> {
@@ -319,7 +322,8 @@ export function summarize(reports: Report[], now = Date.now()): Map<string, Repo
       s.reviewCount += 1;
       s.avgRating = s.totalStars / s.reviewCount;
     } else if (r.kind === 'tag' && r.tag) {
-      s[r.tag] += 1;
+      if (r.tag === 'fav') s.favs += 1;
+      else s[r.tag] += 1;
       if (r.deviceId === me && !s.myTags[r.tag]) s.myTags[r.tag] = r.id;
     }
   }

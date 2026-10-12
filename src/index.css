@@ -718,6 +718,7 @@ select {
 }
 .recent-thumb {
   position: relative;
+  overflow: hidden;
   width: 108px;
   height: 84px;
   border-radius: 12px;
@@ -728,7 +729,16 @@ select {
   justify-content: center;
   font-size: 38px;
 }
+/* 가게 대표 사진: 칸을 꽉 채운다 */
+.thumb-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .recent-state {
+  z-index: 1;
   position: absolute;
   left: 6px;
   bottom: 6px;
@@ -836,6 +846,29 @@ select {
 .cuisine-emoji {
   font-size: 24px;
   line-height: 1;
+}
+.card-thumb {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.detail-photo {
+  position: relative;
+  flex: none;
+  height: 180px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.detail-photo:empty {
+  display: none;
 }
 .card-title {
   flex: 1;

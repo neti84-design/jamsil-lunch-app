@@ -1,4 +1,5 @@
-import { CUISINE_EMOJI, type Restaurant } from '../types';
+import type { Restaurant } from '../types';
+import { Thumb } from './Thumb';
 import { formatWon } from '../lib/links';
 import { WEEKDAY_NAMES, kstDay, type DayTheme } from '../lib/recommend';
 import type { LunchWeather } from '../lib/weather';
@@ -46,7 +47,7 @@ export function TodayPick({ theme, weather, picks, walkById, now, onSelect, onSe
             return (
               <button key={r.id} className="recent-card" onClick={() => onSelect(r.id)}>
                 <span className="recent-thumb" aria-hidden>
-                  {CUISINE_EMOJI[r.cuisine]}
+                  <Thumb r={r} />
                 </span>
                 <strong className="recent-name">{r.name}</strong>
                 <span className="small recent-meta">

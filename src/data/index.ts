@@ -3,6 +3,7 @@ import { RESTAURANTS as CURATED } from './restaurants';
 import { KAKAO_ROWS } from './kakaoPlaces';
 import { MENU_PRICES } from './menuPrices';
 import { KAKAO_DETAILS } from './kakaoDetails';
+import { KAKAO_PHOTOS } from './kakaoPhotos';
 
 /** 카카오 1차 분류 → 앱의 음식 종류 */
 const CUISINE_OF: Record<string, Cuisine> = {
@@ -86,11 +87,12 @@ function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof 
     waiting: { level: 'unknown' },
     reviews: KAKAO_DETAILS[id]?.rating != null ? { kakaoRating: KAKAO_DETAILS[id].rating } : {},
     links: { kakaoMap: `https://place.map.kakao.com/${id}` },
+    photo: KAKAO_PHOTOS[id] ?? null,
     source: 'kakao',
   };
 }
 
-/** 직접 정리한 곳은 조사값을 그대로 두고, 비어 있는 메뉴·영업시간·카카오 별점만 채운다 */
+/** 직접 정리한 곳은 조사값을 그대로 두고, 비어 있는 메뉴·영업시간·카카오 별점·사진만 채운다 */
 function fillCurated(r: Restaurant): Restaurant {
   const kakaoId = r.links.kakaoMap?.match(/place\.map\.kakao\.com\/(\d+)/)?.[1];
   const out = { ...r };
@@ -101,6 +103,7 @@ function fillCurated(r: Restaurant): Restaurant {
   if (!r.hours && kakaoId) Object.assign(out, kakaoHoursFields(kakaoId));
   const rating = kakaoId ? KAKAO_DETAILS[kakaoId]?.rating : undefined;
   if (rating != null && r.reviews.kakaoRating == null) out.reviews = { ...r.reviews, kakaoRating: rating };
+  if (!r.photo && kakaoId && KAKAO_PHOTOS[kakaoId]) out.photo = KAKAO_PHOTOS[kakaoId];
   return out;
 }
 

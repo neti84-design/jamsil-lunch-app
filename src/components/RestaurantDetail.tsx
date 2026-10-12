@@ -10,6 +10,7 @@ import {
 } from '../types';
 import { formatWon, kakaoMapLink, naverBlogSearchLink, naverMapLink, telLink } from '../lib/links';
 import { ReportPanel } from './ReportPanel';
+import { Thumb } from './Thumb';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { useTileStatus } from '../hooks/useTileStatus';
 import type { LocalReason, NewReport, Report, ReportSummary } from '../lib/reports';
@@ -87,6 +88,11 @@ export function RestaurantDetail({
       </header>
 
       <div className="detail-body">
+        {r.photo && (
+          <div className="detail-photo">
+            <Thumb r={r} fallback={null} />
+          </div>
+        )}
         {variant === 'sheet' ? null : hasCoords ? (
           <div className="mini-map">
             <MapContainer center={[r.lat!, r.lng!]} zoom={16} scrollWheelZoom={false} dragging={false} zoomControl={false} attributionControl={false} style={{ height: 180 }}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 import { RESTAURANTS } from './data/restaurants';
@@ -8,14 +8,16 @@ import { RestaurantDetail } from './components/RestaurantDetail';
 import { AdminPanel } from './components/AdminPanel';
 import { MapView } from './components/MapView';
 import { LiveTicker } from './components/LiveTicker';
+import { FavoritesPanel } from './components/FavoritesPanel';
 import { useReports } from './hooks/useReports';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags } from './lib/dish';
+import { maybeOpen } from './lib/hours';
 import type { ReportSummary } from './lib/reports';
 import type { Restaurant } from './types';
 
 const FAV_KEY = 'jamsil-lunch:favorites';
-const FILTER_KEY = 'jamsil-lunch:filters-v2';
+const FILTER_KEY = 'jamsil-lunch:filters-v3';
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
@@ -23,14 +25,19 @@ function loadJSON<T>(key: string, fallback: T): T {
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as unknown;
     if (Array.isArray(fallback)) return (Array.isArray(parsed) ? parsed : fallback) as T;
-    if (parsed && typeof parsed === 'object') return { ...fallback, ...(parsed as object) };
+    if (parsed && typeof parsed === 'object') {
+      // 저장본에 예전 버전의 키가 섞여 있어도 지금 쓰는 키만 가져온다
+      const out = { ...fallback } as Record<string, unknown>;
+      for (const k of Object.keys(out)) if (k in parsed) out[k] = (parsed as Record<string, unknown>)[k];
+      return out as T;
+    }
     return fallback;
   } catch {
     return fallback;
   }
 }
 
-function matches(r: Restaurant, walk: number | null, f: Filters, favs: Set<string>): boolean {
+function matches(r: Restaurant, walk: number | null, f: Filters, now: number): boolean {
   if (r.priceRange[0] > f.maxPrice) return false;
   if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false;
   if (f.dishes.length) {
@@ -46,7 +53,7 @@ function matches(r: Restaurant, walk: number | null, f: Filters, favs: Set<strin
     if (r.seating.groupSize != null && r.seating.groupSize < f.groupSize) return false;
   }
   if (walk != null && walk > f.maxWalk) return false;
-  if (f.onlyFavorites && !favs.has(r.id)) return false;
+  if (f.openNow && !maybeOpen(r, now)) return false;
   if (f.query.trim()) {
     const q = f.query.trim().toLowerCase();
     const hay = [r.name, r.branch ?? '', r.subcategory, r.cuisine, ...r.signature, ...r.menu.map((m) => m.name), ...dishTags(r)]
@@ -79,7 +86,11 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pickNote, setPickNote] = useState<string | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [favOpen, setFavOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
+  const listRef = useRef<HTMLElement>(null);
+  const lastScroll = useRef(0);
   const live = useReports();
 
   useEffect(() => {
@@ -104,7 +115,7 @@ export default function App() {
   }, []);
 
   const results = useMemo(() => {
-    const list = RESTAURANTS.filter((r) => matches(r, walkById.get(r.id) ?? null, filters, favorites));
+    const list = RESTAURANTS.filter((r) => matches(r, walkById.get(r.id) ?? null, filters, live.now));
     const walk = (r: Restaurant) => walkById.get(r.id) ?? 99;
     list.sort((a, b) => {
       if (filters.sort === 'walk') return walk(a) - walk(b);
@@ -116,7 +127,7 @@ export default function App() {
       return compareStars(a, b, live.summaries) || walk(a) - walk(b);
     });
     return list;
-  }, [filters, favorites, walkById, live.summaries]);
+  }, [filters, walkById, live.summaries, live.now]);
 
   const selected = RESTAURANTS.find((r) => r.id === selectedId) ?? null;
 
@@ -133,36 +144,85 @@ export default function App() {
       return next;
     });
 
+  const favoriteList = useMemo(() => RESTAURANTS.filter((r) => favorites.has(r.id)), [favorites]);
+
   const pickRandom = () => {
     if (!results.length) return;
-    const r = results[Math.floor(Math.random() * results.length)];
-    setPickNote(`지금 조건(${describeFilters(filters)})에 맞는 ${results.length}곳 중에서 무작위로 뽑았어요. 조건을 바꾸면 후보도 달라져요.`);
+    // 지금 문 닫은 곳(영업 종료·휴무·브레이크)은 빼고 뽑는다. 다 닫았으면 전체에서.
+    const openNow = results.filter((r) => maybeOpen(r, live.now));
+    const pool = openNow.length ? openNow : results;
+    const r = pool[Math.floor(Math.random() * pool.length)];
+    const closedOut = results.length - pool.length;
+    setPickNote(
+      `지금 조건(${describeFilters(filters)})에 맞는 ${results.length}곳` +
+        (closedOut ? ` 중 지금 문 닫은 ${closedOut}곳을 뺀 ${pool.length}곳` : '') +
+        `에서 무작위로 뽑았어요. 조건을 바꾸면 후보도 달라져요.`,
+    );
     setSelectedId(r.id);
+  };
+
+  /** 제목을 누르면 처음 화면으로 */
+  const goHome = () => {
+    setSelectedId(null);
+    setPickNote(null);
+    setFavOpen(false);
+    setAdminOpen(false);
+    setFiltersOpen(false);
+    setFilters(DEFAULT_FILTERS);
+    setMobileTab('list');
+    listRef.current?.scrollTo({ top: 0 });
+  };
+
+  /** 목록을 손가락으로 밀어 올리면(아래로 스크롤) 펼쳐 둔 상세 조건을 접는다 */
+  const onListScroll = (e: UIEvent<HTMLElement>) => {
+    const top = e.currentTarget.scrollTop;
+    if (filtersOpen && top - lastScroll.current > 8) setFiltersOpen(false);
+    lastScroll.current = top;
   };
 
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">
-          <span className="logo">🍱</span>
-          <div>
-            <h1>
-              잠심<span className="brand-sub">잠실점심</span>
-            </h1>
-            <p className="tagline">먹고 나누자!</p>
-          </div>
-        </div>
-        <button
-          className="btn primary"
-          onClick={pickRandom}
-          disabled={!results.length}
-          title={`현재 조건에 맞는 ${results.length}곳 중 무작위`}
+        <a
+          className="brand"
+          href="/"
+          title="처음 화면으로"
+          onClick={(e) => {
+            e.preventDefault();
+            goHome();
+          }}
         >
-          🎲 오늘 뭐 먹지?
-        </button>
+          <span className="logo">🍱</span>
+          <span className="brand-text">
+            <h1>
+              오늘잠심<span className="brand-sub">잠실점심</span>
+            </h1>
+            <span className="tagline">구내식당 공사 이슈로 인한 식사 문제 해결을 위한 어플!</span>
+          </span>
+        </a>
+        <div className="top-actions">
+          <button className="btn fav-btn" onClick={() => setFavOpen(true)} aria-label={`관심 저장 ${favorites.size}곳`}>
+            ⭐<span className="count">{favorites.size}</span>
+          </button>
+          <button
+            className="btn primary"
+            onClick={pickRandom}
+            disabled={!results.length}
+            title={`현재 조건에 맞는 ${results.length}곳 중 지금 영업 중인 곳에서 무작위`}
+          >
+            🎲 오늘 뭐 먹지?
+          </button>
+        </div>
       </header>
 
-      <FilterBar filters={filters} onChange={setFilters} resultCount={results.length} totalCount={RESTAURANTS.length} />
+      <FilterBar
+        filters={filters}
+        onChange={setFilters}
+        resultCount={results.length}
+        totalCount={RESTAURANTS.length}
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+      />
 
       <div className="mobile-tabs">
         <button className={mobileTab === 'list' ? 'on' : ''} onClick={() => setMobileTab('list')}>
@@ -174,7 +234,7 @@ export default function App() {
       </div>
 
       <main className={'layout tab-' + mobileTab}>
-        <section className="list" aria-label="식당 목록">
+        <section className="list" aria-label="식당 목록" ref={listRef} onScroll={onListScroll}>
           <LiveTicker reports={live.reports} restaurants={RESTAURANTS} now={live.now} mode={live.mode} onSelect={open} />
           {results.length === 0 && (
             <div className="empty">
@@ -232,6 +292,25 @@ export default function App() {
             onRemoveReport={live.remove}
             onClose={() => open(null)}
             onToggleFavorite={() => toggleFav(selected.id)}
+          />
+        </>
+      )}
+
+      {favOpen && (
+        <>
+          <div className="backdrop" onClick={() => setFavOpen(false)} />
+          <FavoritesPanel
+            restaurants={favoriteList}
+            walkById={walkById}
+            budget={filters.maxPrice}
+            summaries={live.summaries}
+            now={live.now}
+            onSelect={(id) => {
+              setFavOpen(false);
+              open(id);
+            }}
+            onToggleFavorite={toggleFav}
+            onClose={() => setFavOpen(false)}
           />
         </>
       )}

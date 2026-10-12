@@ -9,6 +9,7 @@ import {
 } from '../types';
 import { formatWon, kakaoMapLink, naverBlogSearchLink, naverMapLink, telLink } from '../lib/links';
 import { ReportPanel } from './ReportPanel';
+import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { useTileStatus } from '../hooks/useTileStatus';
 import type { LocalReason, NewReport, Report, ReportSummary } from '../lib/reports';
 
@@ -54,6 +55,7 @@ export function RestaurantDetail({
   const res = RESERVATION_LABELS[r.reservation.method];
   const hasCoords = r.lat != null && r.lng != null;
   const tiles = useTileStatus();
+  const hours = openStatus(r, now);
   const icon = L.divIcon({ className: 'pin selected', html: `<span>${CUISINE_EMOJI[r.cuisine]}</span>`, iconSize: [34, 34], iconAnchor: [17, 34] });
 
   return (
@@ -195,6 +197,12 @@ export function RestaurantDetail({
 
         <section>
           <h4>🕒 영업</h4>
+          {hours.state !== 'unknown' && (
+            <p className="open-now">
+              <strong style={{ color: OPEN_STATE_COLOR[hours.state] }}>{hours.label}</strong>
+              {hours.detail && <span className="small"> · {hours.detail}</span>}
+            </p>
+          )}
           <p className="small">
             {r.hours ?? '영업시간 미확인'}
             {r.breakTime && <> · 브레이크 {r.breakTime}</>}

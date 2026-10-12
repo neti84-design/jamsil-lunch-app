@@ -556,3 +556,119 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* live reports */
+.ticker {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  overflow-x: auto;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 13px;
+  scrollbar-width: none;
+}
+.ticker.empty {
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.ticker-label {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ticker-item {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  font-size: 12.5px;
+}
+.ticker-item:hover {
+  border-color: var(--accent);
+}
+.badge.live {
+  background: #fff5f5;
+}
+.badge.team {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.report {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.report h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.live-now {
+  font-size: 15px;
+}
+.report-list {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 6px;
+  font-size: 13.5px;
+}
+.report-list li {
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.report-list li:last-child {
+  border-bottom: none;
+}
+.stars {
+  color: #f5b301;
+  letter-spacing: -1px;
+}
+.report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+.report-form textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 13.5px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  resize: vertical;
+  background: var(--surface);
+}
+input.mini {
+  width: 64px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  background: var(--surface);
+}
+input.mini.wide {
+  width: 130px;
+  flex: 1;
+}
+.btn.sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.star-btn {
+  border: none;
+  background: none;
+  font-size: 24px;
+  color: #d9d4cc;
+  padding: 0 2px;
+  line-height: 1;
+}
+.star-btn.on {
+  color: #f5b301;
+}

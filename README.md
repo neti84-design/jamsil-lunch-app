@@ -12,6 +12,8 @@
 - **도보 거리** (잠실역 기준 5/10/15/20분) + 지도에 반경 표시
 - 식당 상세: 가격·메뉴, **웨이팅 정도**, **예약 방법**(전화/네이버/캐치테이블/테이블링/바로 방문), 좌석, 영업시간, **연락처(바로 전화)**, 리뷰 요약·평점, 네이버지도/카카오맵 바로가기
 - 지도에서 좌표 확인 (네이버 플레이스처럼 핀 클릭 → 상세)
+- 🔴 **실시간 제보**: 식당 상세에서 "지금 웨이팅 없음/보통/길어요 + N분" 제보 → 목록 카드와 상단 실시간 띠에 바로 반영 (3시간 유지)
+- 💬 **팀 후기**: 별점 + 한 줄 후기, 카드에 팀 평균 별점 표시, 평점순 정렬에 반영
 - 🎲 "오늘 뭐 먹지?" 랜덤 추천, ⭐ 찜, 검색, 정렬(거리/평점/가격)
 - 모바일 대응 (목록/지도 탭)
 
@@ -25,6 +27,25 @@ npm run build      # dist/ 생성
 
 GitHub Pages 배포: `main` 브랜치에 푸시하면 `.github/workflows/deploy.yml` 이 자동 배포합니다.
 (저장소 Settings → Pages → Source 를 **GitHub Actions** 로 한 번 설정 필요)
+
+## 실시간 제보·후기 연결 (Supabase, 5분)
+
+키를 넣기 전에는 제보가 **내 기기(localStorage)에만** 저장되고 화면에 "이 기기에만 저장" 배지가 뜹니다.
+팀원과 공유하려면 무료 Supabase 프로젝트를 하나 만들어 연결하세요.
+
+1. https://supabase.com 가입 → **New project** (리전 Northeast Asia(Seoul) 권장)
+2. 좌측 **SQL Editor** → `supabase/schema.sql` 내용 붙여넣고 **Run**
+3. **Settings → API** 에서 `Project URL` 과 `anon public` 키 복사
+4. 로컬 실행: 프로젝트 루트에 `.env` 파일 생성 (`.env.example` 참고)
+   ```
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJ...
+   ```
+5. GitHub Pages 배포: 저장소 **Settings → Secrets and variables → Actions** 에
+   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` 두 개를 **Repository secret** 으로 추가 → 다음 푸시부터 반영
+
+동작 방식: `reports` 테이블 하나에 웨이팅 제보와 후기가 쌓이고, Supabase Realtime 으로 다른 사람의 제보가 새로고침 없이 바로 뜹니다.
+익명 키로 누구나 읽기/쓰기만 가능하고 수정·삭제는 막혀 있습니다(RLS). 링크를 아는 사람만 쓰는 사내용 전제입니다.
 
 ## 데이터
 
@@ -74,6 +95,7 @@ Vite · React 19 · TypeScript · react-leaflet (OpenStreetMap 타일, API 키 �
 
 - [ ] 네이버 지도 SDK 로 교체 (클라이언트 ID 필요) — 한국 지도 디테일이 더 좋음
 - [ ] 실시간 웨이팅 연동 (캐치테이블/테이블링은 공개 API가 없어 링크 연결 수준)
-- [ ] 팀원들이 직접 후기·웨이팅 제보하는 기능 (Google 시트 or Supabase)
+- [x] 팀원들이 직접 후기·웨이팅 제보하는 기능 (Supabase)
+- [ ] 제보 삭제/신고, 닉네임 중복 방지 (Supabase Auth 매직링크로 확장 가능)
 - [ ] "오늘 날씨/요일" 기반 추천, 최근 간 곳 제외
 - [ ] 점심 투표 / 공유 링크

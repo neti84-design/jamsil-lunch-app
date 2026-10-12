@@ -1,5 +1,6 @@
 import { CONCEPT_LABELS, CUISINE_EMOJI, WAIT_LABELS, type Restaurant } from '../types';
 import { formatWon } from '../lib/links';
+import { timeAgo, type ReportSummary } from '../lib/reports';
 
 interface Props {
   r: Restaurant;
@@ -7,11 +8,15 @@ interface Props {
   selected: boolean;
   favorite: boolean;
   budget: number;
+  summary?: ReportSummary;
+  now: number;
   onSelect: () => void;
   onToggleFavorite: () => void;
 }
 
-export function RestaurantCard({ r, walk, selected, favorite, budget, onSelect, onToggleFavorite }: Props) {
+export function RestaurantCard({ r, walk, selected, favorite, budget, summary, now, onSelect, onToggleFavorite }: Props) {
+  const live = summary?.liveWait ?? null;
+  const liveWait = live ? WAIT_LABELS[live.waitLevel!] : null;
   const overBudget = r.priceRange[0] > budget;
   const partlyOver = !overBudget && r.priceRange[1] > budget;
   const wait = WAIT_LABELS[r.waiting.level];
@@ -56,9 +61,21 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, onSelect, 
       </div>
 
       <div className="card-foot">
-        <span className="badge" style={{ borderColor: wait.color, color: wait.color }}>
-          웨이팅 {wait.label}
-        </span>
+        {live && liveWait ? (
+          <span className="badge live" style={{ borderColor: liveWait.color, color: liveWait.color }}>
+            🔴 {timeAgo(live.createdAt, now)} 웨이팅 {liveWait.label}
+            {live.waitMinutes != null && <> {live.waitMinutes}분</>}
+          </span>
+        ) : (
+          <span className="badge" style={{ borderColor: wait.color, color: wait.color }}>
+            웨이팅 {wait.label}
+          </span>
+        )}
+        {summary && summary.reviewCount > 0 && (
+          <span className="badge team">
+            💬 팀 {summary.avgRating!.toFixed(1)} ({summary.reviewCount})
+          </span>
+        )}
         {r.reviews.naverRating != null ? (
           <span className="badge">
             ⭐ {r.reviews.naverRating.toFixed(1)}

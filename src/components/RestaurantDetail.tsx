@@ -8,19 +8,25 @@ import {
   type Restaurant,
 } from '../types';
 import { formatWon, kakaoMapLink, naverBlogSearchLink, naverMapLink, telLink } from '../lib/links';
+import { ReportPanel } from './ReportPanel';
+import type { NewReport, Report } from '../lib/reports';
 
 interface Props {
   r: Restaurant;
   walk: number | null;
   favorite: boolean;
   budget: number;
+  reports: Report[];
+  reportMode: 'supabase' | 'local';
+  now: number;
+  onAddReport: (r: NewReport) => Promise<unknown>;
   onClose: () => void;
   onToggleFavorite: () => void;
 }
 
 const REPO_ISSUES = 'https://github.com/neti84-design/jamsil-lunch-app/issues/new';
 
-export function RestaurantDetail({ r, walk, favorite, budget, onClose, onToggleFavorite }: Props) {
+export function RestaurantDetail({ r, walk, favorite, budget, reports, reportMode, now, onAddReport, onClose, onToggleFavorite }: Props) {
   const wait = WAIT_LABELS[r.waiting.level];
   const res = RESERVATION_LABELS[r.reservation.method];
   const hasCoords = r.lat != null && r.lng != null;
@@ -77,6 +83,8 @@ export function RestaurantDetail({ r, walk, favorite, budget, onClose, onToggleF
           )}
         </div>
 
+        <ReportPanel restaurantId={r.id} reports={reports} mode={reportMode} now={now} onAdd={onAddReport} />
+
         <section>
           <h4>💰 가격</h4>
           <p className="price">
@@ -98,7 +106,7 @@ export function RestaurantDetail({ r, walk, favorite, budget, onClose, onToggleF
 
         <section className="two-col">
           <div>
-            <h4>⏳ 웨이팅</h4>
+            <h4>⏳ 평소 웨이팅 (후기 기준)</h4>
             <p>
               <span className="badge" style={{ borderColor: wait.color, color: wait.color }}>
                 {wait.label}

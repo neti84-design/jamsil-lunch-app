@@ -6,6 +6,8 @@ import { DEFAULT_FILTERS, FilterBar, type Filters } from './components/FilterBar
 import { RestaurantCard } from './components/RestaurantCard';
 import { RestaurantDetail } from './components/RestaurantDetail';
 import { MapView } from './components/MapView';
+import { LiveTicker } from './components/LiveTicker';
+import { useReports } from './hooks/useReports';
 import { walkMinutesFrom } from './lib/geo';
 import type { Restaurant } from './types';
 
@@ -15,7 +17,11 @@ const FILTER_KEY = 'jamsil-lunch:filters';
 function loadJSON<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? { ...fallback, ...JSON.parse(raw) } : fallback;
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(fallback)) return (Array.isArray(parsed) ? parsed : fallback) as T;
+    if (parsed && typeof parsed === 'object') return { ...fallback, ...(parsed as object) };
+    return fallback;
   } catch {
     return fallback;
   }
@@ -44,6 +50,7 @@ export default function App() {
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set(loadJSON<string[]>(FAV_KEY, [])));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list');
+  const live = useReports();
 
   useEffect(() => {
     try {
@@ -72,11 +79,12 @@ export default function App() {
     list.sort((a, b) => {
       if (filters.sort === 'walk') return walk(a) - walk(b);
       if (filters.sort === 'price') return a.priceRange[0] - b.priceRange[0];
-      const rt = (r: Restaurant) => r.reviews.naverRating ?? r.reviews.diningcodeRating ?? 0;
+      const rt = (r: Restaurant) =>
+        live.summaries.get(r.id)?.avgRating ?? r.reviews.naverRating ?? r.reviews.diningcodeRating ?? 0;
       return rt(b) - rt(a);
     });
     return list;
-  }, [filters, favorites, walkById]);
+  }, [filters, favorites, walkById, live.summaries]);
 
   const selected = RESTAURANTS.find((r) => r.id === selectedId) ?? null;
 
@@ -122,6 +130,7 @@ export default function App() {
 
       <main className={'layout tab-' + mobileTab}>
         <section className="list" aria-label="식당 목록">
+          <LiveTicker reports={live.reports} restaurants={RESTAURANTS} now={live.now} mode={live.mode} onSelect={setSelectedId} />
           {results.length === 0 && (
             <div className="empty">
               조건에 맞는 식당이 없어요.
@@ -137,6 +146,8 @@ export default function App() {
               selected={r.id === selectedId}
               favorite={favorites.has(r.id)}
               budget={filters.maxPrice}
+              summary={live.summaries.get(r.id)}
+              now={live.now}
               onSelect={() => setSelectedId(r.id)}
               onToggleFavorite={() => toggleFav(r.id)}
             />
@@ -155,6 +166,10 @@ export default function App() {
             walk={walkById.get(selected.id) ?? null}
             favorite={favorites.has(selected.id)}
             budget={filters.maxPrice}
+            reports={live.reports}
+            reportMode={live.mode}
+            now={live.now}
+            onAddReport={live.add}
             onClose={() => setSelectedId(null)}
             onToggleFavorite={() => toggleFav(selected.id)}
           />

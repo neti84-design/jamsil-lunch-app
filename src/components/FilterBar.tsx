@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   CONCEPT_LABELS,
   CUISINES,
@@ -25,6 +25,8 @@ export interface Filters {
   query: string;
   /** 지금 영업 중(또는 영업시간 미확인)인 곳만 */
   openNow: boolean;
+  /** 건물·상가 (장미상가, 롯데월드몰 …) */
+  building: string | null;
 }
 
 export const NO_LIMIT = 1_000_000;
@@ -41,6 +43,7 @@ export const DEFAULT_FILTERS: Filters = {
   sort: 'stars',
   query: '',
   openNow: false,
+  building: null,
 };
 
 const PRICE_STEPS = [8000, 10000, 12000, 15000, 20000, 30000, NO_LIMIT];
@@ -71,6 +74,7 @@ export function describeFilters(f: Filters): string {
   if (f.concepts.length) parts.push(f.concepts.map((c) => CONCEPT_LABELS[c].label).join('·'));
   if (f.seating === 'group') parts.push(`단체 ${f.groupSize}명+`);
   else if (f.seating) parts.push(SEATING_LABELS[f.seating].label);
+  if (f.building) parts.push(f.building);
   if (f.openNow) parts.push('영업 중');
   if (f.query.trim()) parts.push(`"${f.query.trim()}"`);
   return parts.join(' · ');
@@ -81,7 +85,11 @@ interface Props {
   onChange: (f: Filters) => void;
   resultCount: number;
   totalCount: number;
-  /** 상세 조건 펼침 여부 (모바일). 목록을 위로 밀면 App 에서 접는다 */
+  /** 필터에 보여줄 큰 건물 목록 */
+  buildings: { name: string; emoji: string; count: number }[];
+  /** 검색창 */
+  searchBox: ReactNode;
+  /** 세부조건 펼침 여부. 목록을 내리면 App 에서 접는다 */
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -90,45 +98,82 @@ function toggle<T>(list: T[], v: T): T[] {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 }
 
-/** 위로 이만큼(px) 쓸어 올리면 상세 조건을 접는다 */
-const SWIPE_CLOSE_PX = 40;
+/** 위로 이만큼(px) 쓸어 올리면 세부조건을 접는다 */
+const SWIPE_CLOSE_PX = 50;
+/** 세부조건 영역 최대 높이 (화면 높이 비율) */
+const PANEL_MAX_VH = 0.5;
 
-export function FilterBar({ filters, onChange, resultCount, totalCount, open, onOpenChange }: Props) {
+export function FilterBar({ filters, onChange, resultCount, totalCount, buildings, searchBox, open, onOpenChange }: Props) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
-  const isDefault = JSON.stringify(filters) === JSON.stringify(DEFAULT_FILTERS);
-  const touch = useRef<{ y: number; atBottom: boolean } | null>(null);
+  const isDefault = JSON.stringify({ ...filters, query: '', sort: 'stars' }) === JSON.stringify(DEFAULT_FILTERS);
   const panelRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  /** free: 세부조건 목록 밖(검색줄·세부조건 버튼)에서 시작한 터치 → 스크롤과 상관없이 바로 끌어서 접기 */
+  const touch = useRef<{ y: number; free: boolean; startedAtBottom: boolean; dragging: boolean } | null>(null);
+  /** 펼쳤을 때의 높이(px) */
+  const [fullHeight, setFullHeight] = useState(0);
+  /** 손가락으로 끌고 있는 거리(px, 위로 = 음수) */
+  const [drag, setDrag] = useState(0);
+  const [dragging, setDragging] = useState(false);
 
-  const atBottom = () => {
-    const el = panelRef.current;
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = innerRef.current;
+      if (el) setFullHeight(Math.min(el.scrollHeight, Math.round(window.innerHeight * PANEL_MAX_VH)));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [filters, buildings.length]);
+
+  const innerAtBottom = () => {
+    const el = innerRef.current;
     return !el || el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
   };
+
+  const height = open ? Math.max(0, fullHeight + Math.min(0, drag)) : 0;
+  // 접히면서 내용이 위로 밀려 올라가는 느낌
+  const shift = open ? Math.min(0, drag) : -fullHeight;
 
   return (
     <section
       className={'filters' + (open ? ' open' : '')}
       aria-label="검색"
       onTouchStart={(e) => {
-        touch.current = open ? { y: e.touches[0].clientY, atBottom: atBottom() } : null;
+        const free = !innerRef.current?.contains(e.target as Node);
+        touch.current = { y: e.touches[0].clientY, free, startedAtBottom: innerAtBottom(), dragging: false };
+      }}
+      onTouchMove={(e) => {
+        const t = touch.current;
+        if (!t || !open) return;
+        const dy = e.touches[0].clientY - t.y;
+        // 세부조건을 끝까지 본 상태(또는 목록 밖)에서 위로 끌면 손가락을 따라 접힌다
+        if (dy < 0 && (t.free || (t.startedAtBottom && innerAtBottom()))) {
+          if (!t.dragging) {
+            t.dragging = true;
+            setDragging(true);
+          }
+          setDrag(dy);
+        }
       }}
       onTouchEnd={(e) => {
         const t = touch.current;
         touch.current = null;
         if (!t) return;
         const dy = e.changedTouches[0].clientY - t.y;
-        // 조건 목록이 더 스크롤될 게 있으면 스크롤을 우선하고, 끝까지 본 상태에서 위로 쓸면 접는다
-        if (dy < -SWIPE_CLOSE_PX && t.atBottom && atBottom()) onOpenChange(false);
+        setDragging(false);
+        setDrag(0);
+        if (open && t.dragging && dy < -SWIPE_CLOSE_PX) onOpenChange(false);
+        // 접힌 상태에서 손잡이를 아래로 끌면 펼친다
+        else if (!open && dy > SWIPE_CLOSE_PX) onOpenChange(true);
+      }}
+      onTouchCancel={() => {
+        touch.current = null;
+        setDragging(false);
+        setDrag(0);
       }}
     >
-      <div className="filter-row">
-        <input
-          className="search"
-          type="search"
-          placeholder="가게명·메뉴 검색 (예: 국밥, 돈까스)"
-          value={filters.query}
-          onChange={(e) => set({ query: e.target.value })}
-        />
-      </div>
+      {searchBox}
 
       <div className="quick-row">
         {(Object.keys(SORT_LABELS) as Filters['sort'][]).map((k) => (
@@ -149,13 +194,35 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, open, on
         >
           🧑 혼밥
         </button>
-        <span className="result-meta">
-          <strong>{resultCount}</strong>
-          <span className="small">/{totalCount}곳</span>
-        </span>
       </div>
 
-      <div className="filter-panel" ref={panelRef}>
+      <div
+        className={'filter-panel' + (dragging ? ' dragging' : '')}
+        ref={panelRef}
+        style={{ height }}
+        aria-hidden={!open}
+      >
+        <div className="filter-panel-inner" ref={innerRef} style={{ maxHeight: fullHeight || undefined, transform: `translateY(${shift}px)` }}>
+      {buildings.length > 0 && (
+        <div className="filter-group">
+          <span className="filter-label">건물</span>
+          <div className="chips">
+            <button className={'chip' + (!filters.building ? ' on' : '')} onClick={() => set({ building: null })}>
+              전체
+            </button>
+            {buildings.map((b) => (
+              <button
+                key={b.name}
+                className={'chip' + (filters.building === b.name ? ' on' : '')}
+                onClick={() => set({ building: filters.building === b.name ? null : b.name })}
+              >
+                {b.emoji} {b.name} <span className="small">{b.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="filter-group">
         <span className="filter-label">인당 예산</span>
         <div className="chips">
@@ -264,21 +331,28 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, open, on
       <div className="filter-row between">
         <div className="filter-desc small">기준: {describeFilters(filters)}</div>
         {!isDefault && (
-          <button className="link" onClick={() => onChange(DEFAULT_FILTERS)}>
+          <button className="link" onClick={() => onChange({ ...DEFAULT_FILTERS, query: filters.query, sort: filters.sort })}>
             초기화
           </button>
         )}
       </div>
+        </div>
       </div>
 
-      <button
-        className="filter-handle"
-        onClick={() => onOpenChange(!open)}
-        aria-expanded={open}
-        aria-label={open ? '상세 조건 접기' : '상세 조건 펼치기'}
-      >
-        <span className={'chevron' + (open ? ' up' : '')} aria-hidden />
-      </button>
+      <div className="filter-foot">
+        <button
+          className={'filter-handle' + (open ? ' open' : '')}
+          onClick={() => onOpenChange(!open)}
+          aria-expanded={open}
+        >
+          세부조건{!isDefault && <span className="dot" aria-label="적용 중" />}
+          <span className={'chevron' + (open ? ' up' : '')} aria-hidden />
+        </button>
+        <span className="result-meta">
+          <strong>{resultCount}</strong>
+          <span className="small">/{totalCount}곳</span>
+        </span>
+      </div>
     </section>
   );
 }

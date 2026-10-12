@@ -1,4 +1,4 @@
--- 잠심(잠실점심) 실시간 제보 테이블
+-- 오늘잠심(잠실점심) 실시간 제보 테이블
 -- Supabase 대시보드 > SQL Editor 에 붙여넣고 실행하세요. 여러 번 실행해도 안전합니다.
 
 create table if not exists public.reports (
@@ -17,6 +17,10 @@ create table if not exists public.reports (
 alter table public.reports add column if not exists wait_teams int check (wait_teams between 0 and 99);
 alter table public.reports add column if not exists tag text check (tag in ('hidden', 'classic'));
 alter table public.reports add column if not exists device_id text check (char_length(device_id) <= 64);
+
+-- v3: 관심 저장('fav')도 태그로 공유 → 추천매장 집계 (기존 제약을 교체)
+alter table public.reports drop constraint if exists reports_tag_check;
+alter table public.reports add constraint reports_tag_check check (tag in ('hidden', 'classic', 'fav'));
 
 -- kind 에 'tag' 허용 (기존 제약을 교체)
 alter table public.reports drop constraint if exists reports_kind_check;

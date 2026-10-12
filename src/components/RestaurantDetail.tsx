@@ -24,8 +24,6 @@ interface Props {
   reportLocalReason?: LocalReason;
   now: number;
   isAdmin: boolean;
-  /** "오늘 뭐 먹지?"로 뽑힌 경우 그 기준 설명 */
-  pickNote?: string | null;
   onAddReport: (r: NewReport) => Promise<unknown>;
   onRemoveReport: (id: string, asAdmin?: boolean) => Promise<unknown>;
   onClose: () => void;
@@ -45,7 +43,6 @@ export function RestaurantDetail({
   reportLocalReason,
   now,
   isAdmin,
-  pickNote,
   onAddReport,
   onRemoveReport,
   onClose,
@@ -81,7 +78,6 @@ export function RestaurantDetail({
       </header>
 
       <div className="detail-body">
-        {pickNote && <div className="pick-note">🎲 {pickNote}</div>}
         {hasCoords ? (
           <div className="mini-map">
             <MapContainer center={[r.lat!, r.lng!]} zoom={16} scrollWheelZoom={false} dragging={false} zoomControl={false} attributionControl={false} style={{ height: 180 }}>

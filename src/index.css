@@ -1872,7 +1872,8 @@ input.mini.vote-title-input {
   flex: 1;
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 460px;
+  /* 지도는 화면 가로의 절반까지, 나머지 절반은 조건·식당 */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 .split-map {
   min-width: 0;
@@ -1958,10 +1959,5 @@ input.mini.vote-title-input {
 @media (max-height: 820px) {
   .split-cond {
     max-height: 48%;
-  }
-}
-@media (min-width: 1440px) {
-  .split {
-    grid-template-columns: minmax(0, 1fr) 520px;
   }
 }

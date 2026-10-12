@@ -2445,6 +2445,232 @@ export const RESTAURANTS: Restaurant[] = [
     "dataNotes": "한경 기사는 2020년."
   },
   {
+    "id": "뽀빠이분식-장미상가",
+    "name": "뽀빠이분식",
+    "branch": "장미상가",
+    "cuisine": "분식",
+    "subcategory": "즉석떡볶이/분식",
+    "signature": [
+      "즉석떡볶이",
+      "떡볶이",
+      "튀김"
+    ],
+    "priceRange": [
+      7000,
+      12000
+    ],
+    "menu": [],
+    "concepts": [
+      "filling"
+    ],
+    "seating": {
+      "group": null,
+      "solo": null,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로35길 104 장미상가",
+    "lat": 37.5162,
+    "lng": 127.1047,
+    "approxLocation": true,
+    "phone": null,
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": 1460,
+      "diningcodeRating": null,
+      "summary": "30년 전통 즉석떡볶이집. 잠실 토박이들 사이에 유명하고 KBS 2TV 생생정보(2025.05.29, 떡볶이)에 나왔다. 맛이 자극적이라 호불호가 있다는 후기도 있다.",
+      "highlights": [
+        "즉석떡볶이",
+        "30년 전통",
+        "2TV 생생정보"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 8번 출구 → 장미상가",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": [
+        "https://hotplacehunter.co.kr/?p=69959"
+      ]
+    },
+    "sources": [
+      "https://hotplacehunter.co.kr/?p=69959",
+      "https://polle.com/place/1y2B9e/%EB%BD%80%EB%B9%A0%EC%9D%B4%20%EB%B6%84%EC%8B%9D"
+    ],
+    "dataNotes": "주소는 네이버 지도(올림픽로35길 104, 신천동 7) 기준. 가격·메뉴는 미확인 추정값 — 방문 전 확인."
+  },
+  {
+    "id": "쉐이크쉑-잠실점",
+    "name": "쉐이크쉑",
+    "branch": "잠실점",
+    "cuisine": "양식",
+    "subcategory": "버거",
+    "signature": [
+      "쉑버거",
+      "쉑스택",
+      "크링클컷 프라이",
+      "쉐이크"
+    ],
+    "priceRange": [
+      9000,
+      20000
+    ],
+    "menu": [],
+    "concepts": [
+      "heavy",
+      "quick"
+    ],
+    "seating": {
+      "group": null,
+      "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로 269 롯데캐슬 캐슬플라자",
+    "lat": 37.5141,
+    "lng": 127.1017,
+    "approxLocation": true,
+    "phone": null,
+    "hours": null,
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": null,
+      "summary": "2022년 9월 문을 연 쉐이크쉑 23호점. 잠실점 한정 콘크리트 '잼잼 잠실'이 있었고, 쉐이크 양이 많지만 가격은 비싸다는 후기.",
+      "highlights": [
+        "버거",
+        "쉐이크",
+        "잠실점 한정 메뉴"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 7번 출구 → 캐슬플라자",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": [
+        "https://polle.com/place/1dCS5j/%EC%89%90%EC%9D%B4%ED%81%AC%EC%89%91"
+      ]
+    },
+    "sources": [
+      "https://polle.com/place/1dCS5j/%EC%89%90%EC%9D%B4%ED%81%AC%EC%89%91",
+      "https://www.koreadaily.com/article/20220920022731568",
+      "https://news.jkn.co.kr/post/837490"
+    ],
+    "dataNotes": "주소 올림픽로 269(polle 기준), 층 미확인. 가격은 쉑버거 9천원대 보도 기준 추정 — 세트·쉐이크 포함 시 2만원 안팎."
+  },
+  {
+    "id": "연남토마-롯데캐슬잠실점",
+    "name": "연남토마",
+    "branch": "롯데캐슬잠실점",
+    "cuisine": "양식",
+    "subcategory": "파스타/덮밥",
+    "signature": [
+      "믹스덮밥",
+      "명란바질 오일파스타",
+      "차돌중화크림파스타"
+    ],
+    "priceRange": [
+      14000,
+      18000
+    ],
+    "menu": [
+      {
+        "name": "믹스덮밥",
+        "price": 14000
+      },
+      {
+        "name": "명란바질 오일파스타",
+        "price": 17000
+      },
+      {
+        "name": "차돌중화크림파스타",
+        "price": 18000
+      }
+    ],
+    "concepts": [
+      "filling"
+    ],
+    "seating": {
+      "group": null,
+      "solo": true,
+      "groupSize": null,
+      "room": false,
+      "estimated": true,
+      "notes": null
+    },
+    "address": "서울 송파구 올림픽로 269 롯데캐슬골드 캐슬플라자 지하1층",
+    "lat": 37.5141,
+    "lng": 127.1017,
+    "approxLocation": true,
+    "phone": null,
+    "hours": "11:00~21:00 (라스트오더 20:00)",
+    "breakTime": null,
+    "closedDays": null,
+    "reservation": {
+      "method": "walk-in",
+      "notes": null
+    },
+    "waiting": {
+      "level": "unknown",
+      "peak": null,
+      "notes": null
+    },
+    "reviews": {
+      "naverRating": null,
+      "naverReviewCount": null,
+      "diningcodeRating": 4.2,
+      "summary": "연남동에서 줄 서서 먹던 퓨전 파스타·덮밥집의 잠실 지점. 명란 파스타와 덮밥이 대표 메뉴.",
+      "highlights": [
+        "명란 파스타",
+        "덮밥",
+        "줄 서는 집"
+      ]
+    },
+    "walkMinutes": null,
+    "nearestExit": "잠실역 7번 출구 → 캐슬플라자",
+    "links": {
+      "naverPlace": null,
+      "kakaoMap": null,
+      "others": [
+        "https://www.diningcode.com/profile.php?rid=AsDPNgC9Fd1a"
+      ]
+    },
+    "sources": [
+      "https://www.diningcode.com/profile.php?rid=AsDPNgC9Fd1a",
+      "https://www.jobkorea.co.kr/Recruit/GI_Read/48625105"
+    ],
+    "dataNotes": "위치·가격·영업시간은 다이닝코드와 채용공고 기준."
+  },
+  {
     "id": "한솥도시락-잠실장미상가점",
     "name": "한솥도시락",
     "branch": "잠실장미상가점",

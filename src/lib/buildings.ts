@@ -5,7 +5,7 @@ import type { Restaurant } from '../types';
  * 필터에는 MIN_BUILDING_COUNT 곳 이상 모인 건물만 보여준다(데이터가 늘면 자동으로 추가됨).
  */
 export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
-  { name: '장미상가', emoji: '🌹', re: /장미\s*(아파트\s*)?[AB]?\s*상가|장미[AB]상가|장미상가|잠실장미점/ },
+  { name: '장미상가', emoji: '🌹', re: /장미\s*(아파트\s*)?[AB]?\s*상가|장미[AB]상가|장미상가|잠실장미점|올림픽로\s*35길\s*(104|112|124)(?!\d)/ },
   { name: '롯데월드몰', emoji: '🏬', re: /롯데월드몰/ },
   { name: '롯데백화점', emoji: '🛍️', re: /롯데백화점/ },
   { name: '잠실역 지하상가', emoji: '🚇', re: /잠실역\s*지하상가|잠실지하상가|잠실역 역사 내/ },
@@ -19,6 +19,14 @@ export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
   { name: '캐슬플라자', emoji: '🏰', re: /캐슬플라자|올림픽로 269(?!\d)/ },
   { name: '홈플러스 잠실점', emoji: '🛒', re: /홈플러스 잠실/ },
 ];
+
+/** 큰 쇼핑몰은 입구에서 식당가까지 건물 안을 한참 걸어야 한다 (분) */
+const INSIDE_MIN: Record<string, number> = { 롯데월드몰: 4, 롯데백화점: 3 };
+
+export function insideMinutes(r: Restaurant): number {
+  const b = buildingOf(r);
+  return b ? (INSIDE_MIN[b] ?? 0) : 0;
+}
 
 /** 이 수 이상 모인 건물만 필터·홈에 보여준다 */
 export const MIN_BUILDING_COUNT = 3;

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { Restaurant } from '../types';
 import { Thumb } from './Thumb';
 import { DISH_EMOJI, DISH_TAGS, dishTags, type DishTag } from '../lib/dish';
@@ -43,6 +43,8 @@ function useKeepScrollX(key: string) {
 export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent, buildings, walkById, now, onDish, onBuilding, onSelect, onSeeAll }: Props) {
   const { ref: buildingRef, onScroll: onBuildingScroll } = useKeepScrollX('buildings');
   const { ref: recentRef, onScroll: onRecentScroll } = useKeepScrollX('recent');
+  // 옆으로 밀기 힘든 사람을 위해 주요장소를 한 번에 펼쳐 볼 수 있게
+  const [allBuildings, setAllBuildings] = useState(false);
   const counts = new Map<DishTag, number>();
   for (const r of restaurants) for (const t of dishTags(r)) counts.set(t, (counts.get(t) ?? 0) + 1);
 
@@ -69,9 +71,11 @@ export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent,
         <section className="home-section">
           <div className="section-head">
             <h3 className="section-title">📍 주요장소</h3>
-            <span className="small">옆으로 밀어보기 ›</span>
+            <button className="link-more" onClick={() => setAllBuildings((v) => !v)} aria-expanded={allBuildings}>
+              {allBuildings ? '접기 ‹' : '전체보기 ›'}
+            </button>
           </div>
-          <div className="building-row" ref={buildingRef} onScroll={onBuildingScroll}>
+          <div className={'building-row' + (allBuildings ? ' all' : '')} ref={buildingRef} onScroll={onBuildingScroll}>
             {buildings.map((b) => (
               <button key={b.name} className="building-card" onClick={() => onBuilding(b.name)}>
                 <span className="building-emoji" aria-hidden>

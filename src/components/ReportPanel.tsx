@@ -214,21 +214,6 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
       </section>
 
       <section className="report">
-        <h4>🛵 배달 되나요?</h4>
-        <div className="chips">
-          <button
-            className={'chip tag' + (summary?.myTags.delivery ? ' on' : '')}
-            title="배달앱에서 시켜봤거나 배달되는 걸 확인했으면 눌러주세요"
-            disabled={busy === 'tag'}
-            onClick={() => toggleTag('delivery')}
-          >
-            🛵 배달 돼요 <strong>{summary?.delivery ?? 0}</strong>
-          </button>
-        </div>
-        <p className="small">한 명이라도 체크하면 목록에 "배달" 표시가 붙어요.</p>
-      </section>
-
-      <section className="report">
         <h4>
           💬 한 줄 후기 {reviews.length > 0 && <span className="badge">{reviews.length}개</span>}
           {isAdmin && <span className="badge team">관리자</span>}

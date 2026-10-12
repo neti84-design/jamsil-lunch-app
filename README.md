@@ -95,12 +95,16 @@ Supabase 미연결(로컬 저장) 상태에서는 `.env` 의 `VITE_ADMIN_KEY`(�
 - `src/data/restaurants.ts` 에 식당 목록이 들어 있습니다. 타입은 `src/types.ts` 참고.
 - 검색 결과(다이닝코드·식신·테이블링·폴레·블로그 요약) 기반으로 수집한 초기 데이터라 **가격·영업시간·전화번호는 방문 전 확인**이 필요합니다.
   확인 안 된 값은 `null` 로 두었고, 각 항목의 `sources` 에 출처 URL이 있습니다.
-- 좌표가 `approxLocation: true` 인 곳은 주소/랜드마크 기준 근사치입니다.
-  카카오 REST API 키가 있으면 아래 스크립트로 정확한 좌표를 채울 수 있습니다.
+- 좌표·카카오맵 링크·빈 전화번호는 카카오 장소 검색으로 보정했습니다 (2026-10, 82곳 중 70곳 매칭, 10곳은 주소 좌표).
+  `approxLocation: true` 로 남은 곳(주소 미확인 2곳)은 근사치입니다. 식당을 추가한 뒤 아래 스크립트를 다시 돌리면 됩니다.
 
 ```bash
-KAKAO_REST_KEY=발급키 node scripts/geocode.mjs
+KAKAO_REST_KEY=발급키 node scripts/kakao-enrich.mjs                     # 미리보기 (매칭 결과만 출력)
+KAKAO_REST_KEY=발급키 node scripts/kakao-enrich.mjs --apply             # 주소까지 일치한 곳만 반영
 ```
+
+  이름이 다르게 등록됐거나 다른 지점만 잡히는 곳은 스크립트 안 `REVIEWED` 표에 확인 결과를 적어 둡니다.
+  기존 전화번호는 덮어쓰지 않습니다 (비어 있을 때만 채움).
 
 ### 식당 추가하기
 

@@ -104,36 +104,69 @@ interface PickOptions {
   limit?: number;
 }
 
-/** 오늘의 추천 식당: 주제에 맞는 메뉴 + 평점·팀 별점 + 날마다 조금씩 섞기 */
-export function pickForToday(list: Restaurant[], o: PickOptions): Restaurant[] {
-  const date = kstDate(o.now);
-  const scored: { r: Restaurant; score: number }[] = [];
-  for (const r of list) {
-    // 가격을 알고, 카카오에서 가져온 곳은 영업시간도 아는 곳만
-    if ((r.source && !r.hours) || !r.priceRange || r.priceRange[0] > o.budget) continue;
-    if (o.exclude?.has(r.id)) continue;
-    const walk = o.walkById.get(r.id);
-    if (walk == null || walk > o.theme.maxWalk) continue;
-    if (!o.isOpen(r)) continue;
-    const tags = dishTags(r);
-    let score = 0;
-    // 주제 메뉴가 가장 중요 (평점·거리 보너스는 보통 몇 점 안 됨)
-    if (o.theme.dishes.some((d) => tags.includes(d))) score += 8;
-    if (o.theme.concepts.some((c) => r.concepts.includes(c))) score += 2;
-    if (o.theme.indoor) {
-      const b = buildingOf(r);
-      if (b && INDOOR_BUILDINGS.has(b)) score += 3;
-      score += Math.max(0, 5 - walk) * 0.4;
-    }
-    const s = o.summaries.get(r.id);
-    if (s) score += Math.min(3, (s.totalStars + (s.hidden + s.classic) * 2) / 5);
-    const rt = rating(r);
-    if (rt) score += Math.max(0, rt - 4) * 3;
-    score += dailyJitter(date, r.id) * 2.5;
-    scored.push({ r, score });
+/** 어제 추천에서 평점 하위 이 비율은 오늘 빼고 다른 곳으로 바꾼다 */
+const ROTATE_RATIO = 0.6;
+/** 며칠 전부터 차례로 계산해 "어제 추천"을 정확히 맞춘다 */
+const ROTATE_DAYS = 7;
+
+/** 주제·평점으로 매긴 점수 (날마다 섞는 값은 빼고) */
+function baseScore(r: Restaurant, o: PickOptions): number | null {
+  // 가격을 알고, 카카오에서 가져온 곳은 영업시간도 아는 곳만
+  if ((r.source && !r.hours) || !r.priceRange || r.priceRange[0] > o.budget) return null;
+  if (o.exclude?.has(r.id)) return null;
+  const walk = o.walkById.get(r.id);
+  if (walk == null || walk > o.theme.maxWalk) return null;
+  if (!o.isOpen(r)) return null;
+  const tags = dishTags(r);
+  let score = 0;
+  // 주제 메뉴가 가장 중요 (평점·거리 보너스는 보통 몇 점 안 됨)
+  if (o.theme.dishes.some((d) => tags.includes(d))) score += 8;
+  if (o.theme.concepts.some((c) => r.concepts.includes(c))) score += 2;
+  if (o.theme.indoor) {
+    const b = buildingOf(r);
+    if (b && INDOOR_BUILDINGS.has(b)) score += 3;
+    score += Math.max(0, 5 - walk) * 0.4;
   }
-  return scored
+  const s = o.summaries.get(r.id);
+  if (s) score += Math.min(3, (s.totalStars + (s.hidden + s.classic) * 2) / 5);
+  const rt = rating(r);
+  if (rt) score += Math.max(0, rt - 4) * 3;
+  return score;
+}
+
+/** 그날 추천: 점수 + 날짜별 섞기. drop 에 든 곳은 자리가 남을 때만 */
+function pickForDate(cands: { r: Restaurant; score: number }[], date: string, drop: Set<string>, limit: number): Restaurant[] {
+  const ranked = cands
+    .map((c) => ({ r: c.r, score: c.score + dailyJitter(date, c.r.id) * 2.5 }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, o.limit ?? 6)
     .map((x) => x.r);
+  const fresh = ranked.filter((r) => !drop.has(r.id));
+  return [...fresh, ...ranked.filter((r) => drop.has(r.id))].slice(0, limit);
+}
+
+/** 추천 중 평점이 상대적으로 낮은 하위 60% */
+function lowerRated(picks: Restaurant[]): Set<string> {
+  const n = Math.round(picks.length * ROTATE_RATIO);
+  return new Set([...picks].sort((a, b) => rating(a) - rating(b)).slice(0, n).map((r) => r.id));
+}
+
+/**
+ * 오늘의 추천 식당: 주제에 맞는 메뉴 + 평점·팀 별점 + 날마다 조금씩 섞기.
+ * 같은 조건이면 어제 추천에서 평점 하위 60%는 오늘 다른 곳으로 바뀐다 (상위 40%는 다시 나올 수 있음)
+ */
+export function pickForToday(list: Restaurant[], o: PickOptions): Restaurant[] {
+  const limit = o.limit ?? 6;
+  const cands: { r: Restaurant; score: number }[] = [];
+  for (const r of list) {
+    const score = baseScore(r, o);
+    if (score != null) cands.push({ r, score });
+  }
+  // 어제 추천도 그 전날 추천에 따라 달라지므로 며칠 전부터 차례로 계산
+  let drop = new Set<string>();
+  let picks: Restaurant[] = [];
+  for (let back = ROTATE_DAYS; back >= 0; back--) {
+    picks = pickForDate(cands, kstDate(o.now - back * 86400_000), drop, limit);
+    drop = lowerRated(picks);
+  }
+  return picks;
 }

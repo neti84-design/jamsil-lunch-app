@@ -47,7 +47,7 @@ export function TodayPick({ theme, weather, picks, walkById, now, onSelect, onSe
             return (
               <button key={r.id} className="recent-card" onClick={() => onSelect(r.id)}>
                 <span className="recent-thumb" aria-hidden>
-                  <Thumb r={r} />
+                  <Thumb r={r} width={108} height={84} />
                 </span>
                 <strong className="recent-name">{r.name}</strong>
                 <span className="small recent-meta">

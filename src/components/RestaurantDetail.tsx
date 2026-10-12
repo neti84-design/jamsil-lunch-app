@@ -90,7 +90,7 @@ export function RestaurantDetail({
       <div className="detail-body">
         {r.photo && (
           <div className="detail-photo">
-            <Thumb r={r} fallback={null} />
+            <Thumb r={r} width={400} height={180} fallback={null} />
           </div>
         )}
         {variant === 'sheet' ? null : hasCoords ? (

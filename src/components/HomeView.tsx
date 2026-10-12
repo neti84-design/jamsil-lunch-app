@@ -95,7 +95,7 @@ export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent,
               return (
                 <button key={r.id} className="recent-card" onClick={() => onSelect(r.id)}>
                   <span className="recent-thumb" aria-hidden>
-                    <Thumb r={r} />
+                    <Thumb r={r} width={108} height={84} />
                     {st.state !== 'unknown' && (
                       <span className="recent-state" style={{ background: OPEN_STATE_COLOR[st.state] }}>
                         {st.label}

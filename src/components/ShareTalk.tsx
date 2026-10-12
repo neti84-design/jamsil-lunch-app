@@ -1,0 +1,147 @@
+import { useState } from 'react';
+import { deviceId, timeAgo } from '../lib/reports';
+import { TALK_COMMENT_MAX, type TalkComment, type TalkPost } from '../lib/talk';
+import type { Talk } from '../hooks/useTalk';
+
+interface Props {
+  talk: Talk;
+  now: number;
+  isAdmin: boolean;
+}
+
+function errMsg(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === 'object' && 'message' in e) return String((e as { message: unknown }).message);
+  return String(e);
+}
+
+/** 홈 검색창 바로 아래: 관리자가 올린 질문·공지 한 줄 + 한 줄 답하기 + 사람들 답(옆으로 넘기기) */
+export function ShareTalk({ talk, now, isAdmin }: Props) {
+  if (talk.posts.length === 0) return null;
+  return (
+    <section className="home-section talk" aria-label="공유톡">
+      <div className="section-head">
+        <h3 className="section-title">💬 공유톡</h3>
+        {talk.mode === 'local' && <span className="small">이 기기에만 저장</span>}
+      </div>
+      <div className="talk-list">
+        {talk.posts.map((p) => (
+          <TalkItem
+            key={p.id}
+            post={p}
+            comments={talk.comments.filter((c) => c.postId === p.id)}
+            talk={talk}
+            now={now}
+            isAdmin={isAdmin}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comments: TalkComment[]; talk: Talk; now: number; isAdmin: boolean }) {
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  /** 한 줄에 다 안 보이는 글은 누르면 펼쳐 보기 */
+  const [expanded, setExpanded] = useState(false);
+  const me = deviceId();
+  const sorted = [...comments].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  const run = async (fn: () => Promise<unknown>) => {
+    setBusy(true);
+    setErr(null);
+    try {
+      await fn();
+    } catch (e) {
+      setErr(errMsg(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submit = () => {
+    const body = text.trim();
+    if (!body) return;
+    void run(async () => {
+      await talk.addComment(post.id, body);
+      setText('');
+    });
+  };
+
+  const remove = (c: TalkComment) => {
+    const own = c.deviceId === me;
+    if (!own && !confirm('관리자 권한으로 이 댓글을 지울까요?')) return;
+    void run(() => talk.removeComment(c.id, !own));
+  };
+
+  return (
+    <article className={'talk-item' + (post.allowComments ? '' : ' notice')}>
+      <div className="talk-q">
+        <span className="talk-q-icon" aria-hidden>
+          {post.allowComments ? '🙋' : '📢'}
+        </span>
+        <span className={'talk-q-text' + (expanded ? ' open' : '')} onClick={() => setExpanded((v) => !v)}>
+          {post.body}
+        </span>
+        {isAdmin && (
+          <span className="talk-admin">
+            <button className="link" disabled={busy} onClick={() => void run(() => talk.setPostComments(post.id, !post.allowComments))}>
+              {post.allowComments ? '댓글 닫기' : '댓글 열기'}
+            </button>
+            <button
+              className="link del"
+              disabled={busy}
+              onClick={() => confirm('이 공유톡을 댓글까지 모두 지울까요?') && void run(() => talk.removePost(post.id))}
+            >
+              삭제
+            </button>
+          </span>
+        )}
+      </div>
+
+      {post.allowComments && (
+        <form
+          className="one-line-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+        >
+          <input
+            className="mini grow"
+            placeholder="한 줄로 답하기"
+            maxLength={TALK_COMMENT_MAX}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            enterKeyHint="send"
+          />
+          <button className="btn sm primary" disabled={busy || !text.trim()}>
+            등록
+          </button>
+        </form>
+      )}
+
+      {sorted.length > 0 && (
+        <div className="talk-strip" aria-label="답글 (옆으로 넘기기)">
+          {sorted.map((c) => {
+            const own = c.deviceId === me;
+            return (
+              <span key={c.id} className={'talk-chip' + (own ? ' own' : '')}>
+                <span className="talk-chip-text">{c.body}</span>
+                <span className="talk-chip-time">{timeAgo(c.createdAt, now)}</span>
+                {(own || isAdmin) && (
+                  <button className="talk-chip-del" disabled={busy} onClick={() => remove(c)} aria-label="댓글 지우기">
+                    ✕
+                  </button>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {err && <p className="small error">{err}</p>}
+    </article>
+  );
+}

@@ -5,6 +5,7 @@ import {
   CUISINE_EMOJI,
   RESERVATION_LABELS,
   WAIT_LABELS,
+  hasDelivery,
   type Restaurant,
 } from '../types';
 import { formatWon, kakaoMapLink, naverBlogSearchLink, naverMapLink, telLink } from '../lib/links';
@@ -28,6 +29,8 @@ interface Props {
   onRemoveReport: (id: string, asAdmin?: boolean) => Promise<unknown>;
   onClose: () => void;
   onToggleFavorite: () => void;
+  /** 'sheet' = 지도 아래에서 끌어 올리는 패널 안에 들어갈 때 (작은 지도 생략) */
+  variant?: 'panel' | 'sheet';
 }
 
 const REPO_ISSUES = 'https://github.com/neti84-design/jamsil-lunch-app/issues/new';
@@ -47,6 +50,7 @@ export function RestaurantDetail({
   onRemoveReport,
   onClose,
   onToggleFavorite,
+  variant = 'panel',
 }: Props) {
   const wait = WAIT_LABELS[r.waiting.level];
   const res = RESERVATION_LABELS[r.reservation.method];
@@ -56,7 +60,7 @@ export function RestaurantDetail({
   const icon = L.divIcon({ className: 'pin selected', html: `<span>${CUISINE_EMOJI[r.cuisine]}</span>`, iconSize: [34, 34], iconAnchor: [17, 34] });
 
   return (
-    <aside className="detail" role="dialog" aria-label={`${r.name} 상세`}>
+    <aside className={'detail' + (variant === 'sheet' ? ' sheet-detail' : '')} role="dialog" aria-label={`${r.name} 상세`}>
       <header className="detail-head">
         <button className="icon-btn" onClick={onClose} aria-label="닫기">
           ✕
@@ -78,7 +82,7 @@ export function RestaurantDetail({
       </header>
 
       <div className="detail-body">
-        {hasCoords ? (
+        {variant === 'sheet' ? null : hasCoords ? (
           <div className="mini-map">
             <MapContainer center={[r.lat!, r.lng!]} zoom={16} scrollWheelZoom={false} dragging={false} zoomControl={false} attributionControl={false} style={{ height: 180 }}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" eventHandlers={tiles.handlers} />
@@ -175,8 +179,8 @@ export function RestaurantDetail({
               {r.seating.room === true && <span className="badge">🚪 룸 있음</span>}
               {r.seating.room === false && <span className="badge soft">룸 없음</span>}
               {r.seating.room == null && <span className="badge soft">룸 미확인</span>}
-              {r.seating.solo && <span className="badge">🧑 혼밥 OK</span>}
-              {r.seating.group == null && r.seating.solo == null && <span className="small">정보 없음</span>}
+              {hasDelivery(r, summary?.delivery) && <span className="badge delivery">🛵 배달</span>}
+              {r.seating.group == null && r.seating.room == null && !hasDelivery(r, summary?.delivery) && <span className="small">정보 없음</span>}
             </p>
             {r.seating.notes && <p className="small">{r.seating.notes}</p>}
             {r.seating.estimated && r.seating.group && (

@@ -104,6 +104,8 @@ export function useReports() {
     localReason: backend.localReason,
     now,
     isAdmin,
+    /** 확인된 관리자 비밀번호 (공유톡 관리용). 관리자가 아니면 '' */
+    adminToken: isAdmin ? adminToken : '',
     loginAdmin,
     logoutAdmin,
   };

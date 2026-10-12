@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type UIEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 import { RESTAURANTS } from './data';
@@ -12,14 +12,17 @@ import { SearchBox } from './components/SearchBox';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { HomeView } from './components/HomeView';
 import { TowerLogo } from './components/TowerLogo';
+import { MapSheet } from './components/MapSheet';
+import { ShareTalk } from './components/ShareTalk';
 import { useReports } from './hooks/useReports';
+import { useTalk } from './hooks/useTalk';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
 import { maybeOpen } from './lib/hours';
 import { makeNameMatcher, makeQueryMatcher } from './lib/search';
 import type { ReportSummary } from './lib/reports';
-import type { Restaurant } from './types';
+import { SEATING_LABELS, hasDelivery, type Restaurant } from './types';
 
 const FAV_KEY = 'jamsil-lunch:favorites';
 const FILTER_KEY = 'jamsil-lunch:filters-v3';
@@ -48,7 +51,14 @@ function loadJSON<T>(key: string, fallback: T): T {
   }
 }
 
-function matches(r: Restaurant, walk: number | null, f: Filters, now: number, queryOk: (r: Restaurant) => boolean): boolean {
+function matches(
+  r: Restaurant,
+  walk: number | null,
+  f: Filters,
+  now: number,
+  queryOk: (r: Restaurant) => boolean,
+  summary: ReportSummary | undefined,
+): boolean {
   // 가격 미확인 가게는 예산을 고르면 숨긴다
   if (r.priceRange ? r.priceRange[0] > f.maxPrice : f.maxPrice < NO_LIMIT) return false;
   if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false;
@@ -57,7 +67,7 @@ function matches(r: Restaurant, walk: number | null, f: Filters, now: number, qu
     if (!f.dishes.some((d) => tags.includes(d))) return false;
   }
   if (f.concepts.length && !f.concepts.some((c) => r.concepts.includes(c))) return false;
-  if (f.seating === 'solo' && !r.seating.solo) return false;
+  if (f.delivery && !hasDelivery(r, summary?.delivery)) return false;
   if (f.seating === 'room' && !r.seating.room) return false;
   if (f.seating === 'group') {
     if (!r.seating.group) return false;
@@ -109,7 +119,11 @@ interface NavState {
 }
 
 export default function App() {
-  const [filters, setFilters] = useState<Filters>(() => loadJSON(FILTER_KEY, DEFAULT_FILTERS));
+  const [filters, setFilters] = useState<Filters>(() => {
+    const f = loadJSON(FILTER_KEY, DEFAULT_FILTERS);
+    // 예전 버전에 있던 '혼밥' 좌석 조건 등 지금 없는 값은 버린다
+    return f.seating && !(f.seating in SEATING_LABELS) ? { ...f, seating: null } : f;
+  });
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set(loadJSON<string[]>(FAV_KEY, [])));
   const [recentIds, setRecentIds] = useState<string[]>(() => loadJSON<string[]>(RECENT_KEY, []));
   const [searches, setSearches] = useState<string[]>(() => loadJSON<string[]>(SEARCH_KEY, []));
@@ -125,6 +139,9 @@ export default function App() {
   const nextScroll = useRef(0);
   const lastScroll = useRef(0);
   const live = useReports();
+  const talk = useTalk(live.adminToken);
+  /** 지도에서 누른 식당 (아래 패널로 보여줌, 새 창으로 열지 않음) */
+  const [mapSelId, setMapSelId] = useState<string | null>(null);
 
   useEffect(() => saveJSON(FILTER_KEY, filters), [filters]);
   useEffect(() => saveJSON(FAV_KEY, [...favorites]), [favorites]);
@@ -139,18 +156,19 @@ export default function App() {
   const byId = useMemo(() => new Map(RESTAURANTS.map((r) => [r.id, r])), []);
   const buildings = useMemo(() => bigBuildings(RESTAURANTS), []);
 
-  const results = useMemo(() => {
-    const queryOk = makeQueryMatcher(filters.query, RESTAURANTS);
-    const list = RESTAURANTS.filter((r) => matches(r, walkById.get(r.id) ?? null, filters, live.now, queryOk));
+  /** 조건에 맞는 식당을 정렬해서. 지도는 도보 조건으로 mapMaxWalk 를 쓴다 */
+  const run = (f: Filters) => {
+    const queryOk = makeQueryMatcher(f.query, RESTAURANTS);
+    const list = RESTAURANTS.filter((r) => matches(r, walkById.get(r.id) ?? null, f, live.now, queryOk, live.summaries.get(r.id)));
     const walkOf = (r: Restaurant) => walkById.get(r.id) ?? 99;
-    const nameHit = makeNameMatcher(filters.query);
+    const nameHit = makeNameMatcher(f.query);
     list.sort((a, b) => {
       // 이름으로 찾은 가게가 메뉴·종류로 걸린 가게보다 먼저
       const byName = Number(nameHit(b)) - Number(nameHit(a));
       if (byName) return byName;
-      if (filters.sort === 'walk') return walkOf(a) - walkOf(b);
-      if (filters.sort === 'price') return (a.priceRange?.[0] ?? Infinity) - (b.priceRange?.[0] ?? Infinity) || walkOf(a) - walkOf(b);
-      if (filters.sort === 'rating') {
+      if (f.sort === 'walk') return walkOf(a) - walkOf(b);
+      if (f.sort === 'price') return (a.priceRange?.[0] ?? Infinity) - (b.priceRange?.[0] ?? Infinity) || walkOf(a) - walkOf(b);
+      if (f.sort === 'rating') {
         const rt = (r: Restaurant) => live.summaries.get(r.id)?.avgRating ?? externalRating(r);
         return rt(b) - rt(a) || compareStars(a, b, live.summaries);
       }
@@ -158,7 +176,17 @@ export default function App() {
       return compareStars(a, b, live.summaries) || Number(!!a.source) - Number(!!b.source) || walkOf(a) - walkOf(b);
     });
     return list;
-  }, [filters, walkById, live.summaries, live.now]);
+  };
+  const results = useMemo(
+    () => run(filters),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filters, walkById, live.summaries, live.now],
+  );
+  const mapResults = useMemo(
+    () => (tab === 'map' ? run({ ...filters, maxWalk: filters.mapMaxWalk }) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tab, filters, walkById, live.summaries, live.now],
+  );
 
   const [shown, setShown] = useState(PAGE_SIZE);
   useEffect(() => setShown(PAGE_SIZE), [results]);
@@ -230,6 +258,13 @@ export default function App() {
     setSelectedId(id);
     setRecentIds((prev) => [id, ...prev.filter((x) => x !== id)].slice(0, MAX_RECENT));
   };
+
+  /** 지도 핀을 누르면: 말풍선 + 아래 패널(접힘). 최근 본 식당에도 남긴다 */
+  const selectOnMap = useCallback((id: string) => {
+    setMapSelId(id);
+    setRecentIds((prev) => [id, ...prev.filter((x) => x !== id)].slice(0, MAX_RECENT));
+  }, []);
+  const mapSelected = mapSelId ? (byId.get(mapSelId) ?? null) : null;
 
   // 관심 저장을 공유 저장소에도 남겨 "추천매장" 집계에 쓴다 (실패해도 내 관심 목록은 그대로)
   const publishFav = (id: string, on: boolean) => {
@@ -347,7 +382,8 @@ export default function App() {
     <FilterBar
       filters={filters}
       onChange={setFilters}
-      resultCount={results.length}
+      walkKey={tab === 'map' ? 'mapMaxWalk' : 'maxWalk'}
+      resultCount={tab === 'map' ? mapResults.length : results.length}
       totalCount={RESTAURANTS.length}
       buildings={buildings}
       searchBox={searchBox}
@@ -403,6 +439,7 @@ export default function App() {
         {tab === 'home' && (
           <HomeView
             searchBox={searchBox}
+            talk={<ShareTalk talk={talk} now={live.now} isAdmin={live.isAdmin} />}
             ticker={ticker}
             nearby={nearbyOpen.map(card)}
             restaurants={RESTAURANTS}
@@ -440,7 +477,34 @@ export default function App() {
 
         {tab === 'map' && (
           <div className="map-wrap">
-            <MapView restaurants={results} selectedId={selectedId} onSelect={open} maxWalk={filters.maxWalk} />
+            <MapView
+              restaurants={mapResults}
+              selectedId={mapSelId}
+              onSelect={selectOnMap}
+              maxWalk={filters.mapMaxWalk}
+              walkById={walkById}
+            />
+            {mapSelected && (
+              <MapSheet key={mapSelected.id} onClose={() => setMapSelId(null)}>
+                <RestaurantDetail
+                  variant="sheet"
+                  r={mapSelected}
+                  walk={walkById.get(mapSelected.id) ?? null}
+                  favorite={favorites.has(mapSelected.id)}
+                  budget={filters.maxPrice}
+                  reports={live.reports}
+                  summary={live.summaries.get(mapSelected.id)}
+                  reportMode={live.mode}
+                  reportLocalReason={live.localReason}
+                  now={live.now}
+                  isAdmin={live.isAdmin}
+                  onAddReport={live.add}
+                  onRemoveReport={live.remove}
+                  onClose={() => setMapSelId(null)}
+                  onToggleFavorite={() => toggleFav(mapSelected.id)}
+                />
+              </MapSheet>
+            )}
           </div>
         )}
 
@@ -540,6 +604,7 @@ export default function App() {
             onLogout={live.logoutAdmin}
             onRemove={live.remove}
             onClose={() => setAdminOpen(false)}
+            talk={talk}
           />
         </>
       )}

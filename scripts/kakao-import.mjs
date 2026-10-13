@@ -25,6 +25,8 @@ const OFFICE = OFFICES[SITE];
 if (!OFFICE) throw new Error(`SITE 는 ${Object.keys(OFFICES).join(' / ')} 중 하나`);
 const DATA_DIR = SITE === 'jamsil' ? '../src/data/' : `../src/data/${SITE}/`;
 const EXCLUDE = /^(술집|간식|구내식당|식품판매|카페)$/;
+/** 문 닫은 곳 (카카오에 남아 있어도 다시 가져오지 않는다) — 이태리부대찌개 잠실역점(2026-10 폐점 제보) */
+const CLOSED = new Set(['1145064937']);
 /** 카페라도 샐러드·샌드위치로 점심이 되는 곳은 넣는다 (달리는커피 등) */
 const MEAL_CAFE = /달리는커피|샐러드|샌드위치|샌드|포케|베이글|토스트|브런치/;
 
@@ -77,7 +79,7 @@ const curatedIds = new Set([...curated.matchAll(/place\.map\.kakao\.com\/(\d+)/g
 const rows = [];
 for (const d of found.values()) {
   const cat = d.category_name.split(' > ').slice(1); // ["한식", "해장국", "달래해장"]
-  if (!cat[0] || (EXCLUDE.test(cat[0]) && !(cat[0] === '카페' && MEAL_CAFE.test(d.place_name))) || curatedIds.has(d.id)) continue;
+  if (!cat[0] || (EXCLUDE.test(cat[0]) && !(cat[0] === '카페' && MEAL_CAFE.test(d.place_name))) || curatedIds.has(d.id) || CLOSED.has(d.id)) continue;
   const lat = Number(d.y);
   const lng = Number(d.x);
   if (meters(lat, lng) > RADIUS) continue;

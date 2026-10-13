@@ -24,7 +24,8 @@ const OFFICES = { jamsil: { lat: 37.5141, lng: 127.1017 }, ydp: { lat: 37.527817
 const OFFICE = OFFICES[SITE];
 if (!OFFICE) throw new Error(`SITE 는 ${Object.keys(OFFICES).join(' / ')} 중 하나`);
 const DATA_DIR = SITE === 'jamsil' ? '../src/data/' : `../src/data/${SITE}/`;
-const EXCLUDE = /^(술집|간식|구내식당|식품판매|카페)$/;
+// 여가시설(보드게임카페 등)·유아(키즈카페·놀이시설)도 카카오에선 음식점으로 잡혀서 뺀다
+const EXCLUDE = /^(술집|간식|구내식당|식품판매|카페|여가시설|유아)$/;
 /** 문 닫은 곳 (카카오에 남아 있어도 다시 가져오지 않는다) — 이태리부대찌개 잠실역점(2026-10 폐점 제보) */
 const CLOSED = new Set(['1145064937']);
 /** 분류(간식·카페 등) 때문에 빠지지만 점심으로 추천받은 곳 — 르쁘띠푸 당산본점(영등포, 베이커리) */

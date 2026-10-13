@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
-import { RESTAURANTS } from './data';
-import { ALL_WALK, DEFAULT_FILTERS, FilterBar, NO_LIMIT, type Filters } from './components/FilterBar';
+import { loadRestaurants } from './data';
+import { ALL_WALK, FilterBar, defaultFilters, NO_LIMIT, type Filters } from './components/FilterBar';
 import { RestaurantCard } from './components/RestaurantCard';
 import { RestaurantDetail } from './components/RestaurantDetail';
 import { AdminPanel } from './components/AdminPanel';
@@ -12,6 +12,7 @@ import { SearchBox } from './components/SearchBox';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { HomeView } from './components/HomeView';
 import { TowerLogo } from './components/TowerLogo';
+import { SiteSwitch } from './components/SiteSwitch';
 import { MapSheet } from './components/MapSheet';
 import { ShareTalk } from './components/ShareTalk';
 import { TodayPick } from './components/TodayPick';
@@ -21,6 +22,7 @@ import { useReports } from './hooks/useReports';
 import { useTalk } from './hooks/useTalk';
 import { useVotes } from './hooks/useVotes';
 import { isWide, useWide } from './hooks/useWide';
+import { SITES, SiteContext, loadSite, saveSite, type SiteId } from './lib/sites';
 import { fetchLunchWeather, type LunchWeather } from './lib/weather';
 import { dayTheme, pickForToday, tasteFrom } from './lib/recommend';
 import { walkMinutesFrom } from './lib/geo';
@@ -34,7 +36,7 @@ import { SEATING_LABELS, hasDelivery, type Restaurant } from './types';
 /** 만든 사람 (화면 맨 아래 작게) */
 const MAKER = 'cjy1***';
 const FAV_KEY = 'jamsil-lunch:favorites';
-// 기본값(1.2만원·도보 10분)이 바뀌어 저장 키도 새로 — 예전 저장본은 버린다
+// 기본값(식대·도보 10분)이 바뀌어 저장 키도 새로 — 예전 저장본은 버린다
 const FILTER_KEY = 'jamsil-lunch:filters-v4';
 const RECENT_KEY = 'jamsil-lunch:recent';
 const SEARCH_KEY = 'jamsil-lunch:searches';
@@ -145,9 +147,34 @@ interface NavState {
   detail?: string;
 }
 
+/** 데이터를 받기 전 빈 목록 (매번 새 배열을 만들지 않게) */
+const NO_RESTAURANTS: Restaurant[] = [];
+
 export default function App() {
+  /** 근무지: 마지막에 고른 곳으로 열린다 (처음엔 영등포맥스) */
+  const [siteId, setSiteId] = useState<SiteId>(loadSite);
+  const site = SITES[siteId];
+  /** 근무지별 식당 — 고른 근무지 것만 그때 받아 온다 */
+  const [lists, setLists] = useState<Partial<Record<SiteId, Restaurant[]>>>({});
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadTry, setLoadTry] = useState(0);
+  const restaurants = lists[siteId] ?? NO_RESTAURANTS;
+  const loading = !lists[siteId];
+  useEffect(() => {
+    let alive = true;
+    setLoadFailed(false);
+    loadRestaurants(siteId)
+      .then((list) => alive && setLists((prev) => ({ ...prev, [siteId]: list })))
+      .catch((e: unknown) => {
+        console.warn('[jamsil-lunch] 식당 데이터 불러오기 실패:', e);
+        if (alive) setLoadFailed(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [siteId, loadTry]);
   const [filters, setFilters] = useState<Filters>(() => {
-    const f = loadJSON(FILTER_KEY, DEFAULT_FILTERS);
+    const f = loadJSON(FILTER_KEY, defaultFilters(SITES[siteId]));
     // 예전 버전에 있던 '혼밥' 좌석 조건 등 지금 없는 값은 버린다
     return f.seating && !(f.seating in SEATING_LABELS) ? { ...f, seating: null } : f;
   });
@@ -171,7 +198,7 @@ export default function App() {
   const nextScroll = useRef(0);
   const lastScroll = useRef(0);
   const live = useReports();
-  const talk = useTalk(live.adminToken);
+  const talk = useTalk(live.adminToken, siteId);
   /** 지도에서 누른 식당 (아래 패널로 보여줌, 새 창으로 열지 않음) */
   const [mapSelId, setMapSelId] = useState<string | null>(null);
   /** 관심매장 탭: 나의 관심매장 / 동료 추천매장 */
@@ -201,6 +228,14 @@ export default function App() {
     history.replaceState(history.state, '', location.pathname);
   }, [rememberPoll]);
 
+  // ?site= 링크로 들어왔으면 근무지는 이미 저장했으니 주소창에서 지운다 (새로고침해도 마지막에 고른 곳으로)
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if (!q.has('site')) return;
+    q.delete('site');
+    history.replaceState(history.state, '', location.pathname + (q.size ? `?${q}` : ''));
+  }, []);
+
   // 점심때 날씨 (실패하면 요일 추천만)
   useEffect(() => {
     const ac = new AbortController();
@@ -214,16 +249,18 @@ export default function App() {
 
   const walkById = useMemo(() => {
     const m = new Map<string, number | null>();
-    for (const r of RESTAURANTS) m.set(r.id, walkMinutesFrom(r.lat, r.lng, r.walkMinutes, insideMinutes(r)));
+    for (const r of restaurants) m.set(r.id, walkMinutesFrom(r.lat, r.lng, r.walkMinutes, insideMinutes(r), site));
     return m;
-  }, []);
-  const byId = useMemo(() => new Map(RESTAURANTS.map((r) => [r.id, r])), []);
-  const buildings = useMemo(() => bigBuildings(RESTAURANTS), []);
+  }, [restaurants, site]);
+  /** 받아 둔 근무지 식당 전부 (투표 링크·최근 본 식당) */
+  const byId = useMemo(() => new Map(Object.values(lists).flatMap((l) => l.map((r) => [r.id, r] as const))), [lists]);
+  // 근무지에서 가까운 건물부터
+  const buildings = useMemo(() => bigBuildings(restaurants, site.office), [restaurants, site]);
 
   /** 조건에 맞는 식당을 정렬해서. 지도는 도보 조건으로 mapMaxWalk 를 쓴다 */
   const run = (f: Filters) => {
-    const queryOk = makeQueryMatcher(f.query, RESTAURANTS);
-    const list = RESTAURANTS.filter((r) => matches(r, walkById.get(r.id) ?? null, f, live.now, queryOk, live.summaries.get(r.id)));
+    const queryOk = makeQueryMatcher(f.query, restaurants);
+    const list = restaurants.filter((r) => matches(r, walkById.get(r.id) ?? null, f, live.now, queryOk, live.summaries.get(r.id)));
     const walkOf = (r: Restaurant) => walkById.get(r.id) ?? 99;
     const nameHit = makeNameMatcher(f.query);
     list.sort((a, b) => {
@@ -256,24 +293,28 @@ export default function App() {
   useEffect(() => setShown(PAGE_SIZE), [results]);
 
   const selected = selectedId ? (byId.get(selectedId) ?? null) : null;
-  const favoriteList = useMemo(() => RESTAURANTS.filter((r) => favorites.has(r.id)), [favorites]);
-  const recentList = useMemo(() => recentIds.map((id) => byId.get(id)).filter((r): r is Restaurant => !!r), [recentIds, byId]);
+  const favoriteList = useMemo(() => restaurants.filter((r) => favorites.has(r.id)), [restaurants, favorites]);
+  // 최근 본 식당은 지금 근무지 것만
+  const recentList = useMemo(() => {
+    const here = new Set(restaurants.map((r) => r.id));
+    return recentIds.filter((id) => here.has(id)).map((id) => byId.get(id)!);
+  }, [recentIds, byId, restaurants]);
   const nearbyOpen = useMemo(
     () =>
       // 카카오에서 가져온 곳은 영업시간을 아는 곳만 "지금 영업 중"에 넣는다
-      RESTAURANTS.filter((r) => (!r.source || r.hours) && maybeOpen(r, live.now) && walkById.get(r.id) != null)
+      restaurants.filter((r) => (!r.source || r.hours) && maybeOpen(r, live.now) && walkById.get(r.id) != null)
         .sort((a, b) => walkById.get(a.id)! - walkById.get(b.id)!)
         .slice(0, 5),
-    [live.now, walkById],
+    [restaurants, live.now, walkById],
   );
   const recommended = useMemo(
     () =>
-      RESTAURANTS.filter((r) => {
+      restaurants.filter((r) => {
         const s = live.summaries.get(r.id);
         // 내 관심 저장만 있는 곳은 "다른 사람" 추천이 아니므로 뺀다
         return recommendScore(s) - (s?.myTags.fav ? 3 : 0) > 0;
       }).sort((a, b) => recommendScore(live.summaries.get(b.id)) - recommendScore(live.summaries.get(a.id))),
-    [live.summaries],
+    [restaurants, live.summaries],
   );
   /** 오늘의 추천: 날씨가 특별하면 날씨, 아니면 요일 주제. 예산·도보는 지금 조건을 따른다 */
   const theme = useMemo(
@@ -284,14 +325,14 @@ export default function App() {
   const taste = useMemo(() => tasteFrom(favoriteList), [favoriteList]);
   const todayPicks = useMemo(() => {
     const base = { theme, now: live.now, budget: filters.maxPrice, walkById, summaries: live.summaries, taste, seed };
-    const open = pickForToday(RESTAURANTS, { ...base, isOpen: (r) => maybeOpen(r, live.now) });
+    const open = pickForToday(restaurants, { ...base, isOpen: (r) => maybeOpen(r, live.now) });
     // 영업 끝난 시간(저녁·주말)엔 영업시간과 상관없이 — 다음 점심 고민용
-    return open.length >= 3 ? open : pickForToday(RESTAURANTS, { ...base, isOpen: () => true });
-  }, [theme, live.now, live.summaries, filters.maxPrice, walkById, taste, seed]);
+    return open.length >= 3 ? open : pickForToday(restaurants, { ...base, isOpen: () => true });
+  }, [restaurants, theme, live.now, live.summaries, filters.maxPrice, walkById, taste, seed]);
 
   const topRated = useMemo(
-    () => [...RESTAURANTS].filter((r) => externalRating(r) > 0).sort((a, b) => externalRating(b) - externalRating(a)).slice(0, 10),
-    [],
+    () => [...restaurants].filter((r) => externalRating(r) > 0).sort((a, b) => externalRating(b) - externalRating(a)).slice(0, 10),
+    [restaurants],
   );
 
   // ---------- 화면 이동 (브라우저/휴대폰 뒤로가기와 연동) ----------
@@ -376,6 +417,25 @@ export default function App() {
     publishFav(id, on);
   };
 
+  /** 근무지 바꾸기: 건물·검색어는 그 동네 것이라 비우고, 열어 둔 식당은 닫는다 */
+  const switchSite = (id: SiteId) => {
+    if (id === siteId) return;
+    setSiteId(id);
+    saveSite(id);
+    // 식대는 근무지마다 기본값이 달라서, 기본값 그대로였으면 새 근무지 기본값으로
+    const budget = (f: Filters) => (f.maxPrice === SITES[siteId].defaultBudget ? SITES[id].defaultBudget : f.maxPrice);
+    setFilters((f) => ({ ...f, maxPrice: budget(f), building: null, query: '' }));
+    setMapSelId(null);
+    if (selectedId) open(null);
+  };
+
+  // 근무지마다 색(테마)·제목·주소창 색
+  useEffect(() => {
+    document.documentElement.dataset.site = siteId;
+    document.title = `오늘${site.brand.accent} — ${site.brand.sub}`;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', site.themeColor);
+  }, [siteId, site]);
+
   const goTab = (t: Tab) => {
     if (t === tab || (wide && t === 'search' && tab === 'map')) {
       mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -397,13 +457,13 @@ export default function App() {
     setAdminOpen(false);
     setVoteView(null);
     setFiltersOpen(false);
-    setFilters(DEFAULT_FILTERS);
+    setFilters(defaultFilters(site));
     if (depth > 0) history.go(-depth);
     else mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const searchWith = (patch: Partial<Filters>) => {
-    setFilters({ ...DEFAULT_FILTERS, ...patch });
+    setFilters({ ...defaultFilters(site), ...patch });
     setFiltersOpen(false);
     goTab('search');
   };
@@ -493,7 +553,7 @@ export default function App() {
     if (shown < results.length && el.scrollHeight - el.scrollTop - el.clientHeight < 600) setShown((n) => n + PAGE_SIZE);
   };
 
-  const ticker = <LiveTicker reports={live.reports} restaurants={RESTAURANTS} now={live.now} mode={live.mode} onSelect={open} />;
+  const ticker = <LiveTicker reports={live.reports} restaurants={restaurants} now={live.now} mode={live.mode} onSelect={open} />;
 
   const filterBar = (
     <FilterBar
@@ -501,7 +561,7 @@ export default function App() {
       onChange={setFilters}
       walkKey={tab === 'map' ? 'mapMaxWalk' : 'maxWalk'}
       resultCount={tab === 'map' ? mapResults.length : results.length}
-      totalCount={RESTAURANTS.length}
+      totalCount={restaurants.length}
       buildings={buildings}
       searchBox={searchBox}
       open={filtersOpen}
@@ -519,15 +579,15 @@ export default function App() {
               goHome();
             }}
           >
-            <TowerLogo />
+            <TowerLogo site={siteId} />
             <span className="brand-text">
               <h1>
                 <span className="brand-name">
-                  오늘<em>잠심</em>
+                  오늘<em>{site.brand.accent}</em>
                 </span>
-                <span className="brand-sub">잠실점심</span>
+                <span className="brand-sub">{site.brand.sub}</span>
               </h1>
-              <span className="tagline">구내식당 공사 이슈로 인한 식사 문제 해결을 위한 어플!</span>
+              <span className="tagline">{site.brand.tagline}</span>
             </span>
           </a>
   );
@@ -562,7 +622,7 @@ export default function App() {
             onChange={setFilters}
             walkKey="maxWalk"
             resultCount={results.length}
-            totalCount={RESTAURANTS.length}
+            totalCount={restaurants.length}
             buildings={buildings}
             searchBox={searchBox}
             open
@@ -580,7 +640,7 @@ export default function App() {
             )}
             <span className="result-meta">
               <strong>{results.length}</strong>
-              <span className="small">/{RESTAURANTS.length}곳</span>
+              <span className="small">/{restaurants.length}곳</span>
             </span>
           </div>
           <div className="card-list split-list" hidden={!!mapSelected} onScroll={onSideScroll}>
@@ -629,15 +689,26 @@ export default function App() {
     </div>
   );
 
+  const siteSwitch = <SiteSwitch value={siteId} onChange={switchSite} />;
+
   return (
+    <SiteContext.Provider value={site}>
     <div className={'app' + (wide ? ' wide' : '')}>
       {wide ? (
         <header className="wide-top">
           {brand}
-          <BottomNav variant="top" tab={tab} favCount={favorites.size} onChange={goTab} />
+          <div className="wide-top-right">
+            <BottomNav variant="top" tab={tab} favCount={favoriteList.length} onChange={goTab} />
+            {siteSwitch}
+          </div>
         </header>
       ) : (
-        tab === 'home' && <header className="topbar">{brand}</header>
+        tab === 'home' && (
+          <header className="topbar">
+            {brand}
+            {siteSwitch}
+          </header>
+        )
       )}
       {!wide && tab === 'search' && filterBar}
       {!wide && tab === 'map' && filterBar}
@@ -675,7 +746,7 @@ export default function App() {
             talk={<ShareTalk talk={talk} now={live.now} isAdmin={live.isAdmin} />}
             ticker={ticker}
             nearby={nearbyOpen.map(card)}
-            restaurants={RESTAURANTS}
+            restaurants={restaurants}
             recent={recentList}
             buildings={buildings}
             walkById={walkById}
@@ -806,7 +877,22 @@ export default function App() {
         )}
       </main>
 
-      {!wide && <BottomNav tab={tab} favCount={favorites.size} onChange={goTab} />}
+      {loading && (
+        <div className="data-loading" role="status">
+          {loadFailed ? (
+            <>
+              식당 정보를 불러오지 못했어요.
+              <button className="btn sm" onClick={() => setLoadTry((n) => n + 1)}>
+                다시 시도
+              </button>
+            </>
+          ) : (
+            <>🍱 {site.label} 주변 식당 불러오는 중…</>
+          )}
+        </div>
+      )}
+
+      {!wide && <BottomNav tab={tab} favCount={favoriteList.length} onChange={goTab} />}
 
       {voteView && (
         <>
@@ -814,7 +900,7 @@ export default function App() {
           <VotePanel
             view={voteView}
             votes={votes}
-            restaurants={RESTAURANTS}
+            restaurants={restaurants}
             byId={byId}
             walkById={walkById}
             draft={voteDraft}
@@ -860,7 +946,7 @@ export default function App() {
           <div className="backdrop" onClick={() => setAdminOpen(false)} />
           <AdminPanel
             reports={live.reports}
-            restaurants={RESTAURANTS}
+            restaurants={restaurants}
             now={live.now}
             isAdmin={live.isAdmin}
             onLogin={live.loginAdmin}
@@ -872,5 +958,6 @@ export default function App() {
         </>
       )}
     </div>
+    </SiteContext.Provider>
   );
 }

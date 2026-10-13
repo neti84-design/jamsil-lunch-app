@@ -1989,3 +1989,102 @@ input.mini.vote-title-input {
 .recent-state.taste-mark {
   background: var(--accent);
 }
+
+/* ---------- 근무지 바꾸기 (오른쪽 위) ---------- */
+.site-switch {
+  flex: none;
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.site-switch button {
+  border: none;
+  background: none;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.site-switch button.on {
+  background: var(--accent);
+  color: #fff;
+}
+.topbar {
+  position: relative;
+}
+/* 휴대폰: 바꾸기 단추는 오른쪽 위 구석에 작게, 이름은 한 줄로 */
+.topbar .site-switch {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 2px;
+}
+.topbar .site-switch button {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+.topbar .brand {
+  flex: 1;
+}
+.topbar .brand h1 {
+  white-space: nowrap;
+}
+.wide-top-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ---------- 영등포맥스: 초록 테마 ---------- */
+:root[data-site='ydp'] {
+  --accent: #1f9d55;
+  --accent-soft: #e7f6ed;
+}
+:root[data-site='ydp'] .topbar,
+:root[data-site='ydp'] .wide-top {
+  background: linear-gradient(180deg, #eaf8ef 0%, var(--surface) 100%);
+}
+:root[data-site='ydp'] .tower-logo {
+  box-shadow: 0 4px 12px rgba(31, 157, 85, 0.3);
+}
+:root[data-site='ydp'] .brand-name {
+  color: #1d3a2a;
+}
+:root[data-site='ydp'] .brand-name em {
+  background-image: linear-gradient(90deg, #1f9d55, #10b3a3);
+}
+:root[data-site='ydp'] .cluster-pin {
+  box-shadow: 0 0 0 4px rgba(31, 157, 85, 0.25), var(--shadow);
+}
+:root[data-site='ydp'] .talk-item.notice {
+  border-color: #b9e6c9;
+}
+:root[data-site='ydp'] .vote-row.lead .vote-bar {
+  background: #cdeed9;
+}
+
+/* 근무지 식당 데이터를 받는 동안 */
+.data-loading {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}

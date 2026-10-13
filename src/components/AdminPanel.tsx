@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Restaurant } from '../types';
 import { timeAgo, waitText, type Report } from '../lib/reports';
 import { TALK_POST_MAX } from '../lib/talk';
+import { useSite } from '../lib/sites';
 import type { Talk } from '../hooks/useTalk';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
 
 /** 관리자 화면: 모든 후기·제보를 한 번에 보고 지우기 */
 export function AdminPanel({ reports, restaurants, now, isAdmin, onLogin, onLogout, onRemove, onClose, talk }: Props) {
+  const site = useSite();
   const [token, setToken] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -127,8 +129,11 @@ export function AdminPanel({ reports, restaurants, now, isAdmin, onLogin, onLogo
             {msg && <p className="small" style={{ color: 'var(--danger)' }}>{msg}</p>}
             {kind === 'talk' && (
               <section className="report">
-                <h4>공유톡 올리기</h4>
-                <p className="small">홈 검색창 바로 아래에 한 줄로 떠요. 질문이면 댓글을 받고, 단순 공지면 댓글을 닫아 두세요.</p>
+                <h4>공유톡 올리기 · {site.label}</h4>
+                <p className="small">
+                  근무지를 {site.label}(으)로 고른 사람의 홈 검색창 바로 아래에 한 줄로 떠요. 질문이면 댓글을 받고, 단순 공지면 댓글을 닫아
+                  두세요. 다른 근무지 글은 오른쪽 위에서 근무지를 바꿔서 올리고 관리해요.
+                </p>
                 <div className="one-line-form">
                   <input
                     className="mini grow"

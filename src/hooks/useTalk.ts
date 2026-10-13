@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createTalkBackend, type TalkComment, type TalkPost } from '../lib/talk';
+import type { SiteId } from '../lib/sites';
 
-/** 공유톡 글·댓글을 불러오고 실시간으로 따라간다. adminToken 은 관리자 로그인 상태일 때만 */
-export function useTalk(adminToken: string) {
+/**
+ * 공유톡 글·댓글을 불러오고 실시간으로 따라간다. adminToken 은 관리자 로그인 상태일 때만.
+ * 글은 지금 근무지(site) 것만 보여 주고, 새 글도 그 근무지 글로 올린다
+ */
+export function useTalk(adminToken: string, site: SiteId) {
   const [backend] = useState(createTalkBackend);
   const [posts, setPosts] = useState<TalkPost[]>([]);
   const [comments, setComments] = useState<TalkComment[]>([]);
@@ -60,10 +64,10 @@ export function useTalk(adminToken: string) {
 
   const createPost = useCallback(
     async (body: string, allowComments: boolean) => {
-      const p = await backend.createPost(body, allowComments, adminToken);
+      const p = await backend.createPost(body, allowComments, site, adminToken);
       setPosts((prev) => [p, ...prev.filter((x) => x.id !== p.id)]);
     },
-    [backend, adminToken],
+    [backend, adminToken, site],
   );
 
   const setPostComments = useCallback(
@@ -83,10 +87,17 @@ export function useTalk(adminToken: string) {
     [backend, adminToken],
   );
 
-  /** 최신 글이 위로 */
-  const sortedPosts = useMemo(() => [...posts].sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [posts]);
+  /** 지금 근무지 글만, 최신 글이 위로 */
+  const sortedPosts = useMemo(
+    () => posts.filter((p) => p.site === site).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [posts, site],
+  );
+  const siteComments = useMemo(() => {
+    const ids = new Set(sortedPosts.map((p) => p.id));
+    return comments.filter((c) => ids.has(c.postId));
+  }, [comments, sortedPosts]);
 
-  return { mode: backend.mode, posts: sortedPosts, comments, error, addComment, removeComment, createPost, setPostComments, removePost };
+  return { mode: backend.mode, posts: sortedPosts, comments: siteComments, error, addComment, removeComment, createPost, setPostComments, removePost };
 }
 
 export type Talk = ReturnType<typeof useTalk>;

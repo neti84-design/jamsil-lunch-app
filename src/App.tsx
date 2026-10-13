@@ -6,6 +6,7 @@ import { ALL_WALK, FilterBar, defaultFilters, NO_LIMIT, type Filters } from './c
 import { RestaurantCard } from './components/RestaurantCard';
 import { RestaurantDetail } from './components/RestaurantDetail';
 import { AdminPanel } from './components/AdminPanel';
+import { FeedbackPanel } from './components/FeedbackPanel';
 import { MapView } from './components/MapView';
 import { LiveTicker } from './components/LiveTicker';
 import { SearchBox } from './components/SearchBox';
@@ -181,6 +182,7 @@ export default function App() {
   const [searches, setSearches] = useState<string[]>(() => loadJSON<string[]>(SEARCH_KEY, []));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const wide = useWide();
   /** 처음 화면: PC 는 지도·조건 화면, 휴대폰은 홈 */
@@ -663,7 +665,12 @@ export default function App() {
                 )}
               </>
             )}
-            <div className="credit">made by {MAKER}</div>
+            <div className="credit">
+              <button className="link" onClick={() => setFeedbackOpen(true)}>
+                📮 제보·의견
+              </button>{' '}
+              · made by {MAKER}
+            </div>
           </div>
           {mapSelected && (
             <RestaurantDetail
@@ -877,6 +884,10 @@ export default function App() {
               GitHub
             </a>{' '}
             ·{' '}
+            <button className="link" onClick={() => setFeedbackOpen(true)}>
+              📮 제보·의견
+            </button>{' '}
+            ·{' '}
             <button className="link" onClick={() => setAdminOpen(true)}>
               {live.isAdmin ? '관리자 모드' : '관리자'}
             </button>
@@ -946,6 +957,13 @@ export default function App() {
             inVote={voteDraft.includes(selected.id)}
             onToggleVote={() => toggleDraft(selected.id)}
           />
+        </>
+      )}
+
+      {feedbackOpen && (
+        <>
+          <div className="backdrop" onClick={() => setFeedbackOpen(false)} />
+          <FeedbackPanel onAdd={live.add} onClose={() => setFeedbackOpen(false)} />
         </>
       )}
 

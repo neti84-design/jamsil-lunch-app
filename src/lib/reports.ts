@@ -1,10 +1,21 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { TasteTag, WaitLevel } from '../types';
 
-export type ReportKind = 'wait' | 'review' | 'tag' | 'fix';
+export type ReportKind = 'wait' | 'review' | 'tag' | 'fix' | 'feedback';
 /** 직접 수정: 가격정보 / 운영 정보 / 영업시간 / 기타 */
 export type FixType = 'price' | 'info' | 'hours' | 'etc';
 export const FIX_LABELS: Record<FixType, string> = { price: '가격정보', info: '운영 정보', hours: '영업시간', etc: '기타' };
+/** 앱 제보·의견 (식당과 상관없는 것) */
+export type FeedbackType = 'new' | 'closed' | 'bad' | 'good' | 'etc';
+export const FEEDBACK_LABELS: Record<FeedbackType, string> = {
+  new: '🆕 신규 매장 등록 요청',
+  closed: '🚫 폐업 제보',
+  bad: '😣 불편한 점',
+  good: '😊 좋은 점',
+  etc: '💬 기타',
+};
+/** 제보·의견은 식당 칸에 이 값을 넣어 저장한다 */
+export const FEEDBACK_ID = '__feedback__';
 /** 'fav' = 관심 저장 (추천매장 집계용, 기기당 식당마다 한 번), 'delivery' = 배달 돼요 체크 */
 export type ReportTag = TasteTag | 'fav' | 'delivery';
 
@@ -24,6 +35,9 @@ export interface Report {
   fixType?: FixType | null;
   fixMenu?: string | null;
   fixPrice?: number | null;
+  /** 제보·의견(kind 'feedback')의 종류와 근무지. 내용은 comment */
+  feedbackType?: FeedbackType | null;
+  feedbackSite?: string | null;
   /** 작성한 기기 식별자 (닉네임 대신 사용, 본인 글 표시·삭제용) */
   deviceId?: string | null;
   createdAt: string; // ISO
@@ -139,7 +153,7 @@ class LocalBackend implements ReportsBackend {
     return this.read().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
   async add(r: NewReport) {
-    const rec: Report = { ...r, id: crypto.randomUUID(), deviceId: deviceId(), createdAt: new Date().toISOString() };
+    const rec: Report = { ...r, id: crypto.randomUUID(), deviceId: r.kind === 'feedback' ? null : deviceId(), createdAt: new Date().toISOString() };
     const all = this.read();
     all.push(rec);
     this.write(all);
@@ -202,8 +216,21 @@ function decodeFix(rep: Report): Report {
   return { ...rep, kind: 'fix', fixType, fixMenu: menu, fixPrice: Number(price) || null, comment: null };
 }
 
+/** 제보·의견도 같은 방식으로 "[fb:종류:근무지]내용" 으로 저장한다. 보낸 기기는 남기지 않는다 */
+const FB_RE = /^\[fb:(new|closed|bad|good|etc):(\w*)\]([\s\S]*)$/;
+
+function encodeFeedback(r: NewReport): string {
+  return `[fb:${r.feedbackType ?? 'etc'}:${r.feedbackSite ?? ''}]${r.comment ?? ''}`;
+}
+
+function decodeFeedback(rep: Report): Report {
+  const m = rep.kind === 'review' && rep.rating == null && rep.restaurantId === FEEDBACK_ID ? rep.comment?.match(FB_RE) : null;
+  if (!m) return rep;
+  return { ...rep, kind: 'feedback', feedbackType: m[1] as FeedbackType, feedbackSite: m[2] || null, comment: m[3] };
+}
+
 function fromRow(r: Row): Report {
-  return decodeFix({
+  return decodeFeedback(decodeFix({
     id: r.id,
     restaurantId: r.restaurant_id,
     kind: r.kind,
@@ -215,7 +242,7 @@ function fromRow(r: Row): Report {
     tag: r.tag,
     deviceId: r.device_id,
     createdAt: r.created_at,
-  });
+  }));
 }
 
 class SupabaseBackend implements ReportsBackend {
@@ -241,14 +268,14 @@ class SupabaseBackend implements ReportsBackend {
       .from('reports')
       .insert({
         restaurant_id: r.restaurantId,
-        kind: r.kind === 'fix' ? 'review' : r.kind,
+        kind: r.kind === 'fix' || r.kind === 'feedback' ? 'review' : r.kind,
         wait_level: r.waitLevel ?? null,
         wait_teams: r.waitTeams ?? null,
         wait_minutes: r.waitMinutes ?? null,
-        rating: r.kind === 'fix' ? null : (r.rating ?? null),
-        comment: r.kind === 'fix' ? encodeFix(r) : (r.comment ?? null),
+        rating: r.kind === 'fix' || r.kind === 'feedback' ? null : (r.rating ?? null),
+        comment: r.kind === 'fix' ? encodeFix(r) : r.kind === 'feedback' ? encodeFeedback(r) : (r.comment ?? null),
         tag: r.tag ?? null,
-        device_id: deviceId(),
+        device_id: r.kind === 'feedback' ? null : deviceId(),
       })
       .select()
       .single();

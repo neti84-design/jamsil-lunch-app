@@ -2283,3 +2283,16 @@ img.tower-logo {
   height: 7px;
   border-width: 0 2px 2px 0;
 }
+
+/* 제보·의견 */
+.feedback .chips {
+  margin-bottom: 4px;
+}
+.feedback-done p {
+  margin: 4px 0 10px;
+}
+.feedback-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-top: 2px;
+}

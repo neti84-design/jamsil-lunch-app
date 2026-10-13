@@ -26,7 +26,8 @@ import { useVotes } from './hooks/useVotes';
 import { isWide, useWide } from './hooks/useWide';
 import { SITES, SiteContext, loadSite, saveSite, type SiteId } from './lib/sites';
 import { fetchLunchWeather, type LunchWeather } from './lib/weather';
-import { dayTheme, pickForTaste, pickForToday, tasteFrom } from './lib/recommend';
+import { dayTheme, kstDate, pickForTaste, pickForToday, tasteFrom } from './lib/recommend';
+import { PARTNERS, type Partner } from './data/partners';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
@@ -362,11 +363,24 @@ export default function App() {
       x.score += fav ? 3 : rep.kind === 'review' ? rep.rating! - 2 : 2;
       m.set(rep.restaurantId, x);
     }
-    const hot = [...m.entries()].sort((a, b) => b[1].score - a[1].score).map(([id, why]) => ({ r: byId.get(id)!, why }));
-    const seen = new Set(hot.map((x) => x.r.id));
+    // 롯데 임직원 혜택 매장은 맨 위에 고정 (기간이 지나면 빠진다)
+    const today = kstDate(live.now);
+    const partners = PARTNERS.filter((p) => p.site === siteId && byId.has(p.id) && (!p.until || today <= p.until)).map((p) => ({
+      r: byId.get(p.id)!,
+      why: null,
+      partner: p as Partner | null,
+    }));
+    const seen = new Set(partners.map((x) => x.r.id));
+    const hot = [...m.entries()]
+      .sort((a, b) => b[1].score - a[1].score)
+      .filter(([id]) => !seen.has(id))
+      .map(([id, why]) => ({ r: byId.get(id)!, why, partner: null }));
+    for (const x of hot) seen.add(x.r.id);
     const fill = [...recommended, ...topRated].filter((r) => !seen.has(r.id) && (seen.add(r.id), true));
-    return [...hot, ...fill.map((r) => ({ r, why: null }))].slice(0, BUZZ_SHOWN);
-  }, [restaurants, byId, live.reports, live.now, recommended, topRated]);
+    // 혜택 매장은 몇 곳이든 다 보여 주고, 나머지는 BUZZ_SHOWN 까지
+    const rest = [...hot, ...fill.map((r) => ({ r, why: null, partner: null }))].slice(0, Math.max(0, BUZZ_SHOWN - partners.length));
+    return [...partners, ...rest];
+  }, [restaurants, byId, live.reports, live.now, recommended, topRated, siteId]);
 
   // ---------- 화면 이동 (브라우저/휴대폰 뒤로가기와 연동) ----------
   useEffect(() => {
@@ -791,8 +805,14 @@ export default function App() {
               </>
             }
             ticker={ticker}
-            nearby={buzz.map(({ r, why }) => (
-              <div key={r.id} className="recommend-item">
+            nearby={buzz.map(({ r, why, partner }) => (
+              <div key={r.id} className={'recommend-item' + (partner ? ' partner' : '')}>
+                {partner && (
+                  <div className="recommend-why small">
+                    <span>🎁 롯데 임직원 혜택</span>
+                    <span className="partner-pitch">{partner.pitch}</span>
+                  </div>
+                )}
                 {why && (
                   <div className="recommend-why small">
                     {why.favs > 0 && <span>⭐ 최근 관심 {why.favs}</span>}
@@ -800,6 +820,12 @@ export default function App() {
                   </div>
                 )}
                 {card(r)}
+                {partner && (
+                  <div className="partner-benefit">
+                    {partner.benefit}
+                    {partner.until && <span className="small"> · {partner.until.slice(5).replace('-', '/')}까지</span>}
+                  </div>
+                )}
               </div>
             ))}
             restaurants={restaurants}

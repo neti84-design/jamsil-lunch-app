@@ -187,6 +187,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [howToOpen, setHowToOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const wide = useWide();
   /** 처음 화면: PC 는 지도·조건 화면, 휴대폰은 홈 */
@@ -948,18 +949,34 @@ export default function App() {
 
         {!split && tab !== 'map' && (
           <footer className="foot small">
-            데이터는 블로그·지도 후기 기반 수집본입니다. 가격·영업시간은 방문 전 확인하세요. ·{' '}
-            <a href="https://github.com/neti84-design/jamsil-lunch-app" target="_blank" rel="noreferrer">
-              GitHub
-            </a>{' '}
-            ·{' '}
-            <button className="link" onClick={() => setFeedbackOpen(true)}>
-              📮 제보·의견
-            </button>{' '}
-            ·{' '}
-            <button className="link" onClick={() => setAdminOpen(true)}>
-              {live.isAdmin ? '관리자 모드' : '관리자'}
-            </button>
+            <div className="foot-note">블로그·지도 후기 기반 정보예요. 가격·영업시간은 방문 전 확인하세요.</div>
+            <div className="foot-links">
+              <button className="link" aria-expanded={howToOpen} onClick={() => setHowToOpen((v) => !v)}>
+                사용방법
+              </button>
+              ·
+              <button className="link" onClick={() => setFeedbackOpen(true)}>
+                제보·의견
+              </button>
+              ·
+              <button className="link" onClick={() => setAdminOpen(true)}>
+                {live.isAdmin ? '관리자 모드' : '관리자'}
+              </button>
+            </div>
+            {howToOpen && (
+              <ol className="howto">
+                <li>
+                  세부조건 기본값은 인당 {site.defaultBudget / 10000}만원 이하 · 도보 10분 이내예요
+                  {siteId === 'ydp' ? ' (영등포맥스 기준)' : ' (잠실본사 기준, 영등포맥스는 1만원)'}.
+                </li>
+                <li>오른쪽 위에서 근무지(잠실본사·영등포맥스)를 고르세요.</li>
+                <li>홈에서 음식 종류·건물별로 둘러보거나, 검색에서 이름·메뉴로 찾으세요.</li>
+                <li>세부조건에서 예산·도보 시간·종류를 바꾸고, 초기화로 기본값에 되돌릴 수 있어요.</li>
+                <li>식당을 누르면 메뉴·가격·영업시간·웨이팅을 볼 수 있어요.</li>
+                <li>다녀온 곳에 별점·한 줄 후기·웨이팅을 남겨 동료와 나눠 주세요.</li>
+                <li>마음에 드는 곳은 하트로 찜하고, 오늘의 추천에서 점심 투표를 만들어 링크로 보내세요.</li>
+              </ol>
+            )}
             <div className="credit">made by {MAKER}</div>
           </footer>
         )}

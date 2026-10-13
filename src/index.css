@@ -1991,6 +1991,30 @@ input.mini.vote-title-input {
 .foot .credit {
   margin-top: 4px;
 }
+.foot-note {
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.2px;
+}
+.foot-links {
+  margin-top: 4px;
+}
+.foot .howto {
+  margin: 8px auto 0;
+  padding: 10px 12px 10px 30px;
+  max-width: 420px;
+  text-align: left;
+  line-height: 1.5;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  word-break: keep-all;
+}
+.foot .howto li + li {
+  margin-top: 2px;
+}
 /* 오늘의 추천: 두 번째 줄 (내 취향 추천) */
 .today-sub {
   display: flex;

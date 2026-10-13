@@ -1,4 +1,4 @@
-import { CONCEPT_LABELS, TASTE_TAG_LABELS, WAIT_LABELS, hasDelivery, type Restaurant } from '../types';
+import { CONCEPT_LABELS, TASTE_TAG_LABELS, WAIT_LABELS, cuisineText, hasDelivery, type Restaurant } from '../types';
 import { Thumb } from './Thumb';
 import { formatWon } from '../lib/links';
 import { timeAgo, waitText, type ReportSummary } from '../lib/reports';
@@ -37,7 +37,7 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
             {r.branch && <span className="branch"> {r.branch}</span>}
           </h3>
           <div className="sub">
-            {r.cuisine} · {r.subcategory}
+            {cuisineText(r)}
             {walk != null && <> · 도보 {walk}분</>}
             {r.nearestExit && <> · {r.nearestExit}</>}
           </div>
@@ -45,12 +45,13 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
         <button
           className={'fav' + (favorite ? ' on' : '')}
           aria-label={favorite ? '찜 해제' : '찜하기'}
+          aria-pressed={favorite}
           onClick={(e) => {
             e.stopPropagation();
             onToggleFavorite();
           }}
         >
-          {favorite ? '★' : '☆'}
+          {favorite ? '♥' : '♡'}
         </button>
       </div>
 
@@ -85,9 +86,11 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
             🔴 {timeAgo(live.createdAt, now)} {waitText(live) || liveWait.label}
           </span>
         ) : (
-          <span className="badge" style={{ borderColor: wait.color, color: wait.color }}>
-            웨이팅 {wait.label}
-          </span>
+          r.waiting.level !== 'unknown' && (
+            <span className="badge" style={{ borderColor: wait.color, color: wait.color }}>
+              웨이팅 {wait.label}
+            </span>
+          )
         )}
         {summary && summary.reviewCount > 0 && (
           <span className="badge team" title={`별점 합계 ${summary.totalStars}`}>

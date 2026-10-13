@@ -8,7 +8,7 @@ export const FIX_LABELS: Record<FixType, string> = { price: '가격정보', info
 /** 앱 제보·의견 (식당과 상관없는 것) */
 export type FeedbackType = 'new' | 'closed' | 'bad' | 'good' | 'etc';
 export const FEEDBACK_LABELS: Record<FeedbackType, string> = {
-  new: '🆕 신규 매장 등록 요청',
+  new: '🆕 신규 식당 등록 요청',
   closed: '🚫 폐업 제보',
   bad: '😣 불편한 점',
   good: '😊 좋은 점',
@@ -365,7 +365,7 @@ export interface ReportSummary {
   /** 별점 합계 — "별점 많은 순" 정렬 기준 */
   totalStars: number;
   hidden: number; // 🤫 숨은맛집 체크 수
-  classic: number; // 👍 역시맛집 체크 수
+  classic: number; // 🔁 또 갈래요 체크 수
   favs: number; // ⭐ 관심 저장한 기기 수
   delivery: number; // 🛵 배달 돼요 체크 수
   /** 이 기기에서 체크한 태그 */

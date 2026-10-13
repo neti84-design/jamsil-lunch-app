@@ -131,7 +131,7 @@ function compareStars(a: Restaurant, b: Restaurant, s: Map<string, ReportSummary
   return externalRating(b) - externalRating(a);
 }
 
-/** 동료 추천매장 점수: 다른 사람들의 관심 저장 + 숨은/역시맛집 체크 + 별점 */
+/** 동료 추천매장 점수: 다른 사람들의 관심 저장 + 숨은맛집/또 갈래요 체크 + 별점 */
 function recommendScore(x?: ReportSummary): number {
   return x ? x.favs * 3 + (x.hidden + x.classic) * 2 + x.totalStars : 0;
 }
@@ -777,16 +777,16 @@ export default function App() {
       {tab === 'favorites' && (
         <header className="page-head">
           {backButton}
-          <h2>⭐ 관심매장</h2>
+          <h2>❤️ 찜한 식당</h2>
           <span className="small">
-            {favView === 'mine' ? '카드의 ☆ 를 누르면 여기에 모여요' : '동료들이 관심 저장·맛집 체크·별점을 남긴 곳'}
+            {favView === 'mine' ? '카드의 ♡ 를 누르면 여기에 모여요' : '동료들이 찜·맛집 체크·별점을 남긴 곳'}
           </span>
           <div className="chips fav-switch">
             <button className={'chip' + (favView === 'mine' ? ' on' : '')} onClick={() => setFavView('mine')}>
-              ⭐ 나의 관심매장 {favoriteList.length}
+              ♥ 내가 찜한 식당 {favoriteList.length}
             </button>
             <button className={'chip' + (favView === 'peers' ? ' on' : '')} onClick={() => setFavView('peers')}>
-              👍 동료 추천매장 {recommended.length > 0 && recommended.length}
+              👍 동료 추천 식당 {recommended.length > 0 && recommended.length}
             </button>
           </div>
         </header>
@@ -814,7 +814,7 @@ export default function App() {
                 )}
                 {why && (
                   <div className="recommend-why small">
-                    {why.favs > 0 && <span>⭐ 최근 관심 {why.favs}</span>}
+                    {why.favs > 0 && <span>♥ 최근 찜 {why.favs}</span>}
                     {why.good > 0 && <span>👍 좋았어요 {why.good}</span>}
                   </div>
                 )}
@@ -904,9 +904,9 @@ export default function App() {
           <div className="card-list">
             {favoriteList.length === 0 ? (
               <div className="empty">
-                아직 저장한 곳이 없어요.
+                아직 찜한 식당이 없어요.
                 <br />
-                마음에 드는 식당 카드의 ☆ 를 눌러보세요.
+                마음에 드는 식당 카드의 ♡ 를 눌러보세요.
               </div>
             ) : (
               favoriteList.map(card)
@@ -921,7 +921,7 @@ export default function App() {
                 <div className="empty small">
                   아직 동료들의 추천이 없어요.
                   <br />
-                  관심 저장(☆)·숨은맛집/역시맛집 체크·별점이 모이면 여기에 떠요.
+                  찜(♡)·숨은맛집/또 갈래요 체크·별점이 모이면 여기에 떠요.
                 </div>
                 <h3 className="section-title">대신, 평점 높은 곳</h3>
                 {topRated.map(card)}
@@ -933,9 +933,9 @@ export default function App() {
                 return (
                   <div key={r.id} className="recommend-item">
                     <div className="recommend-why small">
-                      {others > 0 && <span>⭐ 관심 {others}명</span>}
+                      {others > 0 && <span>♥ 찜 {others}명</span>}
                       {s.hidden > 0 && <span>🤫 숨은맛집 {s.hidden}</span>}
-                      {s.classic > 0 && <span>👍 역시맛집 {s.classic}</span>}
+                      {s.classic > 0 && <span>🔁 또 갈래요 {s.classic}</span>}
                       {s.reviewCount > 0 && <span>★ {s.avgRating!.toFixed(1)} ({s.reviewCount})</span>}
                     </div>
                     {card(r)}
@@ -995,7 +995,7 @@ export default function App() {
             onDraftChange={setVoteDraft}
             suggestions={[
               { label: '오늘의 추천', list: todayPicks },
-              { label: '관심매장', list: favoriteList },
+              { label: '찜한 식당', list: favoriteList },
               { label: '최근 본 식당', list: recentList },
             ]}
             onCreated={(p) => setVoteView({ mode: 'poll', id: p.id })}

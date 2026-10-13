@@ -6,6 +6,7 @@ import {
   CUISINE_EMOJI,
   RESERVATION_LABELS,
   WAIT_LABELS,
+  cuisineText,
   hasDelivery,
   type Restaurant,
 } from '../types';
@@ -16,7 +17,7 @@ import { Thumb } from './Thumb';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { useTileStatus } from '../hooks/useTileStatus';
 import { useSite } from '../lib/sites';
-import type { FixType, LocalReason, NewReport, Report, ReportSummary } from '../lib/reports';
+import { LIVE_WINDOW_MS, timeAgo, waitText, type FixType, type LocalReason, type NewReport, type Report, type ReportSummary } from '../lib/reports';
 
 interface Props {
   r: Restaurant;
@@ -78,6 +79,10 @@ export function RestaurantDetail({
   );
   const site = useSite();
   const hours = openStatus(r, now);
+  /** 최근 3시간 안의 웨이팅 제보 — 쓰는 칸은 아래, 지금 상태는 위에서 바로 보이게 */
+  const live = reports.find(
+    (x) => x.restaurantId === r.id && x.kind === 'wait' && now - new Date(x.createdAt).getTime() <= LIVE_WINDOW_MS,
+  );
   const icon = L.divIcon({ className: 'pin selected', html: `<span>${CUISINE_EMOJI[r.cuisine]}</span>`, iconSize: [34, 34], iconAnchor: [17, 34] });
 
   return (
@@ -92,13 +97,13 @@ export function RestaurantDetail({
             {r.branch && <span className="branch"> {r.branch}</span>}
           </h2>
           <div className="sub">
-            {r.cuisine} · {r.subcategory}
+            {cuisineText(r)}
             {walk != null && <> · {site.walkFrom} 도보 {walk}분</>}
             {r.nearestExit && <> ({r.nearestExit})</>}
           </div>
         </div>
-        <button className={'fav big' + (favorite ? ' on' : '')} onClick={onToggleFavorite} aria-label="찜">
-          {favorite ? '★' : '☆'}
+        <button className={'fav big' + (favorite ? ' on' : '')} onClick={onToggleFavorite} aria-label={favorite ? '찜 해제' : '찜하기'} aria-pressed={favorite}>
+          {favorite ? '♥' : '♡'}
         </button>
       </header>
 
@@ -132,27 +137,13 @@ export function RestaurantDetail({
             <a className="btn" href={telLink(r.phone)}>
               📞 {r.phone}
             </a>
-          ) : (
-            <span className="btn disabled">📞 번호 미확인</span>
-          )}
+          ) : null}
           {onToggleVote && (
             <button className={'btn' + (inVote ? ' on' : '')} onClick={onToggleVote} aria-pressed={inVote}>
               🗳️ {inVote ? '투표에 담김 ✓' : '투표에 담기'}
             </button>
           )}
         </div>
-
-        <ReportPanel
-          restaurantId={r.id}
-          reports={reports}
-          summary={summary}
-          mode={reportMode}
-          localReason={reportLocalReason}
-          now={now}
-          isAdmin={isAdmin}
-          onAdd={onAddReport}
-          onRemove={onRemoveReport}
-        />
 
         <section>
           <h4>
@@ -182,10 +173,40 @@ export function RestaurantDetail({
           )}
         </section>
 
+        <section>
+          <h4>
+            🕒 영업 {fixLink('hours')}
+          </h4>
+          {hours.state !== 'unknown' && (
+            <p className="open-now">
+              <strong style={{ color: OPEN_STATE_COLOR[hours.state] }}>{hours.label}</strong>
+              {hours.detail && <span className="small"> · {hours.detail}</span>}
+            </p>
+          )}
+          <p className="small">
+            {r.hours ?? '영업시간 미확인'}
+            {r.hoursReported && <span className="reported"> (제보)</span>}
+            {r.breakTime && <> · 브레이크 {r.breakTime}</>}
+            {r.closedDays && <> · 휴무 {r.closedDays}</>}
+          </p>
+          {r.address && <p className="small">📍 {r.address}</p>}
+        </section>
+
         <section className="two-col">
           <div>
-            <h4>⏳ 평소 웨이팅 (후기 기준)</h4>
+            <h4>⏳ 웨이팅</h4>
+            {live ? (
+              <p className="live-now">
+                <strong style={{ color: WAIT_LABELS[live.waitLevel ?? 'unknown'].color }}>
+                  🔴 {waitText(live) || WAIT_LABELS[live.waitLevel ?? 'unknown'].label}
+                </strong>{' '}
+                <span className="small">· {timeAgo(live.createdAt, now)} 제보</span>
+              </p>
+            ) : (
+              <p className="small">최근 3시간 제보 없음</p>
+            )}
             <p>
+              <span className="small">평소 </span>
               <span className="badge" style={{ borderColor: wait.color, color: wait.color }}>
                 {wait.label}
               </span>
@@ -237,24 +258,17 @@ export function RestaurantDetail({
           )}
         </section>
 
-        <section>
-          <h4>
-            🕒 영업 {fixLink('hours')}
-          </h4>
-          {hours.state !== 'unknown' && (
-            <p className="open-now">
-              <strong style={{ color: OPEN_STATE_COLOR[hours.state] }}>{hours.label}</strong>
-              {hours.detail && <span className="small"> · {hours.detail}</span>}
-            </p>
-          )}
-          <p className="small">
-            {r.hours ?? '영업시간 미확인'}
-            {r.hoursReported && <span className="reported"> (제보)</span>}
-            {r.breakTime && <> · 브레이크 {r.breakTime}</>}
-            {r.closedDays && <> · 휴무 {r.closedDays}</>}
-          </p>
-          {r.address && <p className="small">📍 {r.address}</p>}
-        </section>
+        <ReportPanel
+          restaurantId={r.id}
+          reports={reports}
+          summary={summary}
+          mode={reportMode}
+          localReason={reportLocalReason}
+          now={now}
+          isAdmin={isAdmin}
+          onAdd={onAddReport}
+          onRemove={onRemoveReport}
+        />
 
         <section>
           <h4>⭐ 리뷰</h4>

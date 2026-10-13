@@ -103,7 +103,7 @@ function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comm
       </div>
 
       {sorted.length > 0 && (
-        <HScroll className="talk-strip" label="답글 (옆으로 넘기기)">
+        <HScroll className="talk-strip" label="답글 (옆으로 넘기기)" auto>
           {sorted.map((c) => {
             const own = c.deviceId === me;
             return (

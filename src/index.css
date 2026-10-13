@@ -2124,16 +2124,40 @@ img.tower-logo {
 }
 
 /* 홈: 최근 3일 후기 (공유톡 아래) */
-.rr-list {
-  list-style: none;
-  margin: 0;
-  padding: 4px 12px;
+.rr-window {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  padding: 4px 12px;
+}
+.rr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+/* 전광판: 3줄 창에서 한 줄씩 위로 */
+.rr-window.roll {
+  height: calc(var(--rr-row) * 3 + 8px);
+  overflow: hidden;
+}
+.rr-window.roll li {
+  box-sizing: border-box;
+  height: var(--rr-row);
+}
+.rr-window.roll .rr-row {
+  height: 100%;
+  padding: 0;
+  align-items: center;
+}
+.rr-list.sliding {
+  transform: translateY(calc(-1 * var(--rr-row)));
+  transition: transform 0.5s ease;
 }
 .rr-list li + li {
   border-top: 1px dashed var(--line);
+}
+.recent-reviews {
+  --rr-row: 37px;
 }
 .rr-row {
   display: flex;

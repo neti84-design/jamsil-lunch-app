@@ -89,9 +89,19 @@ export function RecentReviews({ reports, restaurants, now, onSelect }: Props) {
         </ul>
       </div>
       {rows.length > STEP && (
-        <button className="link-more rr-more" onClick={() => setShown((n) => (n >= rows.length ? STEP : n + STEP))}>
-          {shown >= rows.length ? '접기 ‹' : `더보기 (${rows.length - shown}) ›`}
-        </button>
+        // 한 번이라도 펼치면 접기를 바로 옆에 — 조금만 보고 닫을 수 있게
+        <div className="rr-more-row">
+          {shown < rows.length && (
+            <button className="link-more rr-more" onClick={() => setShown((n) => n + STEP)}>
+              더보기 ({rows.length - shown}) ›
+            </button>
+          )}
+          {expanded && (
+            <button className="link-more rr-more" onClick={() => setShown(STEP)}>
+              접기 ‹
+            </button>
+          )}
+        </div>
       )}
     </section>
   );

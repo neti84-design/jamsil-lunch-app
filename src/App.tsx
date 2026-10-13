@@ -26,7 +26,7 @@ import { useVotes } from './hooks/useVotes';
 import { isWide, useWide } from './hooks/useWide';
 import { SITES, SiteContext, loadSite, saveSite, type SiteId } from './lib/sites';
 import { fetchLunchWeather, type LunchWeather } from './lib/weather';
-import { dayTheme, kstDay, pickForTaste, pickForToday, tasteFrom } from './lib/recommend';
+import { dayTheme, pickForTaste, pickForToday, tasteFrom } from './lib/recommend';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
@@ -58,7 +58,7 @@ function deviceSeed(): string {
 }
 /** 오늘의 추천을 "이 중에서 투표"로 담을 때 몇 곳까지 */
 const VOTE_FROM_PICKS = 4;
-/** 홈 아래 '요즘 관심 · 평일 좋았던 매장': 최근 며칠 / 몇 곳 */
+/** 홈 아래 '요즘 관심 · 평점 좋은 매장': 최근 며칠 / 몇 곳 */
 const BUZZ_DAYS = 14;
 const BUZZ_SHOWN = 5;
 const MAX_RECENT = 10;
@@ -342,7 +342,7 @@ export default function App() {
     [restaurants],
   );
   /**
-   * 홈 아래: 요즘 관심 · 평일 좋았던 매장 — 최근 2주 평일에 남긴 관심 저장·맛집 체크·좋은 별점(4~5)을 모은다.
+   * 홈 아래: 요즘 관심 · 평점 좋은 매장 — 최근 2주에 남긴 관심 저장·맛집 체크·좋은 별점(4~5)을 모은다.
    * 모인 게 적으면 그동안 동료 추천 → 평점 높은 곳 순으로 채운다
    */
   const buzz = useMemo(() => {
@@ -351,9 +351,7 @@ export default function App() {
     const m = new Map<string, { score: number; favs: number; good: number }>();
     for (const rep of live.reports) {
       if (!here.has(rep.restaurantId)) continue;
-      const t = Date.parse(rep.createdAt);
-      const day = kstDay(t);
-      if (t < since || day === 0 || day === 6) continue;
+      if (Date.parse(rep.createdAt) < since) continue;
       const fav = rep.kind === 'tag' && rep.tag === 'fav';
       const good =
         (rep.kind === 'tag' && (rep.tag === 'hidden' || rep.tag === 'classic')) || (rep.kind === 'review' && (rep.rating ?? 0) >= 4);

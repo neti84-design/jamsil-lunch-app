@@ -248,7 +248,7 @@ export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove,
                               {r.fixType === 'price' ? `${r.fixMenu} ${r.fixPrice?.toLocaleString('ko-KR')}원` : r.comment}
                             </>
                           )}
-                          {r.kind === 'tag' && <>{r.tag === 'hidden' ? '🤫 숨은맛집' : r.tag === 'fav' ? '⭐ 관심 저장' : r.tag === 'delivery' ? '🛵 배달 돼요' : '👍 역시맛집'}</>}
+                          {r.kind === 'tag' && <>{r.tag === 'hidden' ? '🤫 숨은맛집' : r.tag === 'fav' ? '♥ 찜' : r.tag === 'delivery' ? '🛵 배달 돼요' : '👍 역시맛집'}</>}
                         </div>
                         <div className="small">기기 {r.deviceId?.slice(0, 8) ?? '-'}</div>
                       </div>

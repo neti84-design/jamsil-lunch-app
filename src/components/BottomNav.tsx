@@ -5,14 +5,14 @@ const TABS: { key: Tab; icon: string; label: string }[] = [
   { key: 'search', icon: '🔍', label: '검색' },
   { key: 'map', icon: '🗺️', label: '지도' },
   { key: 'today', icon: '☀️', label: '오늘의 추천' },
-  { key: 'favorites', icon: '⭐', label: '관심매장' },
+  { key: 'favorites', icon: '❤️', label: '찜' },
 ];
 
 /** PC 화면 위쪽 메뉴: 검색은 지도 화면 오른쪽 조건에 합쳐져 있다 */
 const WIDE_TABS: { key: Tab; icon: string; label: string }[] = [
   { key: 'map', icon: '🗺️', label: '지도로 찾기' },
   { key: 'today', icon: '☀️', label: '오늘의 추천' },
-  { key: 'favorites', icon: '⭐', label: '관심매장' },
+  { key: 'favorites', icon: '❤️', label: '찜' },
   { key: 'home', icon: '🏠', label: '홈·소식' },
 ];
 

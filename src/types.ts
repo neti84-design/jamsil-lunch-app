@@ -149,6 +149,11 @@ export const CUISINE_EMOJI: Record<Cuisine, string> = {
   기타: '🍽️',
 };
 
+/** "한식 · 국밥" — 세부 분류가 종류와 같으면("한식 · 한식") 한 번만 */
+export function cuisineText(r: Restaurant): string {
+  return r.subcategory && r.subcategory !== r.cuisine ? `${r.cuisine} · ${r.subcategory}` : r.cuisine;
+}
+
 /** 배달 가능 표시: 조사값이 true 이거나, 누군가 "배달 돼요"를 체크한 곳 */
 export function hasDelivery(r: Restaurant, checks = 0): boolean {
   return r.delivery === true || checks > 0;

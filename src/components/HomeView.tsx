@@ -118,7 +118,7 @@ export function HomeView({ talk, ticker, nearby, restaurants, recent, buildings,
 
       <section className="home-section">
         <div className="section-head">
-          <h3 className="section-title">🔥 요즘 관심 · 평점 좋은 매장</h3>
+          <h3 className="section-title">🔥 요즘 찜 · 평점 좋은 식당</h3>
           <button className="link-more" onClick={onSeeAll}>
             전체보기 ›
           </button>

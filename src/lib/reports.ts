@@ -8,7 +8,7 @@ export const FIX_LABELS: Record<FixType, string> = { price: '가격정보', info
 /** 앱 제보·의견 (식당과 상관없는 것) */
 export type FeedbackType = 'new' | 'closed' | 'bad' | 'good' | 'etc';
 export const FEEDBACK_LABELS: Record<FeedbackType, string> = {
-  new: '🆕 신규 매장 등록 요청',
+  new: '🆕 신규 식당 등록 요청',
   closed: '🚫 폐업 제보',
   bad: '😣 불편한 점',
   good: '😊 좋은 점',

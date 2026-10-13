@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { TASTE_TAG_LABELS, WAIT_LABELS, type TasteTag } from '../types';
+import { TASTE_TAG_LABELS, type TasteTag } from '../types';
 import {
-  LIVE_WINDOW_MS,
   deviceId,
   levelFromNumbers,
   timeAgo,
-  waitText,
   type LocalReason,
   type NewReport,
   type Report,
@@ -37,29 +35,26 @@ const LOCAL_REASON_LABEL: Record<LocalReason, string> = {
   'init-failed': '연결 초기화 실패',
 };
 
-function toInt(s: string): number | null {
-  if (s.trim() === '') return null;
-  const n = Number(s);
-  return Number.isFinite(n) ? Math.max(0, Math.round(n)) : null;
-}
+/** 줄 서 있는 사람이 한 손으로 한 번에 누르는 웨이팅 단추 */
+const WAIT_QUICK: { label: string; teams: number | null; minutes: number | null }[] = [
+  { label: '바로 입장', teams: 0, minutes: null },
+  { label: '약 5분', teams: null, minutes: 5 },
+  { label: '약 10분', teams: null, minutes: 10 },
+  { label: '약 20분', teams: null, minutes: 20 },
+  { label: '30분 이상', teams: null, minutes: 30 },
+];
 
 export function ReportPanel({ restaurantId, reports, summary, mode, localReason, now, isAdmin, onAdd, onRemove }: Props) {
   const me = deviceId();
   const mine = reports.filter((r) => r.restaurantId === restaurantId);
-  const waits = mine.filter((r) => r.kind === 'wait').slice(0, 5);
   const reviews = mine.filter((r) => r.kind === 'review');
-  const live = waits.find((r) => now - new Date(r.createdAt).getTime() <= LIVE_WINDOW_MS);
 
-  const [teams, setTeams] = useState('');
-  const [minutes, setMinutes] = useState('');
+  /** 방금 보낸 웨이팅 버튼 (잠깐 ✓ 표시) */
+  const [sent, setSent] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState<'wait' | 'review' | 'tag' | 'del' | null>(null);
   const [err, setErr] = useState<string | null>(null);
-
-  const t = toInt(teams);
-  const mnt = toInt(minutes);
-  const level = levelFromNumbers(t, mnt);
 
   const run = async (kind: NonNullable<typeof busy>, fn: () => Promise<unknown>, failLabel: string) => {
     if (busy) return;
@@ -74,14 +69,15 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
     }
   };
 
-  const submitWait = () =>
+  const submitWait = (q: (typeof WAIT_QUICK)[number]) =>
     run(
       'wait',
       async () => {
+        const level = levelFromNumbers(q.teams, q.minutes);
         if (!level) return;
-        await onAdd({ restaurantId, kind: 'wait', waitLevel: level, waitTeams: t, waitMinutes: mnt });
-        setTeams('');
-        setMinutes('');
+        await onAdd({ restaurantId, kind: 'wait', waitLevel: level, waitTeams: q.teams, waitMinutes: q.minutes });
+        setSent(q.label);
+        setTimeout(() => setSent((cur) => (cur === q.label ? null : cur)), 3000);
       },
       '제보 실패',
     );
@@ -125,70 +121,27 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
     <>
       <section className="report">
         <h4>
-          🔴 실시간 웨이팅
+          🔴 지금 웨이팅 알려주기
           {mode === 'local' && (
             <span className="badge warn" title="Supabase 키를 설정하면 팀원과 공유됩니다">
               이 기기에만 저장{localReason ? ` · ${LOCAL_REASON_LABEL[localReason]}` : ''}
             </span>
           )}
         </h4>
-        {live ? (
-          <p className="live-now">
-            <strong style={{ color: WAIT_LABELS[live.waitLevel ?? 'unknown'].color }}>
-              {waitText(live) || WAIT_LABELS[live.waitLevel ?? 'unknown'].label}
-            </strong>{' '}
-            · {timeAgo(live.createdAt, now)}
-          </p>
-        ) : (
-          <p className="small">최근 3시간 안에 제보가 없어요. 지금 줄 서 있다면 알려주세요!</p>
-        )}
-        {waits.length > 1 && (
-          <ul className="report-list">
-            {waits.slice(1).map((r) => (
-              <li key={r.id}>
-                <span style={{ color: WAIT_LABELS[r.waitLevel ?? 'unknown'].color }}>
-                  {waitText(r) || WAIT_LABELS[r.waitLevel ?? 'unknown'].label}
-                </span>{' '}
-                · {timeAgo(r.createdAt, now)}
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="one-line-form">
-          <span className="small">앞에</span>
-          <input
-            className="mini"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={99}
-            placeholder="0"
-            aria-label="앞에 몇 팀"
-            value={teams}
-            onChange={(e) => setTeams(e.target.value)}
-          />
-          <span className="small">팀 · 약</span>
-          <input
-            className="mini"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={180}
-            placeholder="0"
-            aria-label="예상 대기 분"
-            value={minutes}
-            onChange={(e) => setMinutes(e.target.value)}
-          />
-          <span className="small">분</span>
-          <button className="btn primary sm" disabled={!level || busy === 'wait'} onClick={submitWait}>
-            {busy === 'wait' ? '…' : '제보'}
-          </button>
+        <p className="small">줄 서 있다면 한 번만 눌러 주세요. 3시간 동안 다른 사람에게 보여요.</p>
+        <div className="chips wait-quick">
+          {WAIT_QUICK.map((q) => (
+            <button
+              key={q.label}
+              className={'chip' + (sent === q.label ? ' on' : '')}
+              disabled={busy === 'wait'}
+              onClick={() => submitWait(q)}
+            >
+              {sent === q.label ? '✓ ' : ''}
+              {q.label}
+            </button>
+          ))}
         </div>
-        {level && (
-          <p className="small">
-            → 웨이팅 <strong style={{ color: WAIT_LABELS[level].color }}>{WAIT_LABELS[level].label}</strong> 으로 올라가요
-          </p>
-        )}
       </section>
 
       <section className="report">
@@ -218,7 +171,7 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
           💬 한 줄 후기 {reviews.length > 0 && <span className="badge">{reviews.length}개</span>}
           {isAdmin && <span className="badge team">관리자</span>}
         </h4>
-        <div className="one-line-form">
+        <div className="review-form">
           <span className="stars-input" role="radiogroup" aria-label="별점">
             {[1, 2, 3, 4, 5].map((n) => (
               <button key={n} className={'star-btn' + (n <= rating ? ' on' : '')} onClick={() => setRating(n)} aria-label={`${n}점`}>

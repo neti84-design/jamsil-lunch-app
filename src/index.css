@@ -902,7 +902,7 @@ select {
   padding: 0 4px;
 }
 .fav.on {
-  color: #f5b301;
+  color: #e8475f;
 }
 .fav.big {
   font-size: 26px;
@@ -1278,6 +1278,20 @@ input.mini.wide {
 }
 .one-line-form .small {
   white-space: nowrap;
+}
+/* 한 줄 후기: 별점은 위 줄, 글 칸은 아래 줄 (휴대폰에서 예시 문구가 잘리지 않게) */
+.review-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.review-form .stars-input {
+  flex-basis: 100%;
+}
+.wait-quick {
+  margin-top: 6px;
 }
 input.mini.grow {
   flex: 1;

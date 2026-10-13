@@ -74,9 +74,9 @@ export function TodayPick({ theme, weather, picks, tastePicks, taste, favCount, 
         {picks.length > 0 && <PickRow list={picks} walkById={walkById} onSelect={onSelect} />}
 
         <div className="today-sub">
-          <h4>⭐ 내 취향 추천</h4>
+          <h4>♥ 내 취향 추천</h4>
           <span className="small">
-            {taste ? `관심매장 ${favCount}곳과 비슷한 메뉴·위치` : '관심매장(☆)을 저장하면 내 취향에 맞춰 골라 드려요'}
+            {taste ? `찜한 식당 ${favCount}곳과 비슷한 메뉴·위치` : '식당을 찜(♡)하면 내 취향에 맞춰 골라 드려요'}
           </span>
         </div>
         {taste &&

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { Restaurant } from '../types';
 import { Thumb } from './Thumb';
+import { HScroll } from './HScroll';
 import { DISH_EMOJI, DISH_TAGS, dishTags, type DishTag } from '../lib/dish';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { formatWon } from '../lib/links';
@@ -75,7 +76,7 @@ export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent,
               {allBuildings ? '접기 ‹' : '전체보기 ›'}
             </button>
           </div>
-          <div className={'building-row' + (allBuildings ? ' all' : '')} ref={buildingRef} onScroll={onBuildingScroll}>
+          <HScroll className={'building-row' + (allBuildings ? ' all' : '')} scrollRef={buildingRef} onScroll={onBuildingScroll}>
             {buildings.map((b) => (
               <button key={b.name} className="building-card" onClick={() => onBuilding(b.name)}>
                 <span className="building-emoji" aria-hidden>
@@ -85,14 +86,14 @@ export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent,
                 <span className="building-count">식당 {b.count}곳</span>
               </button>
             ))}
-          </div>
+          </HScroll>
         </section>
       )}
 
       {recent.length > 0 && (
         <section className="home-section">
           <h3 className="section-title">최근 본 식당</h3>
-          <div className="recent-row" ref={recentRef} onScroll={onRecentScroll}>
+          <HScroll className="recent-row" scrollRef={recentRef} onScroll={onRecentScroll}>
             {recent.map((r) => {
               const st = openStatus(r, now);
               const walk = walkById.get(r.id);
@@ -113,7 +114,7 @@ export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent,
                 </button>
               );
             })}
-          </div>
+          </HScroll>
         </section>
       )}
 

@@ -125,7 +125,10 @@ const SWIPE_CLOSE_PX = 50;
 const PANEL_MAX_VH = 0.5;
 
 export function FilterBar({ filters, onChange, resultCount, totalCount, buildings, searchBox, open: openProp, onOpenChange, walkKey = 'maxWalk', pinned = false }: Props) {
-  const open = pinned || openProp;
+  // PC 지도 화면(pinned)은 처음엔 펼쳐 두고, 식당 목록이 가리면 접을 수 있게
+  const [pinnedOpen, setPinnedOpen] = useState(true);
+  const open = pinned ? pinnedOpen : openProp;
+  const setOpen = pinned ? setPinnedOpen : onOpenChange;
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
   const defaults = defaultFilters(useSite());
   // 지금 화면에서 안 쓰는 도보 칸은 비교에서 뺀다
@@ -243,6 +246,7 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
         className={'filter-panel' + (dragging ? ' dragging' : '')}
         ref={panelRef}
         style={pinned ? undefined : { height }}
+        hidden={pinned && !open}
         aria-hidden={!open}
       >
         <div
@@ -389,22 +393,23 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
         </div>
       </div>
 
-      {!pinned && (
       <div className="filter-foot">
         <button
           className={'filter-handle' + (open ? ' open' : '')}
-          onClick={() => onOpenChange(!open)}
+          onClick={() => setOpen(!open)}
           aria-expanded={open}
         >
-          세부조건{!isDefault && <span className="dot" aria-label="적용 중" />}
+          {pinned ? (open ? '세부조건 접기' : '세부조건 펼치기') : '세부조건'}
+          {!isDefault && <span className="dot" aria-label="적용 중" />}
           <span className={'chevron' + (open ? ' up' : '')} aria-hidden />
         </button>
-        <span className="result-meta">
-          <strong>{resultCount}</strong>
-          <span className="small">/{totalCount}곳</span>
-        </span>
+        {!pinned && (
+          <span className="result-meta">
+            <strong>{resultCount}</strong>
+            <span className="small">/{totalCount}곳</span>
+          </span>
+        )}
       </div>
-      )}
     </section>
   );
 }

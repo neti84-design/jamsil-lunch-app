@@ -172,13 +172,30 @@ const ROTATE_RATIO = 0.6;
 const ROTATE_DAYS = 7;
 
 /** 주제·평점으로 매긴 점수 (날마다 섞는 값은 빼고) */
-function baseScore(r: Restaurant, o: PickOptions): number | null {
+/** 추천에 넣을 수 있는 곳이면 도보 분, 아니면 null */
+function eligibleWalk(r: Restaurant, o: PickOptions): number | null {
   // 가격을 알고, 카카오에서 가져온 곳은 영업시간도 아는 곳만
   if ((r.source && !r.hours) || !r.priceRange || r.priceRange[0] > o.budget) return null;
   if (o.exclude?.has(r.id)) return null;
   const walk = o.walkById.get(r.id);
   if (walk == null || walk > o.theme.maxWalk) return null;
   if (!o.isOpen(r)) return null;
+  return walk;
+}
+
+/** 평점·팀 별점 보너스 */
+function qualityScore(r: Restaurant, o: PickOptions): number {
+  let score = 0;
+  const s = o.summaries.get(r.id);
+  if (s) score += Math.min(3, (s.totalStars + (s.hidden + s.classic) * 2) / 5);
+  const rt = rating(r);
+  if (rt) score += Math.max(0, rt - 4) * 3;
+  return score;
+}
+
+function baseScore(r: Restaurant, o: PickOptions): number | null {
+  const walk = eligibleWalk(r, o);
+  if (walk == null) return null;
   const tags = dishTags(r);
   let score = 0;
   // 주제 메뉴가 가장 중요 (평점·거리 보너스는 보통 몇 점 안 됨)
@@ -189,10 +206,7 @@ function baseScore(r: Restaurant, o: PickOptions): number | null {
     if (b && INDOOR_BUILDINGS.has(b)) score += 3;
     score += Math.max(0, 5 - walk) * 0.4;
   }
-  const s = o.summaries.get(r.id);
-  if (s) score += Math.min(3, (s.totalStars + (s.hidden + s.classic) * 2) / 5);
-  const rt = rating(r);
-  if (rt) score += Math.max(0, rt - 4) * 3;
+  score += qualityScore(r, o);
   score += tasteScore(r, o.taste);
   return score;
 }
@@ -232,4 +246,27 @@ export function pickForToday(list: Restaurant[], o: PickOptions): Restaurant[] {
     drop = lowerRated(picks);
   }
   return picks;
+}
+
+/** 이만큼은 닮아야 "내 취향 추천"에 넣는다 */
+const TASTE_MIN = 1;
+
+/**
+ * 내 취향 추천: 오늘의 주제와 상관없이 관심매장과 닮은 메뉴·위치 위주로.
+ * 날씨 추천과 겹치지 않게 exclude 로 빼고, 날마다(기기마다) 조금씩 섞는다
+ */
+export function pickForTaste(list: Restaurant[], o: PickOptions): Restaurant[] {
+  if (!o.taste) return [];
+  const date = kstDate(o.now);
+  return list
+    .map((r) => {
+      if (eligibleWalk(r, o) == null) return null;
+      const t = tasteScore(r, o.taste);
+      if (t < TASTE_MIN) return null;
+      return { r, score: t * 3 + qualityScore(r, o) + dailyJitter(date, r.id, o.seed) * 2.5 };
+    })
+    .filter((x): x is { r: Restaurant; score: number } => x != null)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, o.limit ?? 6)
+    .map((x) => x.r);
 }

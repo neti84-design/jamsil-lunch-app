@@ -26,7 +26,7 @@ import { useVotes } from './hooks/useVotes';
 import { isWide, useWide } from './hooks/useWide';
 import { SITES, SiteContext, loadSite, saveSite, type SiteId } from './lib/sites';
 import { fetchLunchWeather, type LunchWeather } from './lib/weather';
-import { dayTheme, pickForToday, tasteFrom } from './lib/recommend';
+import { dayTheme, pickForTaste, pickForToday, tasteFrom } from './lib/recommend';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
@@ -328,12 +328,19 @@ export default function App() {
   );
   /** 이 기기 관심매장으로 만든 취향 — 오늘의 추천에서 비슷한 메뉴·위치를 더 올린다 */
   const taste = useMemo(() => tasteFrom(favoriteList), [favoriteList]);
-  const todayPicks = useMemo(() => {
-    const base = { theme, now: live.now, budget: filters.maxPrice, walkById, summaries: live.summaries, taste, seed };
-    const open = pickForToday(restaurants, { ...base, isOpen: (r) => maybeOpen(r, live.now) });
+  /** 오늘의 추천 두 줄: 날씨·요일 추천(취향 빼고) / 내 취향 추천(날씨 추천과 안 겹치게) */
+  const { weatherPicks, tastePicks } = useMemo(() => {
+    const base = { theme, now: live.now, budget: filters.maxPrice, walkById, summaries: live.summaries, seed };
+    const openNow = (r: Restaurant) => maybeOpen(r, live.now);
+    const open = pickForToday(restaurants, { ...base, isOpen: openNow });
     // 영업 끝난 시간(저녁·주말)엔 영업시간과 상관없이 — 다음 점심 고민용
-    return open.length >= 3 ? open : pickForToday(restaurants, { ...base, isOpen: () => true });
+    const anyHours = open.length < 3;
+    const w = anyHours ? pickForToday(restaurants, { ...base, isOpen: () => true }) : open;
+    const exclude = new Set(w.map((r) => r.id));
+    const t = pickForTaste(restaurants, { ...base, taste, exclude, isOpen: anyHours ? () => true : openNow });
+    return { weatherPicks: w, tastePicks: t };
   }, [restaurants, theme, live.now, live.summaries, filters.maxPrice, walkById, taste, seed]);
+  const todayPicks = useMemo(() => [...weatherPicks, ...tastePicks], [weatherPicks, tastePicks]);
 
   const topRated = useMemo(
     () => [...restaurants].filter((r) => externalRating(r) > 0).sort((a, b) => externalRating(b) - externalRating(a)).slice(0, 10),
@@ -530,7 +537,8 @@ export default function App() {
       <TodayPick
         theme={theme}
         weather={weather}
-        picks={todayPicks}
+        picks={weatherPicks}
+        tastePicks={tastePicks}
         taste={taste}
         favCount={favoriteList.length}
         walkById={walkById}
@@ -538,7 +546,9 @@ export default function App() {
         onSelect={open}
         onSeeAll={() => searchWith({ dishes: theme.dishes, maxWalk: theme.maxWalk, openNow: true })}
         onVote={() => {
-          setVoteDraft(todayPicks.slice(0, VOTE_FROM_PICKS).map((r) => r.id));
+          // 두 줄에서 고루 (내 취향 줄이 없으면 날씨 추천에서만)
+          const half = tastePicks.length ? VOTE_FROM_PICKS / 2 : VOTE_FROM_PICKS;
+          setVoteDraft([...weatherPicks.slice(0, half), ...tastePicks.slice(0, VOTE_FROM_PICKS - half)].map((r) => r.id));
           setVoteView({ mode: 'create' });
         }}
       />

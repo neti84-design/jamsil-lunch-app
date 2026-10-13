@@ -1981,13 +1981,25 @@ input.mini.vote-title-input {
 .foot .credit {
   margin-top: 4px;
 }
-/* 오늘의 추천: 내 관심매장 취향 */
-.today-taste {
-  margin: -2px 0 0;
+/* 오늘의 추천: 두 번째 줄 (내 취향 추천) */
+.today-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.today-sub h4 {
+  margin: 0;
+  font-size: 14px;
+}
+.today-sub .small,
+.today-empty {
   font-size: 12px;
 }
-.recent-state.taste-mark {
-  background: var(--accent);
+.today-empty {
+  margin: 0;
 }
 
 /* ---------- 근무지 바꾸기 (오른쪽 위) ---------- */

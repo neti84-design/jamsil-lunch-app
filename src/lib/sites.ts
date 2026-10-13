@@ -29,7 +29,8 @@ export const SITES: Record<SiteId, Site> = {
     label: '잠실본사',
     office: { lat: 37.5141, lng: 127.1017, popup: '출발: 본사 (롯데캐슬골드 · 8번 출구)' },
     station: { lat: 37.5133, lng: 127.1001, popup: '잠실역 (2·8호선)' },
-    walkFrom: '본사에서',
+    // 예전 화면 문구 그대로 (지금 쓰는 사람들이 보던 대로)
+    walkFrom: '잠실역',
     brand: { accent: '잠심', sub: '잠실점심', tagline: '구내식당 공사 이슈로 인한 식사 문제 해결을 위한 어플!' },
     color: '#ff6b35',
     themeColor: '#f64610',
@@ -52,15 +53,48 @@ export const SITES: Record<SiteId, Site> = {
 export const DEFAULT_SITE: SiteId = 'ydp';
 
 const SITE_KEY = 'jamsil-lunch:site';
+const KEY_PREFIX = 'jamsil-lunch:';
 
+/**
+ * 근무지가 생기기 전부터 쓰던 사람인지 — 이 기기에 앱 저장값(조건·관심매장 등)이 이미 있으면 잠실 사용자.
+ * 앱이 저장값을 쓰기 전에 봐야 하므로 이 파일을 처음 불러올 때 한 번만 확인한다
+ */
+const EXISTING_USER = (() => {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(KEY_PREFIX) && k !== SITE_KEY) return true;
+    }
+  } catch {
+    /* 저장이 막혀 있으면 새 사용자로 */
+  }
+  return false;
+})();
+
+function isSite(v: string | null): v is SiteId {
+  return !!v && v in SITES;
+}
+
+/**
+ * 열 때 근무지: 링크의 ?site=ydp|jamsil → 마지막에 고른 곳 →
+ * 예전부터 쓰던 사람은 잠실 (지금 쓰는 사람 화면이 바뀌지 않게) → 처음 여는 사람은 영등포맥스
+ */
 export function loadSite(): SiteId {
+  const fromLink = new URLSearchParams(location.search).get('site');
+  if (isSite(fromLink)) {
+    saveSite(fromLink);
+    return fromLink;
+  }
   try {
     const v = localStorage.getItem(SITE_KEY);
-    if (v && v in SITES) return v as SiteId;
+    if (isSite(v)) return v;
   } catch {
     /* 저장이 막혀 있으면 기본값 */
   }
-  return DEFAULT_SITE;
+  // 정한 근무지를 바로 저장한다 — 안 그러면 처음 온 사람도 다음엔 저장값이 생겨 "예전 사용자"(잠실)로 보인다
+  const first = EXISTING_USER ? 'jamsil' : DEFAULT_SITE;
+  saveSite(first);
+  return first;
 }
 
 export function saveSite(id: SiteId) {

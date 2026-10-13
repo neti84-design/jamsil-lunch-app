@@ -228,6 +228,14 @@ export default function App() {
     history.replaceState(history.state, '', location.pathname);
   }, [rememberPoll]);
 
+  // ?site= 링크로 들어왔으면 근무지는 이미 저장했으니 주소창에서 지운다 (새로고침해도 마지막에 고른 곳으로)
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if (!q.has('site')) return;
+    q.delete('site');
+    history.replaceState(history.state, '', location.pathname + (q.size ? `?${q}` : ''));
+  }, []);
+
   // 점심때 날씨 (실패하면 요일 추천만)
   useEffect(() => {
     const ac = new AbortController();
@@ -246,7 +254,8 @@ export default function App() {
   }, [restaurants, site]);
   /** 받아 둔 근무지 식당 전부 (투표 링크·최근 본 식당) */
   const byId = useMemo(() => new Map(Object.values(lists).flatMap((l) => l.map((r) => [r.id, r] as const))), [lists]);
-  const buildings = useMemo(() => bigBuildings(restaurants, site.office), [restaurants, site]);
+  // 영등포는 근무지에서 가까운 건물부터, 잠실은 지금 쓰는 사람들이 보던 대로 식당 많은 순
+  const buildings = useMemo(() => bigBuildings(restaurants, site.id === 'ydp' ? site.office : undefined), [restaurants, site]);
 
   /** 조건에 맞는 식당을 정렬해서. 지도는 도보 조건으로 mapMaxWalk 를 쓴다 */
   const run = (f: Filters) => {

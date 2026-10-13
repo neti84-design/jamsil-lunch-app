@@ -79,9 +79,10 @@ export function fromKakao([id, placeName, category, address, phone, lat, lng]: K
     id: `kakao-${id}`,
     name,
     branch,
-    cuisine: CUISINE_OF[cat[0]] ?? '기타',
+    // 샐러드·샌드위치로 점심이 되는 카페(달리는커피 등)는 샐러드로
+    cuisine: cat[0] === '카페' && /샐러드|포케|달리는커피|샌드/.test(placeName) ? '샐러드' : (CUISINE_OF[cat[0]] ?? '기타'),
     // 세 번째 단계는 대개 체인 이름이라 두 번째 단계까지만 ("돈까스,우동" → "돈까스·우동")
-    subcategory: (cat[1] ?? cat[0]).replace(/,/g, '·'),
+    subcategory: cat[0] === '카페' ? '샌드위치·샐러드 카페' : (cat[1] ?? cat[0]).replace(/,/g, '·'),
     signature: [],
     priceRange: null,
     menu: [],

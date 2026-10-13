@@ -25,34 +25,36 @@ const OFFICE = OFFICES[SITE];
 if (!OFFICE) throw new Error(`SITE 는 ${Object.keys(OFFICES).join(' / ')} 중 하나`);
 const DATA_DIR = SITE === 'jamsil' ? '../src/data/' : `../src/data/${SITE}/`;
 const EXCLUDE = /^(술집|간식|구내식당|식품판매|카페)$/;
+/** 카페라도 샐러드·샌드위치로 점심이 되는 곳은 넣는다 (달리는커피 등) */
+const MEAL_CAFE = /달리는커피|샐러드|샌드위치|샌드|포케|베이글|토스트|브런치/;
 
 const dLat = RADIUS / 111000;
 const dLng = RADIUS / (111000 * Math.cos((OFFICE.lat * Math.PI) / 180));
 
-async function page(rect, p) {
+async function page(rect, p, code) {
   const url = new URL('https://dapi.kakao.com/v2/local/search/category.json');
-  url.search = new URLSearchParams({ category_group_code: 'FD6', rect: rect.join(','), page: String(p), size: '15' }).toString();
+  url.search = new URLSearchParams({ category_group_code: code, rect: rect.join(','), page: String(p), size: '15' }).toString();
   const res = await fetch(url, { headers: KEY ? { Authorization: `KakaoAK ${KEY}` } : {} });
   if (!res.ok) throw new Error(`카카오 API ${res.status}: ${await res.text()}`);
   return res.json();
 }
 
 const found = new Map();
-async function grab(x1, y1, x2, y2) {
+async function grab(x1, y1, x2, y2, code = 'FD6') {
   const rect = [x1, y1, x2, y2];
-  const first = await page(rect, 1);
+  const first = await page(rect, 1, code);
   if (first.meta.total_count > 45) {
     const mx = (x1 + x2) / 2;
     const my = (y1 + y2) / 2;
-    await grab(x1, y1, mx, my);
-    await grab(mx, y1, x2, my);
-    await grab(x1, my, mx, y2);
-    await grab(mx, my, x2, y2);
+    await grab(x1, y1, mx, my, code);
+    await grab(mx, y1, x2, my, code);
+    await grab(x1, my, mx, y2, code);
+    await grab(mx, my, x2, y2, code);
     return;
   }
   for (const d of first.documents) found.set(d.id, d);
   for (let p = 2, end = first.meta.is_end; !end && p <= 3; p++) {
-    const j = await page(rect, p);
+    const j = await page(rect, p, code);
     for (const d of j.documents) found.set(d.id, d);
     end = j.meta.is_end;
   }
@@ -65,6 +67,8 @@ function meters(lat, lng) {
 }
 
 await grab(OFFICE.lng - dLng, OFFICE.lat - dLat, OFFICE.lng + dLng, OFFICE.lat + dLat);
+// 카페(CE7)는 따로 분류돼 있어서 한 번 더 — 아래에서 샐러드·샌드위치 되는 곳(MEAL_CAFE)만 남긴다
+await grab(OFFICE.lng - dLng, OFFICE.lat - dLat, OFFICE.lng + dLng, OFFICE.lat + dLat, 'CE7');
 
 // 직접 정리한 식당과 겹치는 카카오 장소 id
 const curated = SITE === 'jamsil' ? fs.readFileSync(new URL('../src/data/restaurants.ts', import.meta.url), 'utf8') : '';
@@ -73,7 +77,7 @@ const curatedIds = new Set([...curated.matchAll(/place\.map\.kakao\.com\/(\d+)/g
 const rows = [];
 for (const d of found.values()) {
   const cat = d.category_name.split(' > ').slice(1); // ["한식", "해장국", "달래해장"]
-  if (!cat[0] || EXCLUDE.test(cat[0]) || curatedIds.has(d.id)) continue;
+  if (!cat[0] || (EXCLUDE.test(cat[0]) && !(cat[0] === '카페' && MEAL_CAFE.test(d.place_name))) || curatedIds.has(d.id)) continue;
   const lat = Number(d.y);
   const lng = Number(d.x);
   if (meters(lat, lng) > RADIUS) continue;

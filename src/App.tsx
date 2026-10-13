@@ -36,7 +36,7 @@ import { bumpView, loadViewCounts } from './lib/views';
 import { applyFixes } from './lib/fixes';
 import { makeNameMatcher, makeQueryMatcher } from './lib/search';
 import { LIVE_WINDOW_MS, type ReportSummary } from './lib/reports';
-import { hasDelivery, type Restaurant } from './types';
+import type { Restaurant } from './types';
 
 /** 만든 사람 (화면 맨 아래 작게) */
 const MAKER = 'cjy1***';
@@ -92,7 +92,6 @@ function matches(
   f: Filters,
   now: number,
   queryOk: (r: Restaurant) => boolean,
-  summary: ReportSummary | undefined,
 ): boolean {
   // 가격 미확인 가게는 예산을 고르면 숨긴다
   if (r.priceRange ? r.priceRange[0] > f.maxPrice : f.maxPrice < NO_LIMIT) return false;
@@ -102,7 +101,6 @@ function matches(
     if (!f.dishes.some((d) => tags.includes(d))) return false;
   }
   if (f.concepts.length && !f.concepts.some((c) => r.concepts.includes(c))) return false;
-  if (f.delivery && !hasDelivery(r, summary?.delivery)) return false;
   if (f.seating === 'room' && !r.seating.room) return false;
   if (f.seating === 'group') {
     if (!r.seating.group) return false;
@@ -293,7 +291,7 @@ export default function App() {
   /** 조건에 맞는 식당을 정렬해서. 지도는 도보 조건으로 mapMaxWalk 를 쓴다 */
   const run = (f: Filters) => {
     const queryOk = makeQueryMatcher(f.query, restaurants);
-    const list = restaurants.filter((r) => matches(r, walkById.get(r.id) ?? null, f, live.now, queryOk, live.summaries.get(r.id)));
+    const list = restaurants.filter((r) => matches(r, walkById.get(r.id) ?? null, f, live.now, queryOk));
     const walkOf = (r: Restaurant) => walkById.get(r.id) ?? 99;
     const nameHit = makeNameMatcher(f.query);
     list.sort((a, b) => {

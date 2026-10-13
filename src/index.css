@@ -2106,3 +2106,55 @@ input.mini.vote-title-input {
 .admin-site.site-ydp {
   background: #1f9d55;
 }
+img.tower-logo {
+  object-fit: cover;
+  background: #f7f7f7;
+}
+
+/* 홈: 최근 3일 후기 (공유톡 아래) */
+.rr-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.rr-list li + li {
+  border-top: 1px dashed var(--line);
+}
+.rr-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+}
+.rr-name {
+  flex: none;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rr-review {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rr-time {
+  flex: none;
+}
+.rr-more {
+  display: block;
+  margin: 6px auto 0;
+}

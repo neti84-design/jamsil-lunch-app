@@ -6,8 +6,10 @@ const PALETTE: Record<SiteId, { sky: [string, string, string]; glass: string; li
   ydp: { sky: ['#9be3b0', '#34b36b', '#178a48'], glass: '#c9f0d6', line: '#2e9e5e', sun: '#f4ffb0' },
 };
 
-/** 타워 실루엣 로고 (잠실: 노을 하늘, 영등포: 초록 하늘) */
+/** 잠실: 타워 실루엣 로고 (노을 하늘) · 영등포: 영심이 그림 */
 export function TowerLogo({ size = 46, site = 'jamsil' }: { size?: number; site?: SiteId }) {
+  // 영등포(오늘영심)는 영심이 그림
+  if (site === 'ydp') return <img className="tower-logo" src="/ydp-logo.jpg" width={size} height={size} alt="" aria-hidden />;
   const c = PALETTE[site];
   const sky = `tl-sky-${site}`;
   const glass = `tl-glass-${site}`;

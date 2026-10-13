@@ -86,6 +86,14 @@ export function useTalk(adminToken: string, site: SiteId) {
     [backend, adminToken],
   );
 
+  const updatePost = useCallback(
+    async (id: string, body: string) => {
+      const p = await backend.updatePost(id, body, site, adminToken);
+      setPosts((prev) => prev.map((x) => (x.id === p.id ? p : x)));
+    },
+    [backend, adminToken, site],
+  );
+
   const removePost = useCallback(
     async (id: string, own = false) => {
       if (own) await backend.removeOwnPost(id);
@@ -106,7 +114,7 @@ export function useTalk(adminToken: string, site: SiteId) {
     return comments.filter((c) => ids.has(c.postId));
   }, [comments, sortedPosts]);
 
-  return { mode: backend.mode, posts: sortedPosts, comments: siteComments, error, addComment, removeComment, createPost, createPublicPost, setPostComments, removePost };
+  return { mode: backend.mode, posts: sortedPosts, comments: siteComments, error, addComment, removeComment, createPost, createPublicPost, setPostComments, updatePost, removePost };
 }
 
 export type Talk = ReturnType<typeof useTalk>;

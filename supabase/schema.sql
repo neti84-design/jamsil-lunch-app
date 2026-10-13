@@ -387,3 +387,23 @@ $$;
 
 grant execute on function public.talk_create(text, text) to anon, authenticated;
 grant execute on function public.delete_own_talk_post(uuid, text) to anon, authenticated;
+
+-- ---------- v8: 관리자 공유톡 글 고치기 ----------
+create or replace function public.admin_talk_update(p_id uuid, p_body text, p_token text)
+returns public.talk_posts
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec public.talk_posts;
+begin
+  if not public.admin_check(p_token) then
+    return null;
+  end if;
+  update public.talk_posts set body = p_body where id = p_id returning * into rec;
+  return rec;
+end;
+$$;
+
+grant execute on function public.admin_talk_update(uuid, text, text) to anon, authenticated;

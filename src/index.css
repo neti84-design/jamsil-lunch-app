@@ -1489,7 +1489,7 @@ input.mini.grow {
 }
 .talk-q {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   min-width: 0;
   font-size: 14.5px;
@@ -1498,13 +1498,39 @@ input.mini.grow {
 .talk-q-text {
   flex: 1;
   min-width: 0;
-  white-space: nowrap;
+  /* 질문은 두 줄까지 보이고, 더 길면 눌러서 펼치기 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 .talk-q-text.open {
-  white-space: normal;
+  display: block;
+}
+/* 답 쓰기: 입력칸은 한 줄을 다 쓰고, 단추는 그 밑 오른쪽 */
+.talk-reply-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.talk-reply-form input {
+  width: 100%;
+  font-size: 16px;
+  padding: 10px 12px;
+}
+.talk-reply-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.talk-reply-actions .small {
+  margin-right: auto;
 }
 .talk-admin {
   flex: none;
@@ -2038,6 +2064,16 @@ input.mini.vote-title-input {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
+  word-break: keep-all;
+}
+.foot .howto-note {
+  margin: 8px auto 0;
+  max-width: 420px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
   word-break: keep-all;
 }
 .foot .howto li + li {

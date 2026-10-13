@@ -2016,14 +2016,24 @@ input.mini.vote-title-input {
   color: #fff;
 }
 .topbar {
-  align-items: flex-start;
+  position: relative;
 }
+/* 휴대폰: 바꾸기 단추는 오른쪽 위 구석에 작게, 이름은 한 줄로 */
 .topbar .site-switch {
-  margin-top: 4px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 2px;
 }
-/* 휴대폰 폭이 좁으면 소개 문구는 두 줄로 */
+.topbar .site-switch button {
+  padding: 4px 8px;
+  font-size: 11px;
+}
 .topbar .brand {
   flex: 1;
+}
+.topbar .brand h1 {
+  white-space: nowrap;
 }
 .wide-top-right {
   display: flex;

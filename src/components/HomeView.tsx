@@ -13,7 +13,7 @@ interface Props {
   talk: ReactNode;
   /** 실시간 웨이팅 */
   ticker: ReactNode;
-  /** 가까운 매장 카드들 */
+  /** 요즘 관심 · 평일 좋았던 매장 카드들 */
   nearby: ReactNode;
   restaurants: Restaurant[];
   recent: Restaurant[];
@@ -40,7 +40,7 @@ function useKeepScrollX(key: string) {
   return { ref, onScroll };
 }
 
-/** 홈: 검색 · 음식 카테고리 · 주요장소 · 최근 본 식당 · 실시간 웨이팅 · 가까운 매장 */
+/** 홈: 검색 · 음식 카테고리 · 주요장소 · 최근 본 식당 · 실시간 웨이팅 · 요즘 관심·좋았던 매장 */
 export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent, buildings, walkById, now, onDish, onBuilding, onSelect, onSeeAll }: Props) {
   const { ref: buildingRef, onScroll: onBuildingScroll } = useKeepScrollX('buildings');
   const { ref: recentRef, onScroll: onRecentScroll } = useKeepScrollX('recent');
@@ -122,7 +122,7 @@ export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent,
 
       <section className="home-section">
         <div className="section-head">
-          <h3 className="section-title">📍 지금 영업 중 · 가까운 매장</h3>
+          <h3 className="section-title">🔥 요즘 관심 · 평일 좋았던 매장</h3>
           <button className="link-more" onClick={onSeeAll}>
             전체보기 ›
           </button>

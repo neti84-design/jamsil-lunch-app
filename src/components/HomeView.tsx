@@ -9,9 +9,9 @@ import { formatWon } from '../lib/links';
 interface Props {
   /** 공유톡 (홈 맨 위) */
   talk: ReactNode;
-  /** 실시간 웨이팅 */
+  /** 실시간 웨이팅 (제보가 없으면 null) */
   ticker: ReactNode;
-  /** 요즘 관심 · 평점 좋은 매장 카드들 */
+  /** 추천 매장 카드들 */
   nearby: ReactNode;
   restaurants: Restaurant[];
   recent: Restaurant[];
@@ -114,11 +114,11 @@ export function HomeView({ talk, ticker, nearby, restaurants, recent, buildings,
         </section>
       )}
 
-      <section className="home-section">{ticker}</section>
+      {ticker && <section className="home-section">{ticker}</section>}
 
       <section className="home-section">
         <div className="section-head">
-          <h3 className="section-title">🔥 요즘 찜 · 평점 좋은 식당</h3>
+          <h3 className="section-title">추천</h3>
           <button className="link-more" onClick={onSeeAll}>
             전체보기 ›
           </button>

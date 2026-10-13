@@ -322,3 +322,32 @@ begin
   alter publication supabase_realtime add table public.poll_votes;
 exception when duplicate_object then null;
 end $$;
+
+-- ---------- v6: 많이 본 매장 ----------
+-- 식당 상세를 연 횟수를 하루 단위로만 센다 (누가 봤는지는 남기지 않음). 홈 '추천'에서 최근 2주 많이 본 순으로 씀.
+create table if not exists public.restaurant_views (
+  restaurant_id text not null check (char_length(restaurant_id) <= 100),
+  day date not null default ((now() at time zone 'Asia/Seoul')::date),
+  views int not null default 0,
+  primary key (restaurant_id, day)
+);
+create index if not exists restaurant_views_day_idx on public.restaurant_views (day);
+
+alter table public.restaurant_views enable row level security;
+drop policy if exists "restaurant_views_select_all" on public.restaurant_views;
+create policy "restaurant_views_select_all" on public.restaurant_views for select using (true);
+
+-- 1 더하기 (직접 쓰기는 막고 이 함수로만)
+create or replace function public.bump_view(p_restaurant text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  insert into public.restaurant_views (restaurant_id, day, views)
+  select p_restaurant, (now() at time zone 'Asia/Seoul')::date, 1
+  where char_length(p_restaurant) between 1 and 100
+  on conflict (restaurant_id, day) do update set views = public.restaurant_views.views + 1;
+$$;
+
+grant execute on function public.bump_view(text) to anon, authenticated;

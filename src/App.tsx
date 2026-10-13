@@ -246,7 +246,7 @@ export default function App() {
   }, [restaurants, site]);
   /** 받아 둔 근무지 식당 전부 (투표 링크·최근 본 식당) */
   const byId = useMemo(() => new Map(Object.values(lists).flatMap((l) => l.map((r) => [r.id, r] as const))), [lists]);
-  const buildings = useMemo(() => bigBuildings(restaurants), [restaurants]);
+  const buildings = useMemo(() => bigBuildings(restaurants, site.office), [restaurants, site]);
 
   /** 조건에 맞는 식당을 정렬해서. 지도는 도보 조건으로 mapMaxWalk 를 쓴다 */
   const run = (f: Filters) => {

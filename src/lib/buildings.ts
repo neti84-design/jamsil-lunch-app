@@ -1,4 +1,5 @@
 import type { Restaurant } from '../types';
+import { haversineMeters } from './geo';
 
 /**
  * 식당이 몰려 있는 건물·상가. 주소/지점명/출구 안내에서 찾아낸다.
@@ -8,7 +9,7 @@ export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
   // 영등포맥스 주변 — 주소가 영등포 쪽에만 있는 것이라 잠실 건물보다 먼저 본다 (롯데백화점 영등포점이 잠실 롯데백화점으로 잡히지 않게)
   { name: '타임스퀘어', emoji: '🏬', re: /타임스퀘어|영중로 15(?!\d)/ },
   { name: '신세계백화점', emoji: '🛍️', re: /신세계백화점|신세계 ?영등포|영중로 9(?!\d)/ },
-  { name: '영등포역·롯데백화점', emoji: '🚉', re: /경인로 846(?!\d)|롯데백화점 ?영등포|영등포역점/ },
+  { name: '영등포역·롯데백화점', emoji: '🚉', re: /경인로 846(?!\d)|롯데백화점 ?영등포/ },
   { name: '영등포역 지하상가', emoji: '🚇', re: /영등포역\s*지하|영등포지하(쇼핑|상가)|영중로 지하|경인로 지하/ },
   { name: '영등포맥스', emoji: '🛒', re: /롯데마트\s*맥스|롯데마트맥스|영중로 125(?!\d)/ },
   { name: '포레나 영등포', emoji: '🏢', re: /포레나|국회대로50길 20(?!\d)/ },
@@ -50,14 +51,28 @@ export function buildingOf(r: Restaurant): string | null {
   return hit;
 }
 
-/** 필터로 보여줄 큰 건물 목록 (식당 수 많은 순) */
-export function bigBuildings(list: Restaurant[]): { name: string; emoji: string; count: number }[] {
+/** 필터로 보여줄 큰 건물 목록 — 근무지(from)에서 가까운 건물부터 (없으면 식당 수 많은 순) */
+export function bigBuildings(
+  list: Restaurant[],
+  from?: { lat: number; lng: number },
+): { name: string; emoji: string; count: number }[] {
   const counts = new Map<string, number>();
+  // 건물 위치 = 그 건물 식당들 좌표의 평균
+  const sum = new Map<string, { lat: number; lng: number; n: number }>();
   for (const r of list) {
     const b = buildingOf(r);
-    if (b) counts.set(b, (counts.get(b) ?? 0) + 1);
+    if (!b) continue;
+    counts.set(b, (counts.get(b) ?? 0) + 1);
+    if (r.lat != null && r.lng != null) {
+      const s = sum.get(b) ?? { lat: 0, lng: 0, n: 0 };
+      sum.set(b, { lat: s.lat + r.lat, lng: s.lng + r.lng, n: s.n + 1 });
+    }
   }
+  const dist = (name: string) => {
+    const s = sum.get(name);
+    return from && s ? haversineMeters(from.lat, from.lng, s.lat / s.n, s.lng / s.n) : Infinity;
+  };
   return BUILDINGS.map((b) => ({ name: b.name, emoji: b.emoji, count: counts.get(b.name) ?? 0 }))
     .filter((b) => b.count >= MIN_BUILDING_COUNT)
-    .sort((a, b) => b.count - a.count);
+    .sort((a, b) => dist(a.name) - dist(b.name) || b.count - a.count);
 }

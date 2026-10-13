@@ -1,17 +1,24 @@
 import { useState } from 'react';
 import { FEEDBACK_ID, FEEDBACK_LABELS, type FeedbackType, type NewReport } from '../lib/reports';
 import { useSite } from '../lib/sites';
+import { TALK_POST_MAX } from '../lib/talk';
 
 interface Props {
   onAdd: (r: NewReport) => Promise<unknown>;
+  /** 공유톡에 바로 올리기 */
+  onTalk: (body: string) => Promise<unknown>;
   onClose: () => void;
 }
 
-const TYPES = Object.keys(FEEDBACK_LABELS) as FeedbackType[];
+/** 'talk' = 공유톡 올리기 (제보가 아니라 홈 공유톡에 바로 뜬다) */
+type Kind = FeedbackType | 'talk';
+const TYPES: Kind[] = ['talk', ...(Object.keys(FEEDBACK_LABELS) as FeedbackType[])];
+const LABEL = (t: Kind) => (t === 'talk' ? '공유톡 올리기' : FEEDBACK_LABELS[t]);
 /** DB 칸이 300자 — 앞에 붙는 "[fb:종류:근무지]" 자리를 남긴다 */
 const TEXT_MAX = 280;
 
-const PLACEHOLDER: Record<FeedbackType, string> = {
+const PLACEHOLDER: Record<Kind, string> = {
+  talk: '동료들에게 묻고 싶은 한 줄 (예: 오늘 장미상가 웨이팅 어때요?)',
   new: '가게 이름과 위치를 알려주세요 (예: 타워730 지하 ○○국수)',
   closed: '어느 가게가 문을 닫았나요?',
   bad: '쓰면서 불편했던 점을 알려주세요',
@@ -20,9 +27,10 @@ const PLACEHOLDER: Record<FeedbackType, string> = {
 };
 
 /** 제보·의견 보내기: 신규 매장 · 폐업 · 앱 불편한 점/좋은 점 */
-export function FeedbackPanel({ onAdd, onClose }: Props) {
+export function FeedbackPanel({ onAdd, onTalk, onClose }: Props) {
   const site = useSite();
-  const [type, setType] = useState<FeedbackType>('new');
+  const [type, setType] = useState<Kind>('new');
+  const max = type === 'talk' ? TALK_POST_MAX : TEXT_MAX;
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -34,7 +42,8 @@ export function FeedbackPanel({ onAdd, onClose }: Props) {
     setBusy(true);
     setMsg(null);
     try {
-      await onAdd({ restaurantId: FEEDBACK_ID, kind: 'feedback', feedbackType: type, feedbackSite: site.id, comment: body });
+      if (type === 'talk') await onTalk(body);
+      else await onAdd({ restaurantId: FEEDBACK_ID, kind: 'feedback', feedbackType: type, feedbackSite: site.id, comment: body });
       setText('');
       setSent(true);
     } catch (e) {
@@ -59,7 +68,7 @@ export function FeedbackPanel({ onAdd, onClose }: Props) {
         {sent ? (
           <section className="report feedback-done">
             <p>
-              <strong>고마워요! 잘 받았어요 🙏</strong>
+              <strong>{type === 'talk' ? '공유톡에 올렸어요. 홈 맨 위에서 볼 수 있어요.' : '고마워요! 잘 받았어요 🙏'}</strong>
             </p>
             <div className="fix-actions">
               <button className="btn sm" onClick={() => setSent(false)}>
@@ -75,24 +84,25 @@ export function FeedbackPanel({ onAdd, onClose }: Props) {
             <div className="chips">
               {TYPES.map((t) => (
                 <button key={t} className={'chip' + (type === t ? ' on' : '')} onClick={() => setType(t)}>
-                  {FEEDBACK_LABELS[t]}
+                  {LABEL(t)}
                 </button>
               ))}
             </div>
             <div className="report-form">
               <textarea
-                rows={4}
-                maxLength={TEXT_MAX}
+                rows={type === 'talk' ? 2 : 4}
+                maxLength={max}
                 placeholder={PLACEHOLDER[type]}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
               />
               <div className="fix-actions">
                 <span className="small">
-                  {text.length}/{TEXT_MAX}
+                  {type === 'talk' ? '홈 공유톡에 바로 올라가요 · ' : ''}
+                  {text.length}/{max}
                 </span>
                 <button className="btn sm primary" disabled={busy || !text.trim()} onClick={() => void submit()}>
-                  보내기
+                  {type === 'talk' ? '올리기' : '보내기'}
                 </button>
               </div>
             </div>

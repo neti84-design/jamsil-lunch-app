@@ -70,6 +70,14 @@ export function useTalk(adminToken: string, site: SiteId) {
     [backend, adminToken, site],
   );
 
+  const createPublicPost = useCallback(
+    async (body: string) => {
+      const p = await backend.createPublicPost(body, site);
+      setPosts((prev) => [p, ...prev.filter((x) => x.id !== p.id)]);
+    },
+    [backend, site],
+  );
+
   const setPostComments = useCallback(
     async (id: string, allowComments: boolean) => {
       const p = await backend.setComments(id, allowComments, adminToken);
@@ -79,8 +87,9 @@ export function useTalk(adminToken: string, site: SiteId) {
   );
 
   const removePost = useCallback(
-    async (id: string) => {
-      await backend.removePost(id, adminToken);
+    async (id: string, own = false) => {
+      if (own) await backend.removeOwnPost(id);
+      else await backend.removePost(id, adminToken);
       setPosts((prev) => prev.filter((x) => x.id !== id));
       setComments((prev) => prev.filter((c) => c.postId !== id));
     },
@@ -97,7 +106,7 @@ export function useTalk(adminToken: string, site: SiteId) {
     return comments.filter((c) => ids.has(c.postId));
   }, [comments, sortedPosts]);
 
-  return { mode: backend.mode, posts: sortedPosts, comments: siteComments, error, addComment, removeComment, createPost, setPostComments, removePost };
+  return { mode: backend.mode, posts: sortedPosts, comments: siteComments, error, addComment, removeComment, createPost, createPublicPost, setPostComments, removePost };
 }
 
 export type Talk = ReturnType<typeof useTalk>;

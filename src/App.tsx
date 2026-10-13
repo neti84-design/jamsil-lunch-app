@@ -31,11 +31,12 @@ import { PARTNERS, type Partner } from './data/partners';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
-import { maybeOpen } from './lib/hours';
+import { maybeOpen, openStatus } from './lib/hours';
+import { bumpView, loadViewCounts } from './lib/views';
 import { applyFixes } from './lib/fixes';
 import { makeNameMatcher, makeQueryMatcher } from './lib/search';
-import type { ReportSummary } from './lib/reports';
-import { hasDelivery, type Restaurant } from './types';
+import { LIVE_WINDOW_MS, type ReportSummary } from './lib/reports';
+import type { Restaurant } from './types';
 
 /** 만든 사람 (화면 맨 아래 작게) */
 const MAKER = 'cjy1***';
@@ -59,9 +60,9 @@ function deviceSeed(): string {
 }
 /** 오늘의 추천을 "이 중에서 투표"로 담을 때 몇 곳까지 */
 const VOTE_FROM_PICKS = 4;
-/** 홈 아래 '요즘 관심 · 평점 좋은 매장': 최근 며칠 / 몇 곳 */
+/** 홈 아래 '추천': 최근 며칠 / 몇 곳 */
 const BUZZ_DAYS = 14;
-const BUZZ_SHOWN = 5;
+const BUZZ_SHOWN = 10;
 const MAX_RECENT = 10;
 const MAX_SEARCHES = 10;
 /** 검색 목록은 한 번에 이만큼씩 그린다 (식당이 1,000곳이 넘어서) */
@@ -91,7 +92,6 @@ function matches(
   f: Filters,
   now: number,
   queryOk: (r: Restaurant) => boolean,
-  summary: ReportSummary | undefined,
 ): boolean {
   // 가격 미확인 가게는 예산을 고르면 숨긴다
   if (r.priceRange ? r.priceRange[0] > f.maxPrice : f.maxPrice < NO_LIMIT) return false;
@@ -101,7 +101,6 @@ function matches(
     if (!f.dishes.some((d) => tags.includes(d))) return false;
   }
   if (f.concepts.length && !f.concepts.some((c) => r.concepts.includes(c))) return false;
-  if (f.delivery && !hasDelivery(r, summary?.delivery)) return false;
   if (f.seating === 'room' && !r.seating.room) return false;
   if (f.seating === 'group') {
     if (!r.seating.group) return false;
@@ -145,6 +144,19 @@ function saveJSON(key: string, v: unknown) {
 }
 
 /** history.state 에 넣는 화면 정보 */
+/** 홈 '추천'에 왜 올라왔는지 */
+interface Why {
+  favs: number;
+  good: number;
+  views: number;
+  near: boolean;
+}
+interface BuzzItem {
+  r: Restaurant;
+  why: Why | null;
+  partner: Partner | null;
+}
+
 interface NavState {
   tab: Tab;
   depth: number;
@@ -203,6 +215,15 @@ export default function App() {
   const nextScroll = useRef(0);
   const lastScroll = useRef(0);
   const live = useReports();
+  /** 최근 2주 전체 사용자가 상세를 연 횟수 */
+  const [viewCounts, setViewCounts] = useState<Map<string, number>>(() => new Map());
+  useEffect(() => {
+    let alive = true;
+    loadViewCounts().then((m) => alive && setViewCounts(m));
+    return () => {
+      alive = false;
+    };
+  }, []);
   /** 사용자 "직접 수정"(가격·영업시간)을 반영한 식당 */
   const restaurants = useMemo(() => applyFixes(rawRestaurants, live.reports), [rawRestaurants, live.reports]);
   const talk = useTalk(live.adminToken, siteId);
@@ -270,7 +291,7 @@ export default function App() {
   /** 조건에 맞는 식당을 정렬해서. 지도는 도보 조건으로 mapMaxWalk 를 쓴다 */
   const run = (f: Filters) => {
     const queryOk = makeQueryMatcher(f.query, restaurants);
-    const list = restaurants.filter((r) => matches(r, walkById.get(r.id) ?? null, f, live.now, queryOk, live.summaries.get(r.id)));
+    const list = restaurants.filter((r) => matches(r, walkById.get(r.id) ?? null, f, live.now, queryOk));
     const walkOf = (r: Restaurant) => walkById.get(r.id) ?? 99;
     const nameHit = makeNameMatcher(f.query);
     list.sort((a, b) => {
@@ -344,13 +365,16 @@ export default function App() {
     [restaurants],
   );
   /**
-   * 홈 아래: 요즘 관심 · 평점 좋은 매장 — 최근 2주에 남긴 관심 저장·맛집 체크·좋은 별점(4~5)을 모은다.
-   * 모인 게 적으면 그동안 동료 추천 → 평점 높은 곳 순으로 채운다
+   * 홈 아래 '추천' — 위에서부터
+   * 1) 최근 2주 찜 많은 순 → 또 갈래요·숨은맛집·좋은 별점 많은 순
+   * 2) 최근 2주 전체 사용자가 많이 본 순
+   * 3) 가깝고 지금(또는 오늘) 영업하는 곳
+   * 으로 BUZZ_SHOWN 곳을 채운다. 롯데 임직원 혜택 매장은 맨 위에 고정
    */
   const buzz = useMemo(() => {
     const since = live.now - BUZZ_DAYS * 86400_000;
     const here = new Set(restaurants.map((r) => r.id));
-    const m = new Map<string, { score: number; favs: number; good: number }>();
+    const m = new Map<string, Why>();
     for (const rep of live.reports) {
       if (!here.has(rep.restaurantId)) continue;
       if (Date.parse(rep.createdAt) < since) continue;
@@ -358,30 +382,43 @@ export default function App() {
       const good =
         (rep.kind === 'tag' && (rep.tag === 'hidden' || rep.tag === 'classic')) || (rep.kind === 'review' && (rep.rating ?? 0) >= 4);
       if (!fav && !good) continue;
-      const x = m.get(rep.restaurantId) ?? { score: 0, favs: 0, good: 0 };
+      const x = m.get(rep.restaurantId) ?? { favs: 0, good: 0, views: 0, near: false };
       if (fav) x.favs += 1;
       else x.good += 1;
-      x.score += fav ? 3 : rep.kind === 'review' ? rep.rating! - 2 : 2;
       m.set(rep.restaurantId, x);
     }
     // 롯데 임직원 혜택 매장은 맨 위에 고정 (기간이 지나면 빠진다)
     const today = kstDate(live.now);
-    const partners = PARTNERS.filter((p) => p.site === siteId && byId.has(p.id) && (!p.until || today <= p.until)).map((p) => ({
+    const partners: BuzzItem[] = PARTNERS.filter((p) => p.site === siteId && byId.has(p.id) && (!p.until || today <= p.until)).map((p) => ({
       r: byId.get(p.id)!,
       why: null,
-      partner: p as Partner | null,
+      partner: p,
     }));
     const seen = new Set(partners.map((x) => x.r.id));
-    const hot = [...m.entries()]
-      .sort((a, b) => b[1].score - a[1].score)
-      .filter(([id]) => !seen.has(id))
-      .map(([id, why]) => ({ r: byId.get(id)!, why, partner: null }));
-    for (const x of hot) seen.add(x.r.id);
-    const fill = [...recommended, ...topRated].filter((r) => !seen.has(r.id) && (seen.add(r.id), true));
-    // 혜택 매장은 몇 곳이든 다 보여 주고, 나머지는 BUZZ_SHOWN 까지
-    const rest = [...hot, ...fill.map((r) => ({ r, why: null, partner: null }))].slice(0, Math.max(0, BUZZ_SHOWN - partners.length));
-    return [...partners, ...rest];
-  }, [restaurants, byId, live.reports, live.now, recommended, topRated, siteId]);
+    const out: BuzzItem[] = [...partners];
+    const room = () => out.length < Math.max(BUZZ_SHOWN, partners.length);
+    const add = (id: string, why: Why) => {
+      if (seen.has(id) || !room()) return;
+      seen.add(id);
+      out.push({ r: byId.get(id)!, why, partner: null });
+    };
+    // 1) 찜 → 또 갈래요·숨은맛집
+    for (const [id, why] of [...m.entries()].sort((a, b) => b[1].favs - a[1].favs || b[1].good - a[1].good)) add(id, why);
+    // 2) 많이 본 매장
+    for (const [id, views] of [...viewCounts.entries()].filter(([id]) => here.has(id)).sort((a, b) => b[1] - a[1]))
+      add(id, { ...(m.get(id) ?? { favs: 0, good: 0, near: false }), views });
+    // 3) 가깝고 영업하는 곳: 지금 영업 중 → 오늘 곧 영업 → 영업시간 미확인, 같은 묶음 안에서는 가까운 순
+    const rank = (r: Restaurant) => {
+      const st = openStatus(r, live.now).state;
+      return st === 'open' || st === 'closing' ? 0 : st === 'before' || st === 'break' ? 1 : st === 'unknown' ? 2 : 9;
+    };
+    const near = restaurants
+      .map((r) => ({ r, k: rank(r), w: walkById.get(r.id) ?? 99 }))
+      .filter((x) => x.k < 9)
+      .sort((a, b) => a.k - b.k || a.w - b.w);
+    for (const { r } of near) add(r.id, { favs: 0, good: 0, views: 0, near: true });
+    return out;
+  }, [restaurants, byId, live.reports, live.now, viewCounts, walkById, siteId]);
 
   // ---------- 화면 이동 (브라우저/휴대폰 뒤로가기와 연동) ----------
   useEffect(() => {
@@ -423,6 +460,7 @@ export default function App() {
     }
     push({ tab, depth: depth + 1, detail: id });
     setSelectedId(id);
+    bumpView(id);
     setRecentIds((prev) => [id, ...prev.filter((x) => x !== id)].slice(0, MAX_RECENT));
   };
 
@@ -604,7 +642,13 @@ export default function App() {
     if (shown < results.length && el.scrollHeight - el.scrollTop - el.clientHeight < 600) setShown((n) => n + PAGE_SIZE);
   };
 
-  const ticker = <LiveTicker reports={live.reports} restaurants={restaurants} now={live.now} mode={live.mode} onSelect={open} />;
+  // 실시간 웨이팅은 지금 제보가 있을 때만 홈에 띄운다
+  const hasLiveWait = live.reports.some(
+    (r) => r.kind === 'wait' && live.now - Date.parse(r.createdAt) <= LIVE_WINDOW_MS && byId.has(r.restaurantId) && walkById.has(r.restaurantId),
+  );
+  const ticker = hasLiveWait ? (
+    <LiveTicker reports={live.reports} restaurants={restaurants} now={live.now} mode={live.mode} onSelect={open} />
+  ) : null;
 
   const filterBar = (
     <FilterBar
@@ -817,6 +861,8 @@ export default function App() {
                   <div className="recommend-why small">
                     {why.favs > 0 && <span>♥ 최근 찜 {why.favs}</span>}
                     {why.good > 0 && <span>👍 좋았어요 {why.good}</span>}
+                    {why.views > 0 && <span>많이 본 매장 {why.views}회</span>}
+                    {why.near && <span>가까운 영업 매장</span>}
                   </div>
                 )}
                 {card(r)}
@@ -965,16 +1011,17 @@ export default function App() {
             </div>
             {howToOpen && (
               <ol className="howto">
+                <li>오른쪽 위에서 근무지(잠실본사·영등포맥스)를 고르세요.</li>
                 <li>
                   세부조건 기본값은 인당 {site.defaultBudget / 10000}만원 이하 · 도보 10분 이내예요
-                  {siteId === 'ydp' ? ' (영등포맥스 기준)' : ' (잠실본사 기준, 영등포맥스는 1만원)'}.
+                  {siteId === 'ydp' ? ' (영등포맥스 기준)' : ' (잠실본사 기준, 영등포맥스는 1만원)'}. 세부조건에서 예산·도보 시간·종류를 바꿀 수
+                  있고, 초기화를 누르면 기본값으로 돌아와요.
                 </li>
-                <li>오른쪽 위에서 근무지(잠실본사·영등포맥스)를 고르세요.</li>
                 <li>홈에서 음식 종류·건물별로 둘러보거나, 검색에서 이름·메뉴로 찾으세요.</li>
-                <li>세부조건에서 예산·도보 시간·종류를 바꾸고, 초기화로 기본값에 되돌릴 수 있어요.</li>
                 <li>식당을 누르면 메뉴·가격·영업시간·웨이팅을 볼 수 있어요.</li>
                 <li>다녀온 곳에 별점·한 줄 후기·웨이팅을 남겨 동료와 나눠 주세요.</li>
                 <li>마음에 드는 곳은 하트로 찜하고, 오늘의 추천에서 점심 투표를 만들어 링크로 보내세요.</li>
+                <li>동료에게 묻고 싶은 게 있으면 제보·의견에서 공유톡에 올려 보세요.</li>
               </ol>
             )}
             <div className="credit">made by {MAKER}</div>
@@ -1049,7 +1096,7 @@ export default function App() {
       {feedbackOpen && (
         <>
           <div className="backdrop" onClick={() => setFeedbackOpen(false)} />
-          <FeedbackPanel onAdd={live.add} onClose={() => setFeedbackOpen(false)} />
+          <FeedbackPanel onAdd={live.add} onTalk={talk.createPublicPost} onClose={() => setFeedbackOpen(false)} />
         </>
       )}
 

@@ -322,3 +322,68 @@ begin
   alter publication supabase_realtime add table public.poll_votes;
 exception when duplicate_object then null;
 end $$;
+
+-- ---------- v6: 많이 본 매장 ----------
+-- 식당 상세를 연 횟수를 하루 단위로만 센다 (누가 봤는지는 남기지 않음). 홈 '추천'에서 최근 2주 많이 본 순으로 씀.
+create table if not exists public.restaurant_views (
+  restaurant_id text not null check (char_length(restaurant_id) <= 100),
+  day date not null default ((now() at time zone 'Asia/Seoul')::date),
+  views int not null default 0,
+  primary key (restaurant_id, day)
+);
+create index if not exists restaurant_views_day_idx on public.restaurant_views (day);
+
+alter table public.restaurant_views enable row level security;
+drop policy if exists "restaurant_views_select_all" on public.restaurant_views;
+create policy "restaurant_views_select_all" on public.restaurant_views for select using (true);
+
+-- 1 더하기 (직접 쓰기는 막고 이 함수로만)
+create or replace function public.bump_view(p_restaurant text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  insert into public.restaurant_views (restaurant_id, day, views)
+  select p_restaurant, (now() at time zone 'Asia/Seoul')::date, 1
+  where char_length(p_restaurant) between 1 and 100
+  on conflict (restaurant_id, day) do update set views = public.restaurant_views.views + 1;
+$$;
+
+grant execute on function public.bump_view(text) to anon, authenticated;
+
+-- ---------- v7: 공유톡을 누구나 올리기 ----------
+-- 앱 '제보·의견 > 공유톡 올리기'로 누구나 질문을 올린다 (댓글 열림). 한 기기에서 하루 3개까지, 본인 글은 본인이 지울 수 있다.
+alter table public.talk_posts add column if not exists device_id text check (char_length(device_id) <= 64);
+
+create or replace function public.talk_create(p_body text, p_device text)
+returns public.talk_posts
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec public.talk_posts;
+begin
+  if coalesce(char_length(p_device), 0) not between 1 and 64 then
+    raise exception '기기 정보가 없어요';
+  end if;
+  if (select count(*) from public.talk_posts where device_id = p_device and created_at > now() - interval '1 day') >= 3 then
+    raise exception '공유톡은 하루에 3개까지 올릴 수 있어요';
+  end if;
+  insert into public.talk_posts (body, allow_comments, device_id) values (p_body, true, p_device) returning * into rec;
+  return rec;
+end;
+$$;
+
+create or replace function public.delete_own_talk_post(p_id uuid, p_device text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.talk_posts where id = p_id and device_id = p_device;
+$$;
+
+grant execute on function public.talk_create(text, text) to anon, authenticated;
+grant execute on function public.delete_own_talk_post(uuid, text) to anon, authenticated;

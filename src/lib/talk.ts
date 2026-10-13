@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { deviceId, localAdminToken, supabaseClient } from './reports';
 import type { SiteId } from './sites';
 
-/** 공유톡: 관리자가 올리는 한 줄 질문·공지 */
+/** 공유톡: 한 줄 질문·공지 (관리자 또는 누구나 '제보·의견'에서) */
 export interface TalkPost {
   id: string;
   /** 어느 근무지 공지인지 — 그 근무지를 고른 사람에게만 보인다 */
@@ -10,6 +10,8 @@ export interface TalkPost {
   body: string;
   /** false = 단순 공지 (댓글 닫힘) */
   allowComments: boolean;
+  /** 올린 기기 (관리자 글은 null) — 본인 글 지우기에 쓴다 */
+  deviceId: string | null;
   createdAt: string; // ISO
 }
 
@@ -54,6 +56,9 @@ export interface TalkBackend {
   addComment(postId: string, body: string): Promise<TalkComment>;
   removeOwnComment(id: string): Promise<void>;
   createPost(body: string, allowComments: boolean, site: SiteId, token: string): Promise<TalkPost>;
+  /** 누구나 올리는 질문 (댓글 열림) */
+  createPublicPost(body: string, site: SiteId): Promise<TalkPost>;
+  removeOwnPost(id: string): Promise<void>;
   setComments(id: string, allowComments: boolean, token: string): Promise<TalkPost>;
   removePost(id: string, token: string): Promise<void>;
   removeComment(id: string, token: string): Promise<void>;
@@ -90,7 +95,7 @@ class LocalTalk implements TalkBackend {
   async list() {
     const all = this.read();
     // 예전에 이 기기에 저장된 글은 근무지가 없으면 잠실
-    return { ...all, posts: all.posts.map((p) => ({ ...p, site: p.site ?? 'jamsil' })) };
+    return { ...all, posts: all.posts.map((p) => ({ ...p, site: p.site ?? 'jamsil', deviceId: p.deviceId ?? null })) };
   }
   async addComment(postId: string, body: string) {
     const all = this.read();
@@ -110,11 +115,27 @@ class LocalTalk implements TalkBackend {
   async createPost(body: string, allowComments: boolean, site: SiteId, token: string) {
     this.admin(token);
     const all = this.read();
-    const p: TalkPost = { id: crypto.randomUUID(), site, body, allowComments, createdAt: new Date().toISOString() };
+    const p: TalkPost = { id: crypto.randomUUID(), site, body, allowComments, deviceId: null, createdAt: new Date().toISOString() };
     all.posts.push(p);
     this.write(all);
     this.subs.forEach((h) => h.post(p));
     return p;
+  }
+  async createPublicPost(body: string, site: SiteId) {
+    const all = this.read();
+    const p: TalkPost = { id: crypto.randomUUID(), site, body, allowComments: true, deviceId: deviceId(), createdAt: new Date().toISOString() };
+    all.posts.push(p);
+    this.write(all);
+    this.subs.forEach((h) => h.post(p));
+    return p;
+  }
+  async removeOwnPost(id: string) {
+    const all = this.read();
+    if (all.posts.find((p) => p.id === id)?.deviceId !== deviceId()) return;
+    all.posts = all.posts.filter((p) => p.id !== id);
+    all.comments = all.comments.filter((c) => c.postId !== id);
+    this.write(all);
+    this.subs.forEach((h) => h.postRemoved(id));
   }
   async setComments(id: string, allowComments: boolean, token: string) {
     this.admin(token);
@@ -154,6 +175,7 @@ interface PostRow {
   id: string;
   body: string;
   allow_comments: boolean;
+  device_id?: string | null;
   created_at: string;
 }
 interface CommentRow {
@@ -163,7 +185,13 @@ interface CommentRow {
   device_id: string | null;
   created_at: string;
 }
-const fromPost = (r: PostRow): TalkPost => ({ id: r.id, ...splitBody(r.body), allowComments: r.allow_comments, createdAt: r.created_at });
+const fromPost = (r: PostRow): TalkPost => ({
+  id: r.id,
+  ...splitBody(r.body),
+  allowComments: r.allow_comments,
+  deviceId: r.device_id ?? null,
+  createdAt: r.created_at,
+});
 const fromComment = (r: CommentRow): TalkComment => ({
   id: r.id,
   postId: r.post_id,
@@ -209,6 +237,17 @@ class SupabaseTalk implements TalkBackend {
   }
   async createPost(body: string, allowComments: boolean, site: SiteId, token: string) {
     return fromPost(await this.adminRow('admin_talk_create', { p_body: tagBody(body, site), p_allow: allowComments, p_token: token }));
+  }
+  async createPublicPost(body: string, site: SiteId) {
+    const { data, error } = await this.sb.rpc('talk_create', { p_body: tagBody(body, site), p_device: deviceId() });
+    if (error) throw error;
+    const row = (Array.isArray(data) ? data[0] : data) as PostRow | null;
+    if (!row?.id) throw new Error('올리지 못했어요');
+    return fromPost(row);
+  }
+  async removeOwnPost(id: string) {
+    const { error } = await this.sb.rpc('delete_own_talk_post', { p_id: id, p_device: deviceId() });
+    if (error) throw error;
   }
   async setComments(id: string, allowComments: boolean, token: string) {
     return fromPost(await this.adminRow('admin_talk_set_comments', { p_id: id, p_allow: allowComments, p_token: token }));

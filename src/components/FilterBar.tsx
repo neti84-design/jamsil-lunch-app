@@ -24,8 +24,6 @@ export interface Filters {
   maxWalk: number;
   /** 지도 탭의 도보 상한(분). 검색 목록과 따로 저장 */
   mapMaxWalk: number;
-  /** 배달 되는 곳만 */
-  delivery: boolean;
   sort: 'stars' | 'walk' | 'rating' | 'price';
   query: string;
   /** 지금 영업 중(또는 영업시간 미확인)인 곳만 */
@@ -47,7 +45,6 @@ export const DEFAULT_FILTERS: Filters = {
   groupSize: 6,
   maxWalk: 10,
   mapMaxWalk: 10,
-  delivery: false,
   sort: 'stars',
   query: '',
   openNow: false,
@@ -59,8 +56,9 @@ export function defaultFilters(site: Site): Filters {
   return { ...DEFAULT_FILTERS, maxPrice: site.defaultBudget };
 }
 
-const PRICE_STEPS = [8000, 10000, 12000, 15000, 20000, 30000, NO_LIMIT];
-const WALK_STEPS = [5, 10, 15, 20, ALL_WALK];
+/** '전체'가 맨 앞 */
+const PRICE_STEPS = [NO_LIMIT, 8000, 10000, 12000, 15000, 20000, 30000];
+const WALK_STEPS = [ALL_WALK, 5, 10, 15, 20];
 
 
 /** 검색창 바로 아래 정렬 칩 */
@@ -92,7 +90,6 @@ export function describeFilters(f: Filters, walkKey: WalkKey = 'maxWalk'): strin
   else if (f.seating) parts.push(SEATING_LABELS[f.seating].label);
   if (f.building) parts.push(f.building);
   if (f.openNow) parts.push('영업 중');
-  if (f.delivery) parts.push('배달');
   if (f.query.trim()) parts.push(`"${f.query.trim()}"`);
   return parts.join(' · ');
 }
@@ -232,13 +229,6 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
           onClick={() => set({ openNow: !filters.openNow })}
         >
           🟢 영업 중
-        </button>
-        <button
-          className={'chip sm' + (filters.delivery ? ' on' : '')}
-          title="배달 되는 곳만 (조사로 확인됐거나 누군가 '배달 돼요'를 체크한 곳)"
-          onClick={() => set({ delivery: !filters.delivery })}
-        >
-          🛵 배달
         </button>
       </div>
 

@@ -797,7 +797,6 @@ export default function App() {
 
         {tab === 'home' && (
           <HomeView
-            searchBox={searchBox}
             talk={
               <>
                 <ShareTalk talk={talk} now={live.now} isAdmin={live.isAdmin} />

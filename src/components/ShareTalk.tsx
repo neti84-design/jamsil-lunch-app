@@ -16,7 +16,7 @@ function errMsg(e: unknown): string {
   return String(e);
 }
 
-/** 홈 검색창 바로 아래: 관리자가 올린 질문·공지 한 줄 → 바로 밑에 사람들 답(옆으로 넘기기) → 한 줄 답하기 */
+/** 홈 맨 위: 관리자가 올린 질문·공지 한 줄 → 바로 밑에 사람들 답(옆으로 넘기기) → 한 줄 답하기 */
 export function ShareTalk({ talk, now, isAdmin }: Props) {
   if (talk.posts.length === 0) return null;
   return (
@@ -103,7 +103,7 @@ function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comm
       </div>
 
       {sorted.length > 0 && (
-        <HScroll className="talk-strip" label="답글 (옆으로 넘기기)">
+        <HScroll className="talk-strip" label="답글 (옆으로 넘기기)" auto>
           {sorted.map((c) => {
             const own = c.deviceId === me;
             return (

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 import { loadRestaurants } from './data';
-import { ALL_WALK, DEFAULT_FILTERS, FilterBar, NO_LIMIT, type Filters } from './components/FilterBar';
+import { ALL_WALK, FilterBar, defaultFilters, NO_LIMIT, type Filters } from './components/FilterBar';
 import { RestaurantCard } from './components/RestaurantCard';
 import { RestaurantDetail } from './components/RestaurantDetail';
 import { AdminPanel } from './components/AdminPanel';
@@ -36,7 +36,7 @@ import { SEATING_LABELS, hasDelivery, type Restaurant } from './types';
 /** 만든 사람 (화면 맨 아래 작게) */
 const MAKER = 'cjy1***';
 const FAV_KEY = 'jamsil-lunch:favorites';
-// 기본값(1.2만원·도보 10분)이 바뀌어 저장 키도 새로 — 예전 저장본은 버린다
+// 기본값(식대·도보 10분)이 바뀌어 저장 키도 새로 — 예전 저장본은 버린다
 const FILTER_KEY = 'jamsil-lunch:filters-v4';
 const RECENT_KEY = 'jamsil-lunch:recent';
 const SEARCH_KEY = 'jamsil-lunch:searches';
@@ -174,7 +174,7 @@ export default function App() {
     };
   }, [siteId, loadTry]);
   const [filters, setFilters] = useState<Filters>(() => {
-    const f = loadJSON(FILTER_KEY, DEFAULT_FILTERS);
+    const f = loadJSON(FILTER_KEY, defaultFilters(SITES[siteId]));
     // 예전 버전에 있던 '혼밥' 좌석 조건 등 지금 없는 값은 버린다
     return f.seating && !(f.seating in SEATING_LABELS) ? { ...f, seating: null } : f;
   });
@@ -254,8 +254,8 @@ export default function App() {
   }, [restaurants, site]);
   /** 받아 둔 근무지 식당 전부 (투표 링크·최근 본 식당) */
   const byId = useMemo(() => new Map(Object.values(lists).flatMap((l) => l.map((r) => [r.id, r] as const))), [lists]);
-  // 영등포는 근무지에서 가까운 건물부터, 잠실은 지금 쓰는 사람들이 보던 대로 식당 많은 순
-  const buildings = useMemo(() => bigBuildings(restaurants, site.id === 'ydp' ? site.office : undefined), [restaurants, site]);
+  // 근무지에서 가까운 건물부터
+  const buildings = useMemo(() => bigBuildings(restaurants, site.office), [restaurants, site]);
 
   /** 조건에 맞는 식당을 정렬해서. 지도는 도보 조건으로 mapMaxWalk 를 쓴다 */
   const run = (f: Filters) => {
@@ -422,7 +422,9 @@ export default function App() {
     if (id === siteId) return;
     setSiteId(id);
     saveSite(id);
-    setFilters((f) => ({ ...f, building: null, query: '' }));
+    // 식대는 근무지마다 기본값이 달라서, 기본값 그대로였으면 새 근무지 기본값으로
+    const budget = (f: Filters) => (f.maxPrice === SITES[siteId].defaultBudget ? SITES[id].defaultBudget : f.maxPrice);
+    setFilters((f) => ({ ...f, maxPrice: budget(f), building: null, query: '' }));
     setMapSelId(null);
     if (selectedId) open(null);
   };
@@ -455,13 +457,13 @@ export default function App() {
     setAdminOpen(false);
     setVoteView(null);
     setFiltersOpen(false);
-    setFilters(DEFAULT_FILTERS);
+    setFilters(defaultFilters(site));
     if (depth > 0) history.go(-depth);
     else mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const searchWith = (patch: Partial<Filters>) => {
-    setFilters({ ...DEFAULT_FILTERS, ...patch });
+    setFilters({ ...defaultFilters(site), ...patch });
     setFiltersOpen(false);
     goTab('search');
   };

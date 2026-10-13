@@ -19,6 +19,8 @@ export interface Site {
   color: string;
   /** 브라우저 주소창 색 */
   themeColor: string;
+  /** 처음 식대 조건 (인당, 원) */
+  defaultBudget: number;
   /** 큰길을 건너야 하는 곳인지 (+3분). 없으면 직선거리만 */
   crossesRoad?: (lat: number, lng: number) => boolean;
 }
@@ -34,6 +36,7 @@ export const SITES: Record<SiteId, Site> = {
     brand: { accent: '잠심', sub: '잠실점심', tagline: '구내식당 공사 이슈로 인한 식사 문제 해결을 위한 어플!' },
     color: '#ff6b35',
     themeColor: '#f64610',
+    defaultBudget: 12000,
     // 잠실사거리 큰길 — 올림픽로(동서) 남쪽, 송파대로(남북) 서쪽이면 건너야 한다
     crossesRoad: (lat, lng) => lat < 37.5134 || lng < 127.1004,
   },
@@ -46,6 +49,7 @@ export const SITES: Record<SiteId, Site> = {
     brand: { accent: '영심', sub: '영등포점심', tagline: '짧아서 더 애절한 영등포 생활, 즐기자구요!' },
     color: '#1f9d55',
     themeColor: '#178a48',
+    defaultBudget: 10000,
   },
 };
 

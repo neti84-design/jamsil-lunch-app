@@ -9,6 +9,7 @@ import {
   type SeatingType,
 } from '../types';
 import { DISH_TAGS, type DishTag } from '../lib/dish';
+import { useSite, type Site } from '../lib/sites';
 
 export interface Filters {
   /** 인당 예산 상한. Infinity = 제한 없음 */
@@ -36,7 +37,7 @@ export interface Filters {
 export const NO_LIMIT = 1_000_000;
 export const ALL_WALK = 99;
 
-/** 처음 기준: 인당 1.2만원 · 도보 10분 이내 */
+/** 처음 기준: 인당 1.2만원(영등포는 1만원 — defaultFilters) · 도보 10분 이내 */
 export const DEFAULT_FILTERS: Filters = {
   maxPrice: 12000,
   cuisines: [],
@@ -52,6 +53,11 @@ export const DEFAULT_FILTERS: Filters = {
   openNow: false,
   building: null,
 };
+
+/** 근무지별 처음 기준 (식대만 다르다) */
+export function defaultFilters(site: Site): Filters {
+  return { ...DEFAULT_FILTERS, maxPrice: site.defaultBudget };
+}
 
 const PRICE_STEPS = [8000, 10000, 12000, 15000, 20000, 30000, NO_LIMIT];
 const WALK_STEPS = [5, 10, 15, 20, ALL_WALK];
@@ -121,10 +127,11 @@ const PANEL_MAX_VH = 0.5;
 export function FilterBar({ filters, onChange, resultCount, totalCount, buildings, searchBox, open: openProp, onOpenChange, walkKey = 'maxWalk', pinned = false }: Props) {
   const open = pinned || openProp;
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
+  const defaults = defaultFilters(useSite());
   // 지금 화면에서 안 쓰는 도보 칸은 비교에서 뺀다
   const other: WalkKey = walkKey === 'maxWalk' ? 'mapMaxWalk' : 'maxWalk';
   const isDefault =
-    JSON.stringify({ ...filters, query: '', sort: 'stars', [other]: DEFAULT_FILTERS[other] }) === JSON.stringify(DEFAULT_FILTERS);
+    JSON.stringify({ ...filters, query: '', sort: 'stars', [other]: defaults[other] }) === JSON.stringify(defaults);
   const panelRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   /** free: 세부조건 목록 밖(검색줄·세부조건 버튼)에서 시작한 터치 → 스크롤과 상관없이 바로 끌어서 접기 */
@@ -373,7 +380,7 @@ export function FilterBar({ filters, onChange, resultCount, totalCount, building
         {!isDefault && (
           <button
             className="link"
-            onClick={() => onChange({ ...DEFAULT_FILTERS, query: filters.query, sort: filters.sort, [other]: filters[other] })}
+            onClick={() => onChange({ ...defaults, query: filters.query, sort: filters.sort, [other]: filters[other] })}
           >
             초기화
           </button>

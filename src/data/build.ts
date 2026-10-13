@@ -10,6 +10,34 @@ export interface KakaoSet {
   rows: KakaoRow[];
   details: Record<string, KakaoDetail>;
   photos: Record<string, string>;
+  /** 카카오에 메뉴가 없는 체인점(써브웨이)은 본사 가격으로 채우기 */
+  chainMenus?: boolean;
+}
+
+/** 카카오에 메뉴·가격이 없는 체인점의 대표 메뉴 (본사 가격) */
+const CHAIN_MENUS: { re: RegExp; menu: [string, number][]; also?: string[]; note: string }[] = [
+  {
+    re: /^(써브웨이|서브웨이)/,
+    menu: [
+      ['에그마요 15cm', 6200],
+      ['이탈리안 비엠티 15cm', 7500],
+    ],
+    // 샐러드도 팔아서 "샐러드"로 찾거나 샐러드·포케 메뉴로 골라도 나오게 (가격은 확인 못 해 메뉴판엔 안 넣음)
+    also: ['샐러드'],
+    note: '메뉴·가격은 써브웨이 2026년 5월 가격 인상 기사 기준(15cm 단품)이에요. 매장마다 다를 수 있어요.',
+  },
+];
+
+function chainMenuFields(name: string): MenuFields | null {
+  const c = CHAIN_MENUS.find((x) => x.re.test(name));
+  if (!c) return null;
+  const prices = c.menu.map(([, p]) => p);
+  return {
+    priceRange: [Math.min(...prices), Math.max(...prices)],
+    menu: c.menu.map(([n, price]) => ({ name: n, price })),
+    signature: [...c.menu.map(([n]) => n), ...(c.also ?? [])],
+    dataNotes: c.note,
+  };
 }
 
 /** 카카오 1차 분류 → 앱의 음식 종류 */
@@ -86,7 +114,7 @@ export function fromKakao([id, placeName, category, address, phone, lat, lng]: K
     signature: [],
     priceRange: null,
     menu: [],
-    ...kakaoMenuFields(id, set.details),
+    ...(kakaoMenuFields(id, set.details) ?? (set.chainMenus ? chainMenuFields(name) : null)),
     ...kakaoHoursFields(id, set.details),
     concepts: [],
     seating: { group: null, solo: null },

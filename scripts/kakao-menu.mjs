@@ -202,6 +202,43 @@ async function worker() {
 console.log(`카카오맵 가게 정보 ${ids.length}곳 받는 중…`);
 await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
+// 카페는 샐러드·샌드위치 등 점심이 되는 메뉴가 있는 곳만 남기고 나머지는 kakaoPlaces.ts 에서도 뺀다
+const MEAL_CAFE = /달리는커피|샐러드|샌드위치|포케/;
+const MEAL_MENU = /샐러드|샌드위치|샌드|포케|보울|베이글|토스트|파니니|부리또|브리또|덮밥|파스타|김밥|핫도그|브런치|플래터|라이스|카레|오트밀|아사이/;
+/** 디저트·음료는 점심 메뉴로 치지 않는다 */
+const DESSERT = /인절미|빙수|설빙|케익|케이크|아이스크림|와플|크로플|마카롱|쿠키|스콘|소금빵|플레인|라떼|스무디|에이드|티$/;
+/** 점심 한 끼로 볼 만한 가격 */
+const MEAL_MIN = 5000;
+const isMeal = ([n, p]) => MEAL_MENU.test(n) && !DESSERT.test(n) && p >= MEAL_MIN;
+const placesFile = path.join(DATA, 'kakaoPlaces.ts');
+const placesSrc = fs.readFileSync(placesFile, 'utf8');
+const dropCafe = new Set();
+for (const m of placesSrc.matchAll(/^\s*(\["(\d+)",.*\]),?$/gm)) {
+  const [id, name, category] = JSON.parse(m[1]);
+  if (!category.startsWith('카페')) continue;
+  const meal = (out[id]?.menu ?? []).filter(isMeal);
+  if (meal.length) {
+    // 카페는 점심 메뉴만 보여 주고 가격대도 그걸로 (음료 가격이 섞이지 않게)
+    const prices = meal.map(([, p]) => p);
+    out[id] = { ...out[id], menu: meal, price: [Math.min(...prices), Math.max(...prices)] };
+    continue;
+  }
+  if (MEAL_CAFE.test(name)) continue; // 메뉴가 안 올라와 있어도 이름으로 확실한 곳 (달리는커피)
+  dropCafe.add(id);
+}
+if (dropCafe.size) {
+  const kept = placesSrc
+    .split('\n')
+    .filter((line) => !dropCafe.has(line.match(/^\s*\["(\d+)",/)?.[1]))
+    .join('\n');
+  fs.writeFileSync(placesFile, kept);
+  for (const id of dropCafe) {
+    delete out[id];
+    delete photos[id];
+  }
+  console.log(`점심 메뉴 없는 카페 ${dropCafe.size}곳 뺌 → ${path.relative(ROOT, placesFile)}`);
+}
+
 const keys = Object.keys(out).sort((a, b) => Number(a) - Number(b));
 const body = keys.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(out[k])},`).join('\n');
 fs.writeFileSync(

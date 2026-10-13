@@ -60,6 +60,8 @@ export interface TalkBackend {
   createPublicPost(body: string, site: SiteId): Promise<TalkPost>;
   removeOwnPost(id: string): Promise<void>;
   setComments(id: string, allowComments: boolean, token: string): Promise<TalkPost>;
+  /** 관리자: 글 고치기 (근무지는 그대로) */
+  updatePost(id: string, body: string, site: SiteId, token: string): Promise<TalkPost>;
   removePost(id: string, token: string): Promise<void>;
   removeComment(id: string, token: string): Promise<void>;
   subscribe(h: TalkHandlers): () => void;
@@ -143,6 +145,16 @@ class LocalTalk implements TalkBackend {
     const p = all.posts.find((x) => x.id === id);
     if (!p) throw new Error('글을 찾을 수 없어요');
     p.allowComments = allowComments;
+    this.write(all);
+    this.subs.forEach((h) => h.post(p));
+    return p;
+  }
+  async updatePost(id: string, body: string, _site: SiteId, token: string) {
+    this.admin(token);
+    const all = this.read();
+    const p = all.posts.find((x) => x.id === id);
+    if (!p) throw new Error('글을 찾을 수 없어요');
+    p.body = body;
     this.write(all);
     this.subs.forEach((h) => h.post(p));
     return p;
@@ -251,6 +263,9 @@ class SupabaseTalk implements TalkBackend {
   }
   async setComments(id: string, allowComments: boolean, token: string) {
     return fromPost(await this.adminRow('admin_talk_set_comments', { p_id: id, p_allow: allowComments, p_token: token }));
+  }
+  async updatePost(id: string, body: string, site: SiteId, token: string) {
+    return fromPost(await this.adminRow('admin_talk_update', { p_id: id, p_body: tagBody(body, site), p_token: token }));
   }
   async removePost(id: string, token: string) {
     const { data, error } = await this.sb.rpc('admin_talk_delete_post', { p_id: id, p_token: token });

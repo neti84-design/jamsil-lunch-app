@@ -81,6 +81,18 @@ export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove,
     }
   };
 
+  /** 고치는 중인 공유톡 글 */
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const saveEdit = () => {
+    const body = editText.trim();
+    if (!editId || !body) return;
+    void run(async () => {
+      await talk.updatePost(editId, body);
+      setEditId(null);
+    }, '수정 실패');
+  };
+
   const createPost = () => {
     const body = postText.trim();
     if (!body) return;
@@ -173,6 +185,24 @@ export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove,
                     const n = talk.comments.filter((c) => c.postId === p.id).length;
                     return (
                       <li key={p.id}>
+                        {editId === p.id ? (
+                          <div className="one-line-form">
+                            <input
+                              className="mini grow"
+                              maxLength={TALK_POST_MAX}
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                              autoFocus
+                            />
+                            <button className="btn sm" onClick={() => setEditId(null)}>
+                              취소
+                            </button>
+                            <button className="btn primary sm" disabled={busy || !editText.trim()} onClick={saveEdit}>
+                              저장
+                            </button>
+                          </div>
+                        ) : (
                         <div className="admin-row">
                           <div className="grow">
                             {p.allowComments ? '🙋' : '📢'} <strong>{p.body}</strong>
@@ -180,6 +210,16 @@ export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove,
                               {timeAgo(p.createdAt, now)} · {p.allowComments ? `댓글 받는 중 · ${n}개` : `댓글 닫힘${n ? ` · ${n}개` : ''}`}
                             </div>
                           </div>
+                          <button
+                            className="btn sm"
+                            disabled={busy}
+                            onClick={() => {
+                              setEditId(p.id);
+                              setEditText(p.body);
+                            }}
+                          >
+                            수정
+                          </button>
                           <button
                             className="btn sm"
                             disabled={busy}
@@ -195,6 +235,7 @@ export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove,
                             삭제
                           </button>
                         </div>
+                        )}
                       </li>
                     );
                   })}

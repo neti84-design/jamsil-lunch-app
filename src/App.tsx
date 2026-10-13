@@ -1024,6 +1024,7 @@ export default function App() {
                 <li>동료에게 묻고 싶은 게 있으면 제보·의견에서 공유톡에 올려 보세요.</li>
               </ol>
             )}
+            {howToOpen && <p className="howto-note">모든 작성 내용은 익명이에요. 좋은 곳 많이 공유해 주세요!</p>}
             <div className="credit">made by {MAKER}</div>
           </footer>
         )}

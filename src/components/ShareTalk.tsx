@@ -23,12 +23,20 @@ const PER_PAGE = 2;
 export function ShareTalk({ talk, now, isAdmin }: Props) {
   const pagerRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
-  // 장마다 높이가 달라서, 지금 보는 장 높이에 맞춘다 (짧은 장 밑에 빈칸이 생기지 않게)
+  // 장마다 높이가 달라서, 지금 보는 장 높이에 맞춘다 (짧은 장 밑에 빈칸이 생기지 않게).
+  // 답 쓰는 칸을 열거나 글을 펼쳐 높이가 바뀌어도 따라간다
   useLayoutEffect(() => {
     const el = pagerRef.current;
     const cur = el?.children[page] as HTMLElement | undefined;
-    if (el && cur) el.style.height = cur.offsetHeight + 'px';
-  });
+    if (!el || !cur) return;
+    const fit = () => {
+      el.style.height = cur.offsetHeight + 'px';
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(cur);
+    return () => ro.disconnect();
+  }, [page, talk.posts.length]);
   if (talk.posts.length === 0) return null;
   const pages: TalkPost[][] = [];
   for (let i = 0; i < talk.posts.length; i += PER_PAGE) pages.push(talk.posts.slice(i, i + PER_PAGE));
@@ -168,7 +176,7 @@ function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comm
       )}
       {post.allowComments && writing && (
         <form
-          className="one-line-form"
+          className="talk-reply-form"
           onSubmit={(e) => {
             e.preventDefault();
             submit();
@@ -183,12 +191,17 @@ function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comm
             enterKeyHint="send"
             autoFocus
           />
-          <button type="button" className="btn sm" onClick={() => setWriting(false)}>
-            취소
-          </button>
-          <button className="btn sm primary" disabled={busy || !text.trim()}>
-            등록
-          </button>
+          <div className="talk-reply-actions">
+            <span className="small">
+              {text.length}/{TALK_COMMENT_MAX}
+            </span>
+            <button type="button" className="btn sm" onClick={() => setWriting(false)}>
+              취소
+            </button>
+            <button className="btn sm primary" disabled={busy || !text.trim()}>
+              등록
+            </button>
+          </div>
         </form>
       )}
 

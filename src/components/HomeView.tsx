@@ -7,9 +7,7 @@ import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { formatWon } from '../lib/links';
 
 interface Props {
-  /** 검색창 (App 에서 만들어 넘김) */
-  searchBox: ReactNode;
-  /** 공유톡 (검색창 바로 아래) */
+  /** 공유톡 (홈 맨 위) */
   talk: ReactNode;
   /** 실시간 웨이팅 */
   ticker: ReactNode;
@@ -40,8 +38,8 @@ function useKeepScrollX(key: string) {
   return { ref, onScroll };
 }
 
-/** 홈: 검색 · 음식 카테고리 · 주요장소 · 최근 본 식당 · 실시간 웨이팅 · 요즘 관심·평점 좋은 매장 */
-export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent, buildings, walkById, now, onDish, onBuilding, onSelect, onSeeAll }: Props) {
+/** 홈: 음식 카테고리 · 주요장소 · 최근 본 식당 · 실시간 웨이팅 · 요즘 관심·평점 좋은 매장 */
+export function HomeView({ talk, ticker, nearby, restaurants, recent, buildings, walkById, now, onDish, onBuilding, onSelect, onSeeAll }: Props) {
   const { ref: buildingRef, onScroll: onBuildingScroll } = useKeepScrollX('buildings');
   const { ref: recentRef, onScroll: onRecentScroll } = useKeepScrollX('recent');
   // 옆으로 밀기 힘든 사람을 위해 주요장소를 한 번에 펼쳐 볼 수 있게
@@ -51,8 +49,6 @@ export function HomeView({ searchBox, talk, ticker, nearby, restaurants, recent,
 
   return (
     <div className="home">
-      <div className="home-search">{searchBox}</div>
-
       {talk}
 
       <section className="home-section">

@@ -2219,3 +2219,67 @@ img.tower-logo {
   margin-left: 6px;
   font-size: 12px;
 }
+
+/* ---------- 옆으로 넘기는 줄: PC(마우스)에서는 ‹ › 버튼으로 넘기기 ---------- */
+.hscroll {
+  position: relative;
+}
+.hscroll-btn {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hscroll-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 32px;
+    height: 32px;
+    padding: 0 0 3px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 22px;
+    line-height: 1;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    opacity: 0.92;
+  }
+  .hscroll-btn:hover {
+    opacity: 1;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .hscroll-btn.prev {
+    left: -6px;
+  }
+  .hscroll-btn.next {
+    right: -6px;
+  }
+  /* 공유톡 답글 줄은 낮아서 버튼도 작게 */
+  .talk-strip + .hscroll-btn,
+  .talk-strip ~ .hscroll-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 18px;
+  }
+}
+
+/* PC 지도 화면: 세부조건 접기·펼치기 */
+.filters.pinned .filter-foot {
+  min-height: 0;
+  margin-top: 8px;
+}
+.filters.pinned .filter-handle {
+  padding: 4px 14px;
+  font-size: 12.5px;
+}
+.filters.pinned .filter-handle .chevron {
+  width: 7px;
+  height: 7px;
+  border-width: 0 2px 2px 0;
+}

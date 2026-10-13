@@ -3,6 +3,7 @@ import { Thumb } from './Thumb';
 import { formatWon } from '../lib/links';
 import { WEEKDAY_NAMES, kstDay, tasteScore, type DayTheme, type Taste } from '../lib/recommend';
 import type { LunchWeather } from '../lib/weather';
+import { HScroll } from './HScroll';
 
 interface Props {
   theme: DayTheme;
@@ -55,7 +56,7 @@ export function TodayPick({ theme, weather, picks, taste, favCount, walkById, no
             ? `⭐ 내 관심매장 ${favCount}곳과 비슷한 메뉴·위치를 더 챙겨 골랐어요`
             : '☆ 관심매장을 저장하면 내 취향에 맞춰 추천해 드려요'}
         </p>
-        <div className="recent-row">
+        <HScroll className="recent-row">
           {shown.map((r) => {
             const walk = walkById.get(r.id);
             return (
@@ -72,7 +73,7 @@ export function TodayPick({ theme, weather, picks, taste, favCount, walkById, no
               </button>
             );
           })}
-        </div>
+        </HScroll>
         <button className="btn sm today-vote" onClick={onVote}>
           🗳️ 이 중에서 투표 만들기
         </button>

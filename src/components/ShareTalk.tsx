@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { deviceId, timeAgo } from '../lib/reports';
 import { TALK_COMMENT_MAX, type TalkComment, type TalkPost } from '../lib/talk';
 import type { Talk } from '../hooks/useTalk';
+import { HScroll } from './HScroll';
 
 interface Props {
   talk: Talk;
@@ -102,7 +103,7 @@ function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comm
       </div>
 
       {sorted.length > 0 && (
-        <div className="talk-strip" aria-label="답글 (옆으로 넘기기)">
+        <HScroll className="talk-strip" label="답글 (옆으로 넘기기)">
           {sorted.map((c) => {
             const own = c.deviceId === me;
             return (
@@ -117,7 +118,7 @@ function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comm
               </span>
             );
           })}
-        </div>
+        </HScroll>
       )}
       {post.allowComments && (
         <form

@@ -351,3 +351,39 @@ as $$
 $$;
 
 grant execute on function public.bump_view(text) to anon, authenticated;
+
+-- ---------- v7: 공유톡을 누구나 올리기 ----------
+-- 앱 '제보·의견 > 공유톡 올리기'로 누구나 질문을 올린다 (댓글 열림). 한 기기에서 하루 3개까지, 본인 글은 본인이 지울 수 있다.
+alter table public.talk_posts add column if not exists device_id text check (char_length(device_id) <= 64);
+
+create or replace function public.talk_create(p_body text, p_device text)
+returns public.talk_posts
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec public.talk_posts;
+begin
+  if coalesce(char_length(p_device), 0) not between 1 and 64 then
+    raise exception '기기 정보가 없어요';
+  end if;
+  if (select count(*) from public.talk_posts where device_id = p_device and created_at > now() - interval '1 day') >= 3 then
+    raise exception '공유톡은 하루에 3개까지 올릴 수 있어요';
+  end if;
+  insert into public.talk_posts (body, allow_comments, device_id) values (p_body, true, p_device) returning * into rec;
+  return rec;
+end;
+$$;
+
+create or replace function public.delete_own_talk_post(p_id uuid, p_device text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.talk_posts where id = p_id and device_id = p_device;
+$$;
+
+grant execute on function public.talk_create(text, text) to anon, authenticated;
+grant execute on function public.delete_own_talk_post(uuid, text) to anon, authenticated;

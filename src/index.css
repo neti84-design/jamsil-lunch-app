@@ -1440,6 +1440,34 @@ input.mini.grow {
 }
 
 /* 공유톡 */
+.talk-page {
+  margin-left: auto;
+}
+/* 2개씩 한 장 — 옆으로 밀면 다음 장 */
+.talk-pager {
+  display: flex;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  transition: height 0.2s;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  gap: 12px;
+}
+.talk-pager::-webkit-scrollbar {
+  display: none;
+}
+.talk-page-item {
+  flex: 0 0 100%;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+.talk-reply {
+  flex: none;
+  padding: 2px 10px;
+  font-size: 12px;
+}
 .talk-list {
   display: flex;
   flex-direction: column;

@@ -202,6 +202,32 @@ async function worker() {
 console.log(`카카오맵 가게 정보 ${ids.length}곳 받는 중…`);
 await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
+// 카페는 샐러드·샌드위치 등 점심이 되는 메뉴가 있는 곳만 남기고 나머지는 kakaoPlaces.ts 에서도 뺀다
+const MEAL_CAFE = /달리는커피|샐러드|샌드위치|샌드|포케|베이글|토스트|브런치/;
+const MEAL_MENU = /샐러드|샌드위치|샌드|포케|보울|베이글|토스트|파니니|부리또|브리또|덮밥|파스타|김밥|핫도그|브런치|플래터|라이스|카레/;
+const placesFile = path.join(DATA, 'kakaoPlaces.ts');
+const placesSrc = fs.readFileSync(placesFile, 'utf8');
+const dropCafe = new Set();
+for (const m of placesSrc.matchAll(/^\s*(\["(\d+)",.*\]),?$/gm)) {
+  const [id, name, category] = JSON.parse(m[1]);
+  if (!category.startsWith('카페')) continue;
+  const menu = out[id]?.menu ?? [];
+  if (MEAL_CAFE.test(name) || menu.some(([n]) => MEAL_MENU.test(n))) continue;
+  dropCafe.add(id);
+}
+if (dropCafe.size) {
+  const kept = placesSrc
+    .split('\n')
+    .filter((line) => !dropCafe.has(line.match(/^\s*\["(\d+)",/)?.[1]))
+    .join('\n');
+  fs.writeFileSync(placesFile, kept);
+  for (const id of dropCafe) {
+    delete out[id];
+    delete photos[id];
+  }
+  console.log(`점심 메뉴 없는 카페 ${dropCafe.size}곳 뺌 → ${path.relative(ROOT, placesFile)}`);
+}
+
 const keys = Object.keys(out).sort((a, b) => Number(a) - Number(b));
 const body = keys.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(out[k])},`).join('\n');
 fs.writeFileSync(

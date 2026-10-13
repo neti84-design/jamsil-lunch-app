@@ -3,6 +3,7 @@ import { dishTags, type DishTag } from './dish';
 import { buildingOf } from './buildings';
 import type { ReportSummary } from './reports';
 import type { LunchWeather } from './weather';
+import { haversineMeters } from './geo';
 
 /** 오늘의 추천 주제: 날씨가 특별하면 날씨, 아니면 요일 */
 export interface DayTheme {
@@ -78,10 +79,13 @@ export function dayTheme(now: number, w: LunchWeather | null, baseWalk: number):
   return { ...WEEKDAY_THEMES[day], maxWalk: baseWalk, indoor: false };
 }
 
-/** 날짜와 식당마다 고정된 0~1 값 — 같은 날엔 같은 추천, 날마다 조금씩 섞이게 */
-function dailyJitter(date: string, id: string): number {
+/**
+ * 날짜와 식당마다 고정된 0~1 값 — 같은 날엔 같은 추천, 날마다 조금씩 섞이게.
+ * seed 는 기기마다 다른 값이라 휴대폰·PC 마다 추천이 조금씩 다르다
+ */
+function dailyJitter(date: string, id: string, seed = ''): number {
   let h = 2166136261;
-  for (const ch of date + id) {
+  for (const ch of date + seed + id) {
     h ^= ch.charCodeAt(0);
     h = Math.imul(h, 16777619);
   }
@@ -90,6 +94,50 @@ function dailyJitter(date: string, id: string): number {
 
 function rating(r: Restaurant): number {
   return r.reviews.naverRating ?? r.reviews.diningcodeRating ?? r.reviews.kakaoRating ?? 0;
+}
+
+/** 관심매장으로 만든 내 취향: 자주 고른 메뉴·종류·건물과 그 근처 */
+export interface Taste {
+  favIds: Set<string>;
+  /** 메뉴별 관심매장 비율 (0~1) */
+  dishes: Map<DishTag, number>;
+  cuisines: Map<string, number>;
+  buildings: Set<string>;
+  spots: { lat: number; lng: number }[];
+}
+
+/** 관심매장 근처로 치는 거리(m) — 걸어서 2분 남짓 */
+const NEAR_FAV_M = 150;
+/** 취향 점수 상한 — 오늘의 주제(메뉴 +8)를 뒤집지 않을 만큼만 */
+const TASTE_MAX = 3;
+
+export function tasteFrom(favs: Restaurant[]): Taste | null {
+  if (favs.length === 0) return null;
+  const dishes = new Map<DishTag, number>();
+  const cuisines = new Map<string, number>();
+  const buildings = new Set<string>();
+  const spots: Taste['spots'] = [];
+  for (const r of favs) {
+    for (const d of dishTags(r)) dishes.set(d, (dishes.get(d) ?? 0) + 1 / favs.length);
+    cuisines.set(r.cuisine, (cuisines.get(r.cuisine) ?? 0) + 1 / favs.length);
+    const b = buildingOf(r);
+    if (b) buildings.add(b);
+    if (r.lat != null && r.lng != null) spots.push({ lat: r.lat, lng: r.lng });
+  }
+  return { favIds: new Set(favs.map((r) => r.id)), dishes, cuisines, buildings, spots };
+}
+
+/** 관심매장과 얼마나 닮았나 (0~TASTE_MAX). 관심매장 자신은 0 — 새로운 곳을 찾아 주려고 */
+export function tasteScore(r: Restaurant, t: Taste | null | undefined): number {
+  if (!t || t.favIds.has(r.id)) return 0;
+  let score = 0;
+  // 같은 메뉴를 자주 저장했을수록
+  score += Math.min(1, Math.max(0, ...dishTags(r).map((d) => t.dishes.get(d) ?? 0))) * 2;
+  score += (t.cuisines.get(r.cuisine) ?? 0) * 0.5;
+  const b = buildingOf(r);
+  if (b && t.buildings.has(b)) score += 0.75;
+  else if (r.lat != null && r.lng != null && t.spots.some((p) => haversineMeters(p.lat, p.lng, r.lat!, r.lng!) <= NEAR_FAV_M)) score += 0.75;
+  return Math.min(TASTE_MAX, score);
 }
 
 interface PickOptions {
@@ -101,6 +149,10 @@ interface PickOptions {
   isOpen: (r: Restaurant) => boolean;
   /** 빼고 싶은 곳 (최근 투표로 간 곳 등) */
   exclude?: Set<string>;
+  /** 이 기기 관심매장으로 만든 취향 — 비슷한 메뉴·위치를 더 올린다 */
+  taste?: Taste | null;
+  /** 기기마다 다른 값 — 같은 날이라도 기기마다 섞는 순서가 다르다 */
+  seed?: string;
   limit?: number;
 }
 
@@ -131,13 +183,14 @@ function baseScore(r: Restaurant, o: PickOptions): number | null {
   if (s) score += Math.min(3, (s.totalStars + (s.hidden + s.classic) * 2) / 5);
   const rt = rating(r);
   if (rt) score += Math.max(0, rt - 4) * 3;
+  score += tasteScore(r, o.taste);
   return score;
 }
 
 /** 그날 추천: 점수 + 날짜별 섞기. drop 에 든 곳은 자리가 남을 때만 */
-function pickForDate(cands: { r: Restaurant; score: number }[], date: string, drop: Set<string>, limit: number): Restaurant[] {
+function pickForDate(cands: { r: Restaurant; score: number }[], date: string, drop: Set<string>, limit: number, seed?: string): Restaurant[] {
   const ranked = cands
-    .map((c) => ({ r: c.r, score: c.score + dailyJitter(date, c.r.id) * 2.5 }))
+    .map((c) => ({ r: c.r, score: c.score + dailyJitter(date, c.r.id, seed) * 2.5 }))
     .sort((a, b) => b.score - a.score)
     .map((x) => x.r);
   const fresh = ranked.filter((r) => !drop.has(r.id));
@@ -151,7 +204,7 @@ function lowerRated(picks: Restaurant[]): Set<string> {
 }
 
 /**
- * 오늘의 추천 식당: 주제에 맞는 메뉴 + 평점·팀 별점 + 날마다 조금씩 섞기.
+ * 오늘의 추천 식당: 주제에 맞는 메뉴 + 평점·팀 별점 + 내 관심매장 취향 + 날마다(기기마다) 조금씩 섞기.
  * 같은 조건이면 어제 추천에서 평점 하위 60%는 오늘 다른 곳으로 바뀐다 (상위 40%는 다시 나올 수 있음)
  */
 export function pickForToday(list: Restaurant[], o: PickOptions): Restaurant[] {
@@ -165,7 +218,7 @@ export function pickForToday(list: Restaurant[], o: PickOptions): Restaurant[] {
   let drop = new Set<string>();
   let picks: Restaurant[] = [];
   for (let back = ROTATE_DAYS; back >= 0; back--) {
-    picks = pickForDate(cands, kstDate(o.now - back * 86400_000), drop, limit);
+    picks = pickForDate(cands, kstDate(o.now - back * 86400_000), drop, limit, o.seed);
     drop = lowerRated(picks);
   }
   return picks;

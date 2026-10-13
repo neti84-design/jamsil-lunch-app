@@ -1981,3 +1981,11 @@ input.mini.vote-title-input {
 .foot .credit {
   margin-top: 4px;
 }
+/* 오늘의 추천: 내 관심매장 취향 */
+.today-taste {
+  margin: -2px 0 0;
+  font-size: 12px;
+}
+.recent-state.taste-mark {
+  background: var(--accent);
+}

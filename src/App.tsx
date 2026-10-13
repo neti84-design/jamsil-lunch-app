@@ -22,7 +22,7 @@ import { useTalk } from './hooks/useTalk';
 import { useVotes } from './hooks/useVotes';
 import { isWide, useWide } from './hooks/useWide';
 import { fetchLunchWeather, type LunchWeather } from './lib/weather';
-import { dayTheme, pickForToday } from './lib/recommend';
+import { dayTheme, pickForToday, tasteFrom } from './lib/recommend';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
@@ -39,6 +39,20 @@ const FILTER_KEY = 'jamsil-lunch:filters-v4';
 const RECENT_KEY = 'jamsil-lunch:recent';
 const SEARCH_KEY = 'jamsil-lunch:searches';
 const VOTE_DRAFT_KEY = 'jamsil-lunch:vote-draft';
+/** 기기마다 다른 값 — 오늘의 추천을 휴대폰·PC 마다 조금씩 다르게 섞는다 */
+const SEED_KEY = 'jamsil-lunch:seed';
+
+function deviceSeed(): string {
+  const fresh = Math.random().toString(36).slice(2, 10);
+  try {
+    const saved = localStorage.getItem(SEED_KEY);
+    if (saved) return saved;
+    localStorage.setItem(SEED_KEY, fresh);
+  } catch {
+    /* 저장이 막혀 있으면 이번 방문 동안만 */
+  }
+  return fresh;
+}
 /** 오늘의 추천을 "이 중에서 투표"로 담을 때 몇 곳까지 */
 const VOTE_FROM_PICKS = 4;
 const MAX_RECENT = 10;
@@ -170,6 +184,7 @@ export default function App() {
   const [voteDraft, setVoteDraft] = useState<string[]>(() => loadJSON<string[]>(VOTE_DRAFT_KEY, []));
   const votes = useVotes(voteView?.mode === 'poll' ? voteView.id : null);
   const [weather, setWeather] = useState<LunchWeather | null>(null);
+  const [seed] = useState(deviceSeed);
 
   useEffect(() => saveJSON(FILTER_KEY, filters), [filters]);
   useEffect(() => saveJSON(FAV_KEY, [...favorites]), [favorites]);
@@ -265,12 +280,14 @@ export default function App() {
     () => dayTheme(live.now, weather, filters.maxWalk >= ALL_WALK ? 15 : filters.maxWalk),
     [live.now, weather, filters.maxWalk],
   );
+  /** 이 기기 관심매장으로 만든 취향 — 오늘의 추천에서 비슷한 메뉴·위치를 더 올린다 */
+  const taste = useMemo(() => tasteFrom(favoriteList), [favoriteList]);
   const todayPicks = useMemo(() => {
-    const base = { theme, now: live.now, budget: filters.maxPrice, walkById, summaries: live.summaries };
+    const base = { theme, now: live.now, budget: filters.maxPrice, walkById, summaries: live.summaries, taste, seed };
     const open = pickForToday(RESTAURANTS, { ...base, isOpen: (r) => maybeOpen(r, live.now) });
     // 영업 끝난 시간(저녁·주말)엔 영업시간과 상관없이 — 다음 점심 고민용
     return open.length >= 3 ? open : pickForToday(RESTAURANTS, { ...base, isOpen: () => true });
-  }, [theme, live.now, live.summaries, filters.maxPrice, walkById]);
+  }, [theme, live.now, live.summaries, filters.maxPrice, walkById, taste, seed]);
 
   const topRated = useMemo(
     () => [...RESTAURANTS].filter((r) => externalRating(r) > 0).sort((a, b) => externalRating(b) - externalRating(a)).slice(0, 10),
@@ -449,6 +466,8 @@ export default function App() {
         theme={theme}
         weather={weather}
         picks={todayPicks}
+        taste={taste}
+        favCount={favoriteList.length}
         walkById={walkById}
         now={live.now}
         onSelect={open}

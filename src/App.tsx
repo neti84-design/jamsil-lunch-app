@@ -946,7 +946,6 @@ export default function App() {
           <div className="backdrop" onClick={() => setAdminOpen(false)} />
           <AdminPanel
             reports={live.reports}
-            restaurants={restaurants}
             now={live.now}
             isAdmin={live.isAdmin}
             onLogin={live.loginAdmin}

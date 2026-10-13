@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Restaurant } from '../types';
 import { timeAgo, waitText, type Report } from '../lib/reports';
 import { TALK_POST_MAX } from '../lib/talk';
-import { useSite } from '../lib/sites';
+import { SITES, useSite, type SiteId } from '../lib/sites';
+import { loadRestaurants } from '../data';
 import type { Talk } from '../hooks/useTalk';
 
 interface Props {
   reports: Report[];
-  restaurants: Restaurant[];
   now: number;
   isAdmin: boolean;
   onLogin: (token: string) => Promise<boolean>;
@@ -18,7 +18,7 @@ interface Props {
 }
 
 /** 관리자 화면: 모든 후기·제보를 한 번에 보고 지우기 */
-export function AdminPanel({ reports, restaurants, now, isAdmin, onLogin, onLogout, onRemove, onClose, talk }: Props) {
+export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove, onClose, talk }: Props) {
   const site = useSite();
   const [token, setToken] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
@@ -26,7 +26,22 @@ export function AdminPanel({ reports, restaurants, now, isAdmin, onLogin, onLogo
   const [kind, setKind] = useState<'talk' | 'review' | 'wait' | 'tag'>('talk');
   const [postText, setPostText] = useState('');
   const [allowComments, setAllowComments] = useState(true);
-  const byId = new Map(restaurants.map((r) => [r.id, r]));
+  /** 후기·제보가 어느 식당인지 — 두 근무지 식당을 다 받아 와서 이름·근무지·주소로 보여 준다 (관리자 화면에서만) */
+  const [byId, setById] = useState(new Map<string, { r: Restaurant; site: SiteId }>());
+  useEffect(() => {
+    if (!isAdmin) return;
+    let alive = true;
+    const ids = Object.keys(SITES) as SiteId[];
+    Promise.all(ids.map((id) => loadRestaurants(id).catch(() => [] as Restaurant[]))).then((lists) => {
+      if (!alive) return;
+      const m = new Map<string, { r: Restaurant; site: SiteId }>();
+      lists.forEach((list, i) => list.forEach((r) => m.set(r.id, { r, site: ids[i] })));
+      setById(m);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [isAdmin]);
 
   const login = async () => {
     setBusy(true);
@@ -189,13 +204,19 @@ export function AdminPanel({ reports, restaurants, now, isAdmin, onLogin, onLogo
             {kind !== 'talk' && list.length === 0 && <p className="small">아직 없어요.</p>}
             <ul className="report-list admin-list">
               {list.map((r) => {
-                const rest = byId.get(r.restaurantId);
+                const hit = byId.get(r.restaurantId);
+                const rest = hit?.r;
                 return (
                   <li key={r.id}>
                     <div className="admin-row">
                       <div className="grow">
-                        <strong>{rest?.name ?? r.restaurantId}</strong>
+                        {hit && <span className={'admin-site site-' + hit.site}>{SITES[hit.site].label}</span>}
+                        <strong>
+                          {rest ? rest.name : byId.size ? r.restaurantId : '불러오는 중…'}
+                          {rest?.branch && <span className="small"> {rest.branch}</span>}
+                        </strong>
                         <span className="small"> · {timeAgo(r.createdAt, now)}</span>
+                        {rest?.address && <div className="small">📍 {rest.address}</div>}
                         <div>
                           {r.kind === 'review' && (
                             <>

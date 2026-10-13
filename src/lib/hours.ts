@@ -134,7 +134,9 @@ function parseClosed(text: string | null | undefined): (d: KstDate) => boolean {
 const cache = new Map<string, Schedule | null>();
 
 function schedule(r: Restaurant): Schedule | null {
-  if (cache.has(r.id)) return cache.get(r.id)!;
+  // 영업시간을 "직접 수정"으로 바꿀 수 있어서 id 가 아니라 시간 글자로 기억한다
+  const key = `${r.hours ?? ''}|${r.breakTime ?? ''}|${r.closedDays ?? ''}`;
+  if (cache.has(key)) return cache.get(key)!;
   let result: Schedule | null = null;
   const hours = r.hours?.trim();
   if (hours) {
@@ -144,7 +146,7 @@ function schedule(r: Restaurant): Schedule | null {
       result = { allDay, spans, breaks: parseBreaks(r.breakTime), closed: parseClosed(r.closedDays) };
     }
   }
-  cache.set(r.id, result);
+  cache.set(key, result);
   return result;
 }
 

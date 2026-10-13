@@ -27,6 +27,8 @@ const DATA_DIR = SITE === 'jamsil' ? '../src/data/' : `../src/data/${SITE}/`;
 const EXCLUDE = /^(술집|간식|구내식당|식품판매|카페)$/;
 /** 문 닫은 곳 (카카오에 남아 있어도 다시 가져오지 않는다) — 이태리부대찌개 잠실역점(2026-10 폐점 제보) */
 const CLOSED = new Set(['1145064937']);
+/** 분류(간식·카페 등) 때문에 빠지지만 점심으로 추천받은 곳 — 르쁘띠푸 당산본점(영등포, 베이커리) */
+const ALWAYS = new Set(['1612076280']);
 /**
  * 카페는 일단 다 가져오고, scripts/kakao-menu.mjs 가 카카오 메뉴를 보고
  * 샐러드·샌드위치 등 점심이 되는 곳만 남긴다 (달리는커피 등). 그래서 두 스크립트를 이어서 돌린다
@@ -81,7 +83,7 @@ const curatedIds = new Set([...curated.matchAll(/place\.map\.kakao\.com\/(\d+)/g
 const rows = [];
 for (const d of found.values()) {
   const cat = d.category_name.split(' > ').slice(1); // ["한식", "해장국", "달래해장"]
-  if (!cat[0] || (EXCLUDE.test(cat[0]) && cat[0] !== '카페') || curatedIds.has(d.id) || CLOSED.has(d.id)) continue;
+  if (!cat[0] || (EXCLUDE.test(cat[0]) && cat[0] !== '카페' && !ALWAYS.has(d.id)) || curatedIds.has(d.id) || CLOSED.has(d.id)) continue;
   const lat = Number(d.y);
   const lng = Number(d.x);
   if (meters(lat, lng) > RADIUS) continue;

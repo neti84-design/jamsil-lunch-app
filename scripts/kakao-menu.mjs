@@ -204,6 +204,7 @@ await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
 // 카페는 샐러드·샌드위치 등 점심이 되는 메뉴가 있는 곳만 남기고 나머지는 kakaoPlaces.ts 에서도 뺀다
 const MEAL_CAFE = /달리는커피|샐러드|샌드위치|포케/;
+const KEEP = new Set(['1612076280']);
 const MEAL_MENU = /샐러드|샌드위치|샌드|포케|보울|베이글|토스트|파니니|부리또|브리또|덮밥|파스타|김밥|핫도그|브런치|플래터|라이스|카레|오트밀|아사이/;
 /** 디저트·음료는 점심 메뉴로 치지 않는다 */
 const DESSERT = /인절미|빙수|설빙|케익|케이크|아이스크림|와플|크로플|마카롱|쿠키|스콘|소금빵|플레인|라떼|스무디|에이드|티$/;
@@ -224,6 +225,7 @@ for (const m of placesSrc.matchAll(/^\s*(\["(\d+)",.*\]),?$/gm)) {
     continue;
   }
   if (MEAL_CAFE.test(name)) continue; // 메뉴가 안 올라와 있어도 이름으로 확실한 곳 (달리는커피)
+  if (KEEP.has(id)) continue; // 점심으로 추천받아 직접 넣은 곳 (kakao-import.mjs 의 ALWAYS)
   dropCafe.add(id);
 }
 if (dropCafe.size) {

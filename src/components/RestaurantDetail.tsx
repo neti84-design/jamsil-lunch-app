@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import {
@@ -10,11 +11,12 @@ import {
 } from '../types';
 import { formatWon, kakaoMapLink, naverBlogSearchLink, naverMapLink, telLink } from '../lib/links';
 import { ReportPanel } from './ReportPanel';
+import { FixPanel } from './FixPanel';
 import { Thumb } from './Thumb';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { useTileStatus } from '../hooks/useTileStatus';
 import { useSite } from '../lib/sites';
-import type { LocalReason, NewReport, Report, ReportSummary } from '../lib/reports';
+import type { FixType, LocalReason, NewReport, Report, ReportSummary } from '../lib/reports';
 
 interface Props {
   r: Restaurant;
@@ -38,7 +40,6 @@ interface Props {
   onToggleVote?: () => void;
 }
 
-const REPO_ISSUES = 'https://github.com/neti84-design/jamsil-lunch-app/issues/new';
 
 export function RestaurantDetail({
   r,
@@ -63,6 +64,18 @@ export function RestaurantDetail({
   const res = RESERVATION_LABELS[r.reservation.method];
   const hasCoords = r.lat != null && r.lng != null;
   const tiles = useTileStatus();
+  /** 직접 수정 칸: 열린 종류 (가격·영업 제목 옆 단추로도 연다) */
+  const [fixType, setFixType] = useState<FixType | null>(null);
+  const fixRef = useRef<HTMLElement>(null);
+  const openFix = (t: FixType) => {
+    setFixType(t);
+    requestAnimationFrame(() => fixRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  };
+  const fixLink = (t: FixType) => (
+    <button className="link fix-link" onClick={() => openFix(t)}>
+      ✏️ 직접 수정
+    </button>
+  );
   const site = useSite();
   const hours = openStatus(r, now);
   const icon = L.divIcon({ className: 'pin selected', html: `<span>${CUISINE_EMOJI[r.cuisine]}</span>`, iconSize: [34, 34], iconAnchor: [17, 34] });
@@ -142,7 +155,9 @@ export function RestaurantDetail({
         />
 
         <section>
-          <h4>💰 가격</h4>
+          <h4>
+            💰 가격 {fixLink('price')}
+          </h4>
           {r.priceRange ? (
             <p className="price">
               인당 {formatWon(r.priceRange[0])}
@@ -156,7 +171,10 @@ export function RestaurantDetail({
             <ul className="menu">
               {r.menu.map((m) => (
                 <li key={m.name} className={m.price > budget ? 'over' : ''}>
-                  <span>{m.name}</span>
+                  <span>
+                    {m.name}
+                    {m.reported && <span className="reported"> (제보)</span>}
+                  </span>
                   <span>{formatWon(m.price)}</span>
                 </li>
               ))}
@@ -220,7 +238,9 @@ export function RestaurantDetail({
         </section>
 
         <section>
-          <h4>🕒 영업</h4>
+          <h4>
+            🕒 영업 {fixLink('hours')}
+          </h4>
           {hours.state !== 'unknown' && (
             <p className="open-now">
               <strong style={{ color: OPEN_STATE_COLOR[hours.state] }}>{hours.label}</strong>
@@ -229,6 +249,7 @@ export function RestaurantDetail({
           )}
           <p className="small">
             {r.hours ?? '영업시간 미확인'}
+            {r.hoursReported && <span className="reported"> (제보)</span>}
             {r.breakTime && <> · 브레이크 {r.breakTime}</>}
             {r.closedDays && <> · 휴무 {r.closedDays}</>}
           </p>
@@ -264,6 +285,18 @@ export function RestaurantDetail({
           </p>
         </section>
 
+        <FixPanel
+          ref={fixRef}
+          r={r}
+          reports={reports}
+          now={now}
+          isAdmin={isAdmin}
+          type={fixType}
+          onType={setFixType}
+          onAdd={onAddReport}
+          onRemove={onRemoveReport}
+        />
+
         {r.dataNotes && (
           <section>
             <h4>ℹ️ 참고</h4>
@@ -273,9 +306,9 @@ export function RestaurantDetail({
 
         <footer className="detail-foot small">
           정보가 틀렸나요?{' '}
-          <a href={`${REPO_ISSUES}?title=${encodeURIComponent(`[정보 수정] ${r.name}`)}`} target="_blank" rel="noreferrer">
-            수정 제안하기
-          </a>
+          <button className="link" onClick={() => openFix('info')}>
+            ✏️ 직접 수정
+          </button>
         </footer>
       </div>
     </aside>

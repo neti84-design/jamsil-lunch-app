@@ -1,7 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { TasteTag, WaitLevel } from '../types';
 
-export type ReportKind = 'wait' | 'review' | 'tag';
+export type ReportKind = 'wait' | 'review' | 'tag' | 'fix';
+/** 직접 수정: 가격정보 / 운영 정보 / 영업시간 / 기타 */
+export type FixType = 'price' | 'info' | 'hours' | 'etc';
+export const FIX_LABELS: Record<FixType, string> = { price: '가격정보', info: '운영 정보', hours: '영업시간', etc: '기타' };
 /** 'fav' = 관심 저장 (추천매장 집계용, 기기당 식당마다 한 번), 'delivery' = 배달 돼요 체크 */
 export type ReportTag = TasteTag | 'fav' | 'delivery';
 
@@ -17,6 +20,10 @@ export interface Report {
   rating?: number | null;
   comment?: string | null;
   tag?: ReportTag | null;
+  /** 직접 수정(kind 'fix')의 종류. 내용은 comment, 가격정보는 fixMenu·fixPrice */
+  fixType?: FixType | null;
+  fixMenu?: string | null;
+  fixPrice?: number | null;
   /** 작성한 기기 식별자 (닉네임 대신 사용, 본인 글 표시·삭제용) */
   deviceId?: string | null;
   createdAt: string; // ISO
@@ -175,8 +182,28 @@ interface Row {
   created_at: string;
 }
 
+/**
+ * 직접 수정은 DB 를 바꾸지 않으려고 후기(review, 별점 없음) 칸에 "[fix:종류]내용" 으로 저장한다.
+ * 가격정보는 "[fix:price]메뉴|가격"
+ */
+const FIX_RE = /^\[fix:(price|info|hours|etc)\]([\s\S]*)$/;
+
+function encodeFix(r: NewReport): string {
+  const body = r.fixType === 'price' ? `${r.fixMenu ?? ''}|${r.fixPrice ?? ''}` : (r.comment ?? '');
+  return `[fix:${r.fixType}]${body}`;
+}
+
+function decodeFix(rep: Report): Report {
+  const m = rep.kind === 'review' && rep.rating == null ? rep.comment?.match(FIX_RE) : null;
+  if (!m) return rep;
+  const fixType = m[1] as FixType;
+  if (fixType !== 'price') return { ...rep, kind: 'fix', fixType, comment: m[2] };
+  const [menu, price] = m[2].split('|');
+  return { ...rep, kind: 'fix', fixType, fixMenu: menu, fixPrice: Number(price) || null, comment: null };
+}
+
 function fromRow(r: Row): Report {
-  return {
+  return decodeFix({
     id: r.id,
     restaurantId: r.restaurant_id,
     kind: r.kind,
@@ -188,7 +215,7 @@ function fromRow(r: Row): Report {
     tag: r.tag,
     deviceId: r.device_id,
     createdAt: r.created_at,
-  };
+  });
 }
 
 class SupabaseBackend implements ReportsBackend {
@@ -214,12 +241,12 @@ class SupabaseBackend implements ReportsBackend {
       .from('reports')
       .insert({
         restaurant_id: r.restaurantId,
-        kind: r.kind,
+        kind: r.kind === 'fix' ? 'review' : r.kind,
         wait_level: r.waitLevel ?? null,
         wait_teams: r.waitTeams ?? null,
         wait_minutes: r.waitMinutes ?? null,
-        rating: r.rating ?? null,
-        comment: r.comment ?? null,
+        rating: r.kind === 'fix' ? null : (r.rating ?? null),
+        comment: r.kind === 'fix' ? encodeFix(r) : (r.comment ?? null),
         tag: r.tag ?? null,
         device_id: deviceId(),
       })

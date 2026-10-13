@@ -129,26 +129,13 @@ function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comm
             답하기
           </button>
         )}
+        {/* 관리자의 댓글 닫기·삭제는 관리자 화면에서만 (홈은 깔끔하게) */}
         {ownPost && !isAdmin && (
           <span className="talk-admin">
             <button
               className="link del"
               disabled={busy}
               onClick={() => confirm('내가 올린 공유톡을 지울까요?') && void run(() => talk.removePost(post.id, true))}
-            >
-              삭제
-            </button>
-          </span>
-        )}
-        {isAdmin && (
-          <span className="talk-admin">
-            <button className="link" disabled={busy} onClick={() => void run(() => talk.setPostComments(post.id, !post.allowComments))}>
-              {post.allowComments ? '댓글 닫기' : '댓글 열기'}
-            </button>
-            <button
-              className="link del"
-              disabled={busy}
-              onClick={() => confirm('이 공유톡을 댓글까지 모두 지울까요?') && void run(() => talk.removePost(post.id))}
             >
               삭제
             </button>

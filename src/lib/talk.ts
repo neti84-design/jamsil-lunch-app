@@ -1,9 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { deviceId, localAdminToken, supabaseClient } from './reports';
+import type { SiteId } from './sites';
 
 /** 공유톡: 관리자가 올리는 한 줄 질문·공지 */
 export interface TalkPost {
   id: string;
+  /** 어느 근무지 공지인지 — 그 근무지를 고른 사람에게만 보인다 */
+  site: SiteId;
   body: string;
   /** false = 단순 공지 (댓글 닫힘) */
   allowComments: boolean;
@@ -19,7 +22,23 @@ export interface TalkComment {
   createdAt: string; // ISO
 }
 
-export const TALK_POST_MAX = 100;
+/** 저장 칸은 100자 — 근무지 표시([ydp])가 들어갈 자리를 남긴다 */
+export const TALK_POST_MAX = 94;
+
+/**
+ * 근무지는 글 앞에 [ydp] 처럼 붙여 저장한다 (DB 칸을 따로 만들지 않아도 되게).
+ * 아무것도 안 붙은 글은 예전부터 있던 잠실 글
+ */
+const SITE_TAG = /^\[(ydp)\]/;
+
+function tagBody(body: string, site: SiteId): string {
+  return site === 'jamsil' ? body : `[${site}]${body}`;
+}
+
+function splitBody(raw: string): { site: SiteId; body: string } {
+  const m = raw.match(SITE_TAG);
+  return m ? { site: m[1] as SiteId, body: raw.slice(m[0].length) } : { site: 'jamsil', body: raw };
+}
 export const TALK_COMMENT_MAX = 60;
 
 export interface TalkHandlers {
@@ -34,7 +53,7 @@ export interface TalkBackend {
   list(): Promise<{ posts: TalkPost[]; comments: TalkComment[] }>;
   addComment(postId: string, body: string): Promise<TalkComment>;
   removeOwnComment(id: string): Promise<void>;
-  createPost(body: string, allowComments: boolean, token: string): Promise<TalkPost>;
+  createPost(body: string, allowComments: boolean, site: SiteId, token: string): Promise<TalkPost>;
   setComments(id: string, allowComments: boolean, token: string): Promise<TalkPost>;
   removePost(id: string, token: string): Promise<void>;
   removeComment(id: string, token: string): Promise<void>;
@@ -69,7 +88,9 @@ class LocalTalk implements TalkBackend {
     if (token !== localAdminToken()) throw new Error(WRONG_TOKEN);
   }
   async list() {
-    return this.read();
+    const all = this.read();
+    // 예전에 이 기기에 저장된 글은 근무지가 없으면 잠실
+    return { ...all, posts: all.posts.map((p) => ({ ...p, site: p.site ?? 'jamsil' })) };
   }
   async addComment(postId: string, body: string) {
     const all = this.read();
@@ -86,10 +107,10 @@ class LocalTalk implements TalkBackend {
     this.write(all);
     this.subs.forEach((h) => h.commentRemoved(id));
   }
-  async createPost(body: string, allowComments: boolean, token: string) {
+  async createPost(body: string, allowComments: boolean, site: SiteId, token: string) {
     this.admin(token);
     const all = this.read();
-    const p: TalkPost = { id: crypto.randomUUID(), body, allowComments, createdAt: new Date().toISOString() };
+    const p: TalkPost = { id: crypto.randomUUID(), site, body, allowComments, createdAt: new Date().toISOString() };
     all.posts.push(p);
     this.write(all);
     this.subs.forEach((h) => h.post(p));
@@ -142,7 +163,7 @@ interface CommentRow {
   device_id: string | null;
   created_at: string;
 }
-const fromPost = (r: PostRow): TalkPost => ({ id: r.id, body: r.body, allowComments: r.allow_comments, createdAt: r.created_at });
+const fromPost = (r: PostRow): TalkPost => ({ id: r.id, ...splitBody(r.body), allowComments: r.allow_comments, createdAt: r.created_at });
 const fromComment = (r: CommentRow): TalkComment => ({
   id: r.id,
   postId: r.post_id,
@@ -186,8 +207,8 @@ class SupabaseTalk implements TalkBackend {
     if (!row?.id) throw new Error(WRONG_TOKEN);
     return row;
   }
-  async createPost(body: string, allowComments: boolean, token: string) {
-    return fromPost(await this.adminRow('admin_talk_create', { p_body: body, p_allow: allowComments, p_token: token }));
+  async createPost(body: string, allowComments: boolean, site: SiteId, token: string) {
+    return fromPost(await this.adminRow('admin_talk_create', { p_body: tagBody(body, site), p_allow: allowComments, p_token: token }));
   }
   async setComments(id: string, allowComments: boolean, token: string) {
     return fromPost(await this.adminRow('admin_talk_set_comments', { p_id: id, p_allow: allowComments, p_token: token }));

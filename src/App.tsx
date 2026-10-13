@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
-import { ALL_RESTAURANTS, RESTAURANTS_BY_SITE } from './data';
+import { loadRestaurants } from './data';
 import { ALL_WALK, DEFAULT_FILTERS, FilterBar, NO_LIMIT, type Filters } from './components/FilterBar';
 import { RestaurantCard } from './components/RestaurantCard';
 import { RestaurantDetail } from './components/RestaurantDetail';
@@ -147,14 +147,32 @@ interface NavState {
   detail?: string;
 }
 
-/** 근무지와 상관없이 id 로 찾기 (투표 링크·관리자 화면) */
-const ALL_BY_ID = new Map(ALL_RESTAURANTS.map((r) => [r.id, r]));
+/** 데이터를 받기 전 빈 목록 (매번 새 배열을 만들지 않게) */
+const NO_RESTAURANTS: Restaurant[] = [];
 
 export default function App() {
   /** 근무지: 마지막에 고른 곳으로 열린다 (처음엔 영등포맥스) */
   const [siteId, setSiteId] = useState<SiteId>(loadSite);
   const site = SITES[siteId];
-  const restaurants = RESTAURANTS_BY_SITE[siteId];
+  /** 근무지별 식당 — 고른 근무지 것만 그때 받아 온다 */
+  const [lists, setLists] = useState<Partial<Record<SiteId, Restaurant[]>>>({});
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadTry, setLoadTry] = useState(0);
+  const restaurants = lists[siteId] ?? NO_RESTAURANTS;
+  const loading = !lists[siteId];
+  useEffect(() => {
+    let alive = true;
+    setLoadFailed(false);
+    loadRestaurants(siteId)
+      .then((list) => alive && setLists((prev) => ({ ...prev, [siteId]: list })))
+      .catch((e: unknown) => {
+        console.warn('[jamsil-lunch] 식당 데이터 불러오기 실패:', e);
+        if (alive) setLoadFailed(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [siteId, loadTry]);
   const [filters, setFilters] = useState<Filters>(() => {
     const f = loadJSON(FILTER_KEY, DEFAULT_FILTERS);
     // 예전 버전에 있던 '혼밥' 좌석 조건 등 지금 없는 값은 버린다
@@ -180,7 +198,7 @@ export default function App() {
   const nextScroll = useRef(0);
   const lastScroll = useRef(0);
   const live = useReports();
-  const talk = useTalk(live.adminToken);
+  const talk = useTalk(live.adminToken, siteId);
   /** 지도에서 누른 식당 (아래 패널로 보여줌, 새 창으로 열지 않음) */
   const [mapSelId, setMapSelId] = useState<string | null>(null);
   /** 관심매장 탭: 나의 관심매장 / 동료 추천매장 */
@@ -226,7 +244,8 @@ export default function App() {
     for (const r of restaurants) m.set(r.id, walkMinutesFrom(r.lat, r.lng, r.walkMinutes, insideMinutes(r), site));
     return m;
   }, [restaurants, site]);
-  const byId = ALL_BY_ID;
+  /** 받아 둔 근무지 식당 전부 (투표 링크·최근 본 식당) */
+  const byId = useMemo(() => new Map(Object.values(lists).flatMap((l) => l.map((r) => [r.id, r] as const))), [lists]);
   const buildings = useMemo(() => bigBuildings(restaurants), [restaurants]);
 
   /** 조건에 맞는 식당을 정렬해서. 지도는 도보 조건으로 mapMaxWalk 를 쓴다 */
@@ -668,7 +687,7 @@ export default function App() {
         <header className="wide-top">
           {brand}
           <div className="wide-top-right">
-            <BottomNav variant="top" tab={tab} favCount={favorites.size} onChange={goTab} />
+            <BottomNav variant="top" tab={tab} favCount={favoriteList.length} onChange={goTab} />
             {siteSwitch}
           </div>
         </header>
@@ -847,7 +866,22 @@ export default function App() {
         )}
       </main>
 
-      {!wide && <BottomNav tab={tab} favCount={favorites.size} onChange={goTab} />}
+      {loading && (
+        <div className="data-loading" role="status">
+          {loadFailed ? (
+            <>
+              식당 정보를 불러오지 못했어요.
+              <button className="btn sm" onClick={() => setLoadTry((n) => n + 1)}>
+                다시 시도
+              </button>
+            </>
+          ) : (
+            <>🍱 {site.label} 주변 식당 불러오는 중…</>
+          )}
+        </div>
+      )}
+
+      {!wide && <BottomNav tab={tab} favCount={favoriteList.length} onChange={goTab} />}
 
       {voteView && (
         <>
@@ -901,7 +935,7 @@ export default function App() {
           <div className="backdrop" onClick={() => setAdminOpen(false)} />
           <AdminPanel
             reports={live.reports}
-            restaurants={ALL_RESTAURANTS}
+            restaurants={restaurants}
             now={live.now}
             isAdmin={live.isAdmin}
             onLogin={live.loginAdmin}

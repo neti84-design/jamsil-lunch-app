@@ -2068,3 +2068,23 @@ input.mini.vote-title-input {
 :root[data-site='ydp'] .vote-row.lead .vote-bar {
   background: #cdeed9;
 }
+
+/* 근무지 식당 데이터를 받는 동안 */
+.data-loading {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}

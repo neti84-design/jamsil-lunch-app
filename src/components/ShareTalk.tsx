@@ -15,7 +15,7 @@ function errMsg(e: unknown): string {
   return String(e);
 }
 
-/** 홈 검색창 바로 아래: 관리자가 올린 질문·공지 한 줄 + 한 줄 답하기 + 사람들 답(옆으로 넘기기) */
+/** 홈 검색창 바로 아래: 관리자가 올린 질문·공지 한 줄 → 바로 밑에 사람들 답(옆으로 넘기기) → 한 줄 답하기 */
 export function ShareTalk({ talk, now, isAdmin }: Props) {
   if (talk.posts.length === 0) return null;
   return (
@@ -101,6 +101,24 @@ function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comm
         )}
       </div>
 
+      {sorted.length > 0 && (
+        <div className="talk-strip" aria-label="답글 (옆으로 넘기기)">
+          {sorted.map((c) => {
+            const own = c.deviceId === me;
+            return (
+              <span key={c.id} className={'talk-chip' + (own ? ' own' : '')}>
+                <span className="talk-chip-text">{c.body}</span>
+                <span className="talk-chip-time">{timeAgo(c.createdAt, now)}</span>
+                {(own || isAdmin) && (
+                  <button className="talk-chip-del" disabled={busy} onClick={() => remove(c)} aria-label="댓글 지우기">
+                    ✕
+                  </button>
+                )}
+              </span>
+            );
+          })}
+        </div>
+      )}
       {post.allowComments && (
         <form
           className="one-line-form"
@@ -123,24 +141,6 @@ function TalkItem({ post, comments, talk, now, isAdmin }: { post: TalkPost; comm
         </form>
       )}
 
-      {sorted.length > 0 && (
-        <div className="talk-strip" aria-label="답글 (옆으로 넘기기)">
-          {sorted.map((c) => {
-            const own = c.deviceId === me;
-            return (
-              <span key={c.id} className={'talk-chip' + (own ? ' own' : '')}>
-                <span className="talk-chip-text">{c.body}</span>
-                <span className="talk-chip-time">{timeAgo(c.createdAt, now)}</span>
-                {(own || isAdmin) && (
-                  <button className="talk-chip-del" disabled={busy} onClick={() => remove(c)} aria-label="댓글 지우기">
-                    ✕
-                  </button>
-                )}
-              </span>
-            );
-          })}
-        </div>
-      )}
       {err && <p className="small error">{err}</p>}
     </article>
   );

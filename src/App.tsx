@@ -15,6 +15,7 @@ import { TowerLogo } from './components/TowerLogo';
 import { SiteSwitch } from './components/SiteSwitch';
 import { MapSheet } from './components/MapSheet';
 import { ShareTalk } from './components/ShareTalk';
+import { RecentReviews } from './components/RecentReviews';
 import { TodayPick } from './components/TodayPick';
 import { VoteHome } from './components/VoteHome';
 import { VotePanel, type VoteView } from './components/VotePanel';
@@ -743,7 +744,12 @@ export default function App() {
         {tab === 'home' && (
           <HomeView
             searchBox={searchBox}
-            talk={<ShareTalk talk={talk} now={live.now} isAdmin={live.isAdmin} />}
+            talk={
+              <>
+                <ShareTalk talk={talk} now={live.now} isAdmin={live.isAdmin} />
+                <RecentReviews reports={live.reports} restaurants={restaurants} now={live.now} onSelect={open} />
+              </>
+            }
             ticker={ticker}
             nearby={nearbyOpen.map(card)}
             restaurants={restaurants}

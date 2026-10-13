@@ -365,7 +365,7 @@ export interface ReportSummary {
   /** 별점 합계 — "별점 많은 순" 정렬 기준 */
   totalStars: number;
   hidden: number; // 🤫 숨은맛집 체크 수
-  classic: number; // 👍 역시맛집 체크 수
+  classic: number; // 🔁 또 갈래요 체크 수
   favs: number; // ⭐ 관심 저장한 기기 수
   delivery: number; // 🛵 배달 돼요 체크 수
   /** 이 기기에서 체크한 태그 */

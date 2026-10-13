@@ -131,7 +131,7 @@ function compareStars(a: Restaurant, b: Restaurant, s: Map<string, ReportSummary
   return externalRating(b) - externalRating(a);
 }
 
-/** 동료 추천매장 점수: 다른 사람들의 관심 저장 + 숨은/역시맛집 체크 + 별점 */
+/** 동료 추천매장 점수: 다른 사람들의 관심 저장 + 숨은맛집/또 갈래요 체크 + 별점 */
 function recommendScore(x?: ReportSummary): number {
   return x ? x.favs * 3 + (x.hidden + x.classic) * 2 + x.totalStars : 0;
 }
@@ -921,7 +921,7 @@ export default function App() {
                 <div className="empty small">
                   아직 동료들의 추천이 없어요.
                   <br />
-                  찜(♡)·숨은맛집/역시맛집 체크·별점이 모이면 여기에 떠요.
+                  찜(♡)·숨은맛집/또 갈래요 체크·별점이 모이면 여기에 떠요.
                 </div>
                 <h3 className="section-title">대신, 평점 높은 곳</h3>
                 {topRated.map(card)}
@@ -935,7 +935,7 @@ export default function App() {
                     <div className="recommend-why small">
                       {others > 0 && <span>♥ 찜 {others}명</span>}
                       {s.hidden > 0 && <span>🤫 숨은맛집 {s.hidden}</span>}
-                      {s.classic > 0 && <span>👍 역시맛집 {s.classic}</span>}
+                      {s.classic > 0 && <span>🔁 또 갈래요 {s.classic}</span>}
                       {s.reviewCount > 0 && <span>★ {s.avgRating!.toFixed(1)} ({s.reviewCount})</span>}
                     </div>
                     {card(r)}

@@ -135,7 +135,7 @@ export const WAIT_LABELS: Record<WaitLevel, { label: string; color: string }> = 
 export type TasteTag = 'hidden' | 'classic';
 export const TASTE_TAG_LABELS: Record<TasteTag, { label: string; emoji: string; desc: string }> = {
   hidden: { label: '숨은맛집', emoji: '🤫', desc: '알려진 것보다 훨씬 맛있는 곳' },
-  classic: { label: '역시맛집', emoji: '👍', desc: '기대한 만큼 맛있는 곳' },
+  classic: { label: '또 갈래요', emoji: '🔁', desc: '다음에 또 가고 싶은 곳' },
 };
 
 export const CUISINE_EMOJI: Record<Cuisine, string> = {

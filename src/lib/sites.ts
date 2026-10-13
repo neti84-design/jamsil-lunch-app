@@ -46,7 +46,7 @@ export const SITES: Record<SiteId, Site> = {
     office: { lat: 37.527817, lng: 126.904683, popup: '출발: 영등포맥스 (영중로 125 · 롯데마트 맥스)' },
     station: { lat: 37.522709, lng: 126.90518, popup: '영등포시장역 (5호선)' },
     walkFrom: '맥스에서',
-    brand: { accent: '영심', sub: '영등포점심', tagline: '짧아서 더 애절한 영등포 생활, 즐기자구요!' },
+    brand: { accent: '영심', sub: '영등포점심', tagline: '짧아서 더 애절한 영등포 점심시간, 즐기자구요!' },
     color: '#1f9d55',
     themeColor: '#178a48',
     defaultBudget: 10000,

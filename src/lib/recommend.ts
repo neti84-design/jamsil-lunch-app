@@ -21,7 +21,17 @@ export interface DayTheme {
 export const WEEKDAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
 /** 우산 없이(또는 지하·건물 안으로) 갈 수 있는 곳 */
-const INDOOR_BUILDINGS = new Set(['롯데월드몰', '롯데백화점', '잠실역 지하상가', '캐슬플라자']);
+const INDOOR_BUILDINGS = new Set([
+  '롯데월드몰',
+  '롯데백화점',
+  '잠실역 지하상가',
+  '캐슬플라자',
+  '영등포맥스',
+  '타임스퀘어',
+  '신세계백화점',
+  '영등포역 지하상가',
+  '영등포역·롯데백화점',
+]);
 
 const WEEKDAY_THEMES: Record<number, Omit<DayTheme, 'maxWalk' | 'indoor'>> = {
   1: { emoji: '💪', reason: '월요일엔 든든하게 시작', dishes: ['백반·정식', '국밥·탕', '돈까스'], concepts: ['filling'] },

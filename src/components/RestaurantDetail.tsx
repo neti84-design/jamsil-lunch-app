@@ -13,6 +13,7 @@ import { ReportPanel } from './ReportPanel';
 import { Thumb } from './Thumb';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { useTileStatus } from '../hooks/useTileStatus';
+import { useSite } from '../lib/sites';
 import type { LocalReason, NewReport, Report, ReportSummary } from '../lib/reports';
 
 interface Props {
@@ -62,6 +63,7 @@ export function RestaurantDetail({
   const res = RESERVATION_LABELS[r.reservation.method];
   const hasCoords = r.lat != null && r.lng != null;
   const tiles = useTileStatus();
+  const site = useSite();
   const hours = openStatus(r, now);
   const icon = L.divIcon({ className: 'pin selected', html: `<span>${CUISINE_EMOJI[r.cuisine]}</span>`, iconSize: [34, 34], iconAnchor: [17, 34] });
 
@@ -78,7 +80,7 @@ export function RestaurantDetail({
           </h2>
           <div className="sub">
             {r.cuisine} · {r.subcategory}
-            {walk != null && <> · 잠실역 도보 {walk}분</>}
+            {walk != null && <> · {site.walkFrom} 도보 {walk}분</>}
             {r.nearestExit && <> ({r.nearestExit})</>}
           </div>
         </div>

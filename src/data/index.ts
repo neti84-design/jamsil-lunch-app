@@ -2,8 +2,19 @@ import type { Cuisine, Restaurant } from '../types';
 import { RESTAURANTS as CURATED } from './restaurants';
 import { KAKAO_ROWS } from './kakaoPlaces';
 import { MENU_PRICES } from './menuPrices';
-import { KAKAO_DETAILS } from './kakaoDetails';
+import { KAKAO_DETAILS, type KakaoDetail } from './kakaoDetails';
 import { KAKAO_PHOTOS } from './kakaoPhotos';
+import { KAKAO_ROWS as YDP_ROWS } from './ydp/kakaoPlaces';
+import { KAKAO_DETAILS as YDP_DETAILS } from './ydp/kakaoDetails';
+import { KAKAO_PHOTOS as YDP_PHOTOS } from './ydp/kakaoPhotos';
+import type { SiteId } from '../lib/sites';
+
+/** 근무지 하나의 카카오 자료 */
+interface KakaoSet {
+  rows: typeof KAKAO_ROWS;
+  details: Record<string, KakaoDetail>;
+  photos: Record<string, string>;
+}
 
 /** 카카오 1차 분류 → 앱의 음식 종류 */
 const CUISINE_OF: Record<string, Cuisine> = {
@@ -30,8 +41,8 @@ function splitBranch(placeName: string): [string, string | null] {
 type MenuFields = Pick<Restaurant, 'priceRange' | 'menu' | 'signature' | 'dataNotes'>;
 
 /** 카카오맵 가게 정보(메뉴·가격) → 메뉴·가격대·대표 메뉴. 없으면 동료 자료 */
-function kakaoMenuFields(kakaoId: string): MenuFields | null {
-  const d = KAKAO_DETAILS[kakaoId];
+function kakaoMenuFields(kakaoId: string, details: Record<string, KakaoDetail> = KAKAO_DETAILS): MenuFields | null {
+  const d = details[kakaoId];
   if (!d?.price || !d.menu?.length) return menuFields(kakaoId);
   const [lo, hi] = d.price;
   return {
@@ -44,8 +55,11 @@ function kakaoMenuFields(kakaoId: string): MenuFields | null {
 }
 
 /** 카카오맵 영업시간·별점 */
-function kakaoHoursFields(kakaoId: string): Pick<Restaurant, 'hours' | 'breakTime' | 'closedDays'> | null {
-  const d = KAKAO_DETAILS[kakaoId];
+function kakaoHoursFields(
+  kakaoId: string,
+  details: Record<string, KakaoDetail> = KAKAO_DETAILS,
+): Pick<Restaurant, 'hours' | 'breakTime' | 'closedDays'> | null {
+  const d = details[kakaoId];
   return d?.hours ? { hours: d.hours, breakTime: d.breakTime ?? null, closedDays: d.closedDays ?? null } : null;
 }
 
@@ -62,7 +76,7 @@ function menuFields(key: string): MenuFields | null {
   };
 }
 
-function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof KAKAO_ROWS)[number]): Restaurant {
+function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof KAKAO_ROWS)[number], set: KakaoSet): Restaurant {
   const cat = category.split('>');
   const [name, branch] = splitBranch(placeName);
   return {
@@ -75,8 +89,8 @@ function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof 
     signature: [],
     priceRange: null,
     menu: [],
-    ...kakaoMenuFields(id),
-    ...kakaoHoursFields(id),
+    ...kakaoMenuFields(id, set.details),
+    ...kakaoHoursFields(id, set.details),
     concepts: [],
     seating: { group: null, solo: null },
     address,
@@ -85,9 +99,9 @@ function fromKakao([id, placeName, category, address, phone, lat, lng]: (typeof 
     phone: phone || null,
     reservation: { method: 'unknown' },
     waiting: { level: 'unknown' },
-    reviews: KAKAO_DETAILS[id]?.rating != null ? { kakaoRating: KAKAO_DETAILS[id].rating } : {},
+    reviews: set.details[id]?.rating != null ? { kakaoRating: set.details[id].rating } : {},
     links: { kakaoMap: `https://place.map.kakao.com/${id}` },
-    photo: KAKAO_PHOTOS[id] ?? null,
+    photo: set.photos[id] ?? null,
     source: 'kakao',
   };
 }
@@ -107,8 +121,14 @@ function fillCurated(r: Restaurant): Restaurant {
   return out;
 }
 
-/** 직접 정리한 식당 + 카카오맵에서 가져온 주변 음식점 */
-export const RESTAURANTS: Restaurant[] = [
-  ...CURATED.map(fillCurated),
-  ...KAKAO_ROWS.map(fromKakao),
-];
+const JAMSIL: KakaoSet = { rows: KAKAO_ROWS, details: KAKAO_DETAILS, photos: KAKAO_PHOTOS };
+const YDP: KakaoSet = { rows: YDP_ROWS, details: YDP_DETAILS, photos: YDP_PHOTOS };
+
+/** 근무지별 식당: 잠실은 직접 정리한 식당 + 카카오맵 주변 음식점, 영등포는 카카오맵 주변 음식점 */
+export const RESTAURANTS_BY_SITE: Record<SiteId, Restaurant[]> = {
+  jamsil: [...CURATED.map(fillCurated), ...JAMSIL.rows.map((row) => fromKakao(row, JAMSIL))],
+  ydp: YDP.rows.map((row) => fromKakao(row, YDP)),
+};
+
+/** 두 근무지 식당 전부 (관리자 화면·투표 링크처럼 근무지와 상관없이 찾을 때) */
+export const ALL_RESTAURANTS: Restaurant[] = [...RESTAURANTS_BY_SITE.jamsil, ...RESTAURANTS_BY_SITE.ydp];

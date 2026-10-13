@@ -5,6 +5,15 @@ import type { Restaurant } from '../types';
  * 필터에는 MIN_BUILDING_COUNT 곳 이상 모인 건물만 보여준다(데이터가 늘면 자동으로 추가됨).
  */
 export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
+  // 영등포맥스 주변 — 주소가 영등포 쪽에만 있는 것이라 잠실 건물보다 먼저 본다 (롯데백화점 영등포점이 잠실 롯데백화점으로 잡히지 않게)
+  { name: '타임스퀘어', emoji: '🏬', re: /타임스퀘어|영중로 15(?!\d)/ },
+  { name: '신세계백화점', emoji: '🛍️', re: /신세계백화점|신세계 ?영등포|영중로 9(?!\d)/ },
+  { name: '영등포역·롯데백화점', emoji: '🚉', re: /경인로 846(?!\d)|롯데백화점 ?영등포|영등포역점/ },
+  { name: '영등포역 지하상가', emoji: '🚇', re: /영등포역\s*지하|영등포지하(쇼핑|상가)|영중로 지하|경인로 지하/ },
+  { name: '영등포맥스', emoji: '🛒', re: /롯데마트\s*맥스|롯데마트맥스|영중로 125(?!\d)/ },
+  { name: '포레나 영등포', emoji: '🏢', re: /포레나|국회대로50길 20(?!\d)/ },
+  { name: '홈플러스 문래점', emoji: '🛒', re: /홈플러스 ?문래|당산로 34(?!\d)/ },
+  { name: '영등포시장', emoji: '🏮', re: /영등포(전통)?시장(?!역)/ },
   { name: '장미상가', emoji: '🌹', re: /장미\s*(아파트\s*)?[AB]?\s*상가|장미[AB]상가|장미상가|잠실장미점|올림픽로\s*35길\s*(104|112|124)(?!\d)/ },
   { name: '롯데월드몰', emoji: '🏬', re: /롯데월드몰|올림픽로 300(?!\d)/ },
   { name: '롯데백화점', emoji: '🛍️', re: /롯데백화점/ },
@@ -21,7 +30,7 @@ export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
 ];
 
 /** 큰 쇼핑몰은 입구에서 식당가까지 건물 안을 한참 걸어야 한다 (분) */
-const INSIDE_MIN: Record<string, number> = { 롯데월드몰: 4, 롯데백화점: 3 };
+const INSIDE_MIN: Record<string, number> = { 롯데월드몰: 4, 롯데백화점: 3, 타임스퀘어: 4, 신세계백화점: 3, '영등포역·롯데백화점': 3 };
 
 export function insideMinutes(r: Restaurant): number {
   const b = buildingOf(r);

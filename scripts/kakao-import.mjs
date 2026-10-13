@@ -5,6 +5,7 @@
  * 사용법:
  *   KAKAO_REST_KEY=발급받은키 node scripts/kakao-import.mjs          # 기본 반경 1000m
  *   KAKAO_REST_KEY=발급받은키 node scripts/kakao-import.mjs 800      # 반경 지정 (m)
+ *   SITE=ydp node scripts/kakao-import.mjs                           # 영등포맥스 기준 → src/data/ydp/kakaoPlaces.ts
  *
  * - 본사(롯데캐슬골드) 기준 반경 안의 카카오 "음식점"(FD6) 을 전부 모읍니다.
  *   카카오 API 는 한 번에 45곳까지만 주므로 영역을 4등분해 가며 빠짐없이 수집합니다.
@@ -17,8 +18,12 @@ import fs from 'node:fs';
 
 const KEY = process.env.KAKAO_REST_KEY;
 const RADIUS = Number(process.argv[2]) || 1000;
-// 본사(롯데캐슬골드) — src/lib/geo.ts 의 OFFICE 와 같은 값
-const OFFICE = { lat: 37.5141, lng: 127.1017 };
+// 근무지 — src/lib/sites.ts 의 office 와 같은 값 (jamsil: 롯데캐슬골드, ydp: 영등포맥스 영중로 125)
+const SITE = process.env.SITE || 'jamsil';
+const OFFICES = { jamsil: { lat: 37.5141, lng: 127.1017 }, ydp: { lat: 37.527817, lng: 126.904683 } };
+const OFFICE = OFFICES[SITE];
+if (!OFFICE) throw new Error(`SITE 는 ${Object.keys(OFFICES).join(' / ')} 중 하나`);
+const DATA_DIR = SITE === 'jamsil' ? '../src/data/' : `../src/data/${SITE}/`;
 const EXCLUDE = /^(술집|간식|구내식당|식품판매|카페)$/;
 
 const dLat = RADIUS / 111000;
@@ -62,7 +67,7 @@ function meters(lat, lng) {
 await grab(OFFICE.lng - dLng, OFFICE.lat - dLat, OFFICE.lng + dLng, OFFICE.lat + dLat);
 
 // 직접 정리한 식당과 겹치는 카카오 장소 id
-const curated = fs.readFileSync(new URL('../src/data/restaurants.ts', import.meta.url), 'utf8');
+const curated = SITE === 'jamsil' ? fs.readFileSync(new URL('../src/data/restaurants.ts', import.meta.url), 'utf8') : '';
 const curatedIds = new Set([...curated.matchAll(/place\.map\.kakao\.com\/(\d+)/g)].map((m) => m[1]));
 
 const rows = [];
@@ -77,12 +82,13 @@ for (const d of found.values()) {
 }
 rows.sort((a, b) => a[0].localeCompare(b[0], 'en', { numeric: true }));
 
-const out = `// 자동 생성: scripts/kakao-import.mjs (카카오맵 음식점, 본사 반경 ${RADIUS}m, ${new Date().toISOString().slice(0, 10)})
+const out = `// 자동 생성: scripts/kakao-import.mjs (카카오맵 음식점, ${SITE} 근무지 반경 ${RADIUS}m, ${new Date().toISOString().slice(0, 10)})
 // 직접 고치지 말고 스크립트를 다시 돌리세요. 정보를 보강하려면 그 식당을 restaurants.ts 로 옮겨 적으면 됩니다.
 // [카카오 id, 이름, 분류, 주소, 전화, 위도, 경도]
 export const KAKAO_ROWS: [string, string, string, string, string, number, number][] = [
 ${rows.map((r) => '  ' + JSON.stringify(r)).join(',\n')},
 ];
 `;
-fs.writeFileSync(new URL('../src/data/kakaoPlaces.ts', import.meta.url), out);
+fs.mkdirSync(new URL(DATA_DIR, import.meta.url), { recursive: true });
+fs.writeFileSync(new URL(DATA_DIR + 'kakaoPlaces.ts', import.meta.url), out);
 console.log(`카카오 음식점 ${found.size}곳 중 ${rows.length}곳 저장 (직접 정리한 ${curatedIds.size}곳·술집·간식 등 제외)`);

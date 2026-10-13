@@ -6,6 +6,7 @@
  * 사용법:
  *   node scripts/kakao-menu.mjs            # 받아 둔 것은 다시 받지 않음
  *   node scripts/kakao-menu.mjs --fresh    # 전부 새로 받기
+ *   SITE=ydp node scripts/kakao-menu.mjs   # 영등포맥스 (src/data/ydp/)
  *
  * - src/data/kakaoPlaces.ts 의 카카오 id(+ restaurants.ts 의 카카오맵 링크) 마다 카카오맵 가게 페이지가 쓰는 정보(place-api.map.kakao.com)를 읽습니다.
  *   공식 API 가 아니라서 카카오가 형식을 바꾸면 이 스크립트를 고쳐야 할 수 있습니다.
@@ -17,16 +18,20 @@ import path from 'node:path';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const CACHE = path.join(ROOT, 'node_modules/.cache/kakao-panel');
-const OUT = path.join(ROOT, 'src/data/kakaoDetails.ts');
-const PHOTO_OUT = path.join(ROOT, 'src/data/kakaoPhotos.ts');
+// SITE=ydp 면 영등포맥스 데이터(src/data/ydp/)
+const SITE = process.env.SITE || 'jamsil';
+const DATA = path.join(ROOT, SITE === 'jamsil' ? 'src/data' : `src/data/${SITE}`);
+const OUT = path.join(DATA, 'kakaoDetails.ts');
+const PHOTO_OUT = path.join(DATA, 'kakaoPhotos.ts');
 const FRESH = process.argv.includes('--fresh');
 const CONCURRENCY = 4;
 /** 메뉴는 앞에서부터 이만큼만 앱에 넣는다 */
 const MAX_MENU = 12;
 
-const kakaoIds = [...fs.readFileSync(path.join(ROOT, 'src/data/kakaoPlaces.ts'), 'utf8').matchAll(/^\s*\["(\d+)",/gm)].map((m) => m[1]);
+const kakaoIds = [...fs.readFileSync(path.join(DATA, 'kakaoPlaces.ts'), 'utf8').matchAll(/^\s*\["(\d+)",/gm)].map((m) => m[1]);
 // 직접 정리한 곳도 카카오맵 링크가 있으면 받아서, 비어 있는 영업시간·메뉴만 채운다
-const curatedIds = [...fs.readFileSync(path.join(ROOT, 'src/data/restaurants.ts'), 'utf8').matchAll(/place\.map\.kakao\.com\/(\d+)/g)].map((m) => m[1]);
+const curatedIds =
+  SITE === 'jamsil' ? [...fs.readFileSync(path.join(ROOT, 'src/data/restaurants.ts'), 'utf8').matchAll(/place\.map\.kakao\.com\/(\d+)/g)].map((m) => m[1]) : [];
 const ids = [...new Set([...kakaoIds, ...curatedIds])];
 fs.mkdirSync(CACHE, { recursive: true });
 

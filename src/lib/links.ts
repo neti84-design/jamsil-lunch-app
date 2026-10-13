@@ -1,7 +1,9 @@
 import type { Restaurant } from '../types';
 
 function q(r: Restaurant): string {
-  return encodeURIComponent(`${r.name}${r.branch ? ' ' + r.branch : ''} 잠실`);
+  // 지도·블로그 검색에 동네 이름을 붙여 다른 지역 같은 이름 가게를 피한다
+  const area = r.address?.includes('영등포구') ? '영등포' : '잠실';
+  return encodeURIComponent(`${r.name}${r.branch ? ' ' + r.branch : ''} ${area}`);
 }
 
 export function naverMapLink(r: Restaurant): string {

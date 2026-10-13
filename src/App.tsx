@@ -26,7 +26,7 @@ import { useVotes } from './hooks/useVotes';
 import { isWide, useWide } from './hooks/useWide';
 import { SITES, SiteContext, loadSite, saveSite, type SiteId } from './lib/sites';
 import { fetchLunchWeather, type LunchWeather } from './lib/weather';
-import { dayTheme, pickForTaste, pickForToday, tasteFrom } from './lib/recommend';
+import { dayTheme, kstDay, pickForTaste, pickForToday, tasteFrom } from './lib/recommend';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
@@ -58,6 +58,9 @@ function deviceSeed(): string {
 }
 /** 오늘의 추천을 "이 중에서 투표"로 담을 때 몇 곳까지 */
 const VOTE_FROM_PICKS = 4;
+/** 홈 아래 '요즘 관심 · 평일 좋았던 매장': 최근 며칠 / 몇 곳 */
+const BUZZ_DAYS = 14;
+const BUZZ_SHOWN = 5;
 const MAX_RECENT = 10;
 const MAX_SEARCHES = 10;
 /** 검색 목록은 한 번에 이만큼씩 그린다 (식당이 1,000곳이 넘어서) */
@@ -304,14 +307,6 @@ export default function App() {
     const here = new Set(restaurants.map((r) => r.id));
     return recentIds.filter((id) => here.has(id)).map((id) => byId.get(id)!);
   }, [recentIds, byId, restaurants]);
-  const nearbyOpen = useMemo(
-    () =>
-      // 카카오에서 가져온 곳은 영업시간을 아는 곳만 "지금 영업 중"에 넣는다
-      restaurants.filter((r) => (!r.source || r.hours) && maybeOpen(r, live.now) && walkById.get(r.id) != null)
-        .sort((a, b) => walkById.get(a.id)! - walkById.get(b.id)!)
-        .slice(0, 5),
-    [restaurants, live.now, walkById],
-  );
   const recommended = useMemo(
     () =>
       restaurants.filter((r) => {
@@ -346,6 +341,34 @@ export default function App() {
     () => [...restaurants].filter((r) => externalRating(r) > 0).sort((a, b) => externalRating(b) - externalRating(a)).slice(0, 10),
     [restaurants],
   );
+  /**
+   * 홈 아래: 요즘 관심 · 평일 좋았던 매장 — 최근 2주 평일에 남긴 관심 저장·맛집 체크·좋은 별점(4~5)을 모은다.
+   * 모인 게 적으면 그동안 동료 추천 → 평점 높은 곳 순으로 채운다
+   */
+  const buzz = useMemo(() => {
+    const since = live.now - BUZZ_DAYS * 86400_000;
+    const here = new Set(restaurants.map((r) => r.id));
+    const m = new Map<string, { score: number; favs: number; good: number }>();
+    for (const rep of live.reports) {
+      if (!here.has(rep.restaurantId)) continue;
+      const t = Date.parse(rep.createdAt);
+      const day = kstDay(t);
+      if (t < since || day === 0 || day === 6) continue;
+      const fav = rep.kind === 'tag' && rep.tag === 'fav';
+      const good =
+        (rep.kind === 'tag' && (rep.tag === 'hidden' || rep.tag === 'classic')) || (rep.kind === 'review' && (rep.rating ?? 0) >= 4);
+      if (!fav && !good) continue;
+      const x = m.get(rep.restaurantId) ?? { score: 0, favs: 0, good: 0 };
+      if (fav) x.favs += 1;
+      else x.good += 1;
+      x.score += fav ? 3 : rep.kind === 'review' ? rep.rating! - 2 : 2;
+      m.set(rep.restaurantId, x);
+    }
+    const hot = [...m.entries()].sort((a, b) => b[1].score - a[1].score).map(([id, why]) => ({ r: byId.get(id)!, why }));
+    const seen = new Set(hot.map((x) => x.r.id));
+    const fill = [...recommended, ...topRated].filter((r) => !seen.has(r.id) && (seen.add(r.id), true));
+    return [...hot, ...fill.map((r) => ({ r, why: null }))].slice(0, BUZZ_SHOWN);
+  }, [restaurants, byId, live.reports, live.now, recommended, topRated]);
 
   // ---------- 화면 이동 (브라우저/휴대폰 뒤로가기와 연동) ----------
   useEffect(() => {
@@ -770,7 +793,17 @@ export default function App() {
               </>
             }
             ticker={ticker}
-            nearby={nearbyOpen.map(card)}
+            nearby={buzz.map(({ r, why }) => (
+              <div key={r.id} className="recommend-item">
+                {why && (
+                  <div className="recommend-why small">
+                    {why.favs > 0 && <span>⭐ 최근 관심 {why.favs}</span>}
+                    {why.good > 0 && <span>👍 좋았어요 {why.good}</span>}
+                  </div>
+                )}
+                {card(r)}
+              </div>
+            ))}
             restaurants={restaurants}
             recent={recentList}
             buildings={buildings}
@@ -779,7 +812,10 @@ export default function App() {
             onDish={(d: DishTag) => searchWith({ dishes: [d] })}
             onBuilding={(b) => searchWith({ building: b })}
             onSelect={open}
-            onSeeAll={() => searchWith({ sort: 'walk', openNow: true })}
+            onSeeAll={() => {
+              setFavView('peers');
+              goTab('favorites');
+            }}
           />
         )}
 

@@ -2288,9 +2288,11 @@ img.tower-logo {
 .rr-time {
   flex: none;
 }
-.rr-more {
-  display: block;
-  margin: 6px auto 0;
+.rr-more-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 6px;
 }
 
 /* 식당 정보: 사용자 "직접 수정" */

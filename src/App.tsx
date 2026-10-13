@@ -32,13 +32,11 @@ import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
 import { maybeOpen } from './lib/hours';
 import { makeNameMatcher, makeQueryMatcher } from './lib/search';
 import type { ReportSummary } from './lib/reports';
-import { SEATING_LABELS, hasDelivery, type Restaurant } from './types';
+import { hasDelivery, type Restaurant } from './types';
 
 /** 만든 사람 (화면 맨 아래 작게) */
 const MAKER = 'cjy1***';
 const FAV_KEY = 'jamsil-lunch:favorites';
-// 기본값(식대·도보 10분)이 바뀌어 저장 키도 새로 — 예전 저장본은 버린다
-const FILTER_KEY = 'jamsil-lunch:filters-v4';
 const RECENT_KEY = 'jamsil-lunch:recent';
 const SEARCH_KEY = 'jamsil-lunch:searches';
 const VOTE_DRAFT_KEY = 'jamsil-lunch:vote-draft';
@@ -174,11 +172,9 @@ export default function App() {
       alive = false;
     };
   }, [siteId, loadTry]);
-  const [filters, setFilters] = useState<Filters>(() => {
-    const f = loadJSON(FILTER_KEY, defaultFilters(SITES[siteId]));
-    // 예전 버전에 있던 '혼밥' 좌석 조건 등 지금 없는 값은 버린다
-    return f.seating && !(f.seating in SEATING_LABELS) ? { ...f, seating: null } : f;
-  });
+  // 조건은 열 때마다 기본값(식대·도보 10분)에서 시작한다 — 예전에 걸어 둔 메뉴·영업 중 등이 남아 있으면 헷갈려서.
+  // 바꾼 조건은 앱을 쓰는 동안만 유지
+  const [filters, setFilters] = useState<Filters>(() => defaultFilters(SITES[siteId]));
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set(loadJSON<string[]>(FAV_KEY, [])));
   const [recentIds, setRecentIds] = useState<string[]>(() => loadJSON<string[]>(RECENT_KEY, []));
   const [searches, setSearches] = useState<string[]>(() => loadJSON<string[]>(SEARCH_KEY, []));
@@ -214,7 +210,6 @@ export default function App() {
   const [weather, setWeather] = useState<LunchWeather | null>(null);
   const [seed] = useState(deviceSeed);
 
-  useEffect(() => saveJSON(FILTER_KEY, filters), [filters]);
   useEffect(() => saveJSON(FAV_KEY, [...favorites]), [favorites]);
   useEffect(() => saveJSON(RECENT_KEY, recentIds), [recentIds]);
   useEffect(() => saveJSON(SEARCH_KEY, searches), [searches]);

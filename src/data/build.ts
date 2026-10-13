@@ -10,7 +10,7 @@ export interface KakaoSet {
   rows: KakaoRow[];
   details: Record<string, KakaoDetail>;
   photos: Record<string, string>;
-  /** 카카오에 메뉴가 없는 체인점은 본사 가격으로 채우기 (영등포만 — 잠실은 지금 화면 그대로) */
+  /** 카카오에 메뉴가 없는 체인점(써브웨이)은 본사 가격으로 채우기 */
   chainMenus?: boolean;
 }
 

@@ -30,6 +30,7 @@ import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
 import { maybeOpen } from './lib/hours';
+import { applyFixes } from './lib/fixes';
 import { makeNameMatcher, makeQueryMatcher } from './lib/search';
 import type { ReportSummary } from './lib/reports';
 import { hasDelivery, type Restaurant } from './types';
@@ -157,7 +158,7 @@ export default function App() {
   const [lists, setLists] = useState<Partial<Record<SiteId, Restaurant[]>>>({});
   const [loadFailed, setLoadFailed] = useState(false);
   const [loadTry, setLoadTry] = useState(0);
-  const restaurants = lists[siteId] ?? NO_RESTAURANTS;
+  const rawRestaurants = lists[siteId] ?? NO_RESTAURANTS;
   const loading = !lists[siteId];
   useEffect(() => {
     let alive = true;
@@ -195,6 +196,8 @@ export default function App() {
   const nextScroll = useRef(0);
   const lastScroll = useRef(0);
   const live = useReports();
+  /** 사용자 "직접 수정"(가격·영업시간)을 반영한 식당 */
+  const restaurants = useMemo(() => applyFixes(rawRestaurants, live.reports), [rawRestaurants, live.reports]);
   const talk = useTalk(live.adminToken, siteId);
   /** 지도에서 누른 식당 (아래 패널로 보여줌, 새 창으로 열지 않음) */
   const [mapSelId, setMapSelId] = useState<string | null>(null);
@@ -249,7 +252,11 @@ export default function App() {
     return m;
   }, [restaurants, site]);
   /** 받아 둔 근무지 식당 전부 (투표 링크·최근 본 식당) */
-  const byId = useMemo(() => new Map(Object.values(lists).flatMap((l) => l.map((r) => [r.id, r] as const))), [lists]);
+  // 직접 수정(가격·영업시간)을 반영한 것으로 — 열어 둔 식당 정보에도 바로 보이게
+  const byId = useMemo(
+    () => new Map(applyFixes(Object.values(lists).flat(), live.reports).map((r) => [r.id, r] as const)),
+    [lists, live.reports],
+  );
   // 근무지에서 가까운 건물부터
   const buildings = useMemo(() => bigBuildings(restaurants, site.office), [restaurants, site]);
 

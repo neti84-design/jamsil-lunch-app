@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Restaurant } from '../types';
-import { timeAgo, waitText, type Report } from '../lib/reports';
+import { FIX_LABELS, timeAgo, waitText, type Report } from '../lib/reports';
 import { TALK_POST_MAX } from '../lib/talk';
 import { SITES, useSite, type SiteId } from '../lib/sites';
 import { loadRestaurants } from '../data';
@@ -23,7 +23,7 @@ export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove,
   const [token, setToken] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [kind, setKind] = useState<'talk' | 'review' | 'wait' | 'tag'>('talk');
+  const [kind, setKind] = useState<'talk' | 'review' | 'wait' | 'tag' | 'fix'>('talk');
   const [postText, setPostText] = useState('');
   const [allowComments, setAllowComments] = useState(true);
   /** 후기·제보가 어느 식당인지 — 두 근무지 식당을 다 받아 와서 이름·근무지·주소로 보여 준다 (관리자 화면에서만) */
@@ -134,9 +134,9 @@ export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove,
               <button className={'chip' + (kind === 'talk' ? ' on' : '')} onClick={() => setKind('talk')}>
                 💬 공유톡 {talk.posts.length}
               </button>
-              {(['review', 'wait', 'tag'] as const).map((k) => (
+              {(['review', 'fix', 'wait', 'tag'] as const).map((k) => (
                 <button key={k} className={'chip' + (kind === k ? ' on' : '')} onClick={() => setKind(k)}>
-                  {k === 'review' ? '후기' : k === 'wait' ? '웨이팅 제보' : '맛집 체크'}{' '}
+                  {k === 'review' ? '후기' : k === 'fix' ? '직접 수정' : k === 'wait' ? '웨이팅 제보' : '맛집 체크'}{' '}
                   {reports.filter((r) => r.kind === k).length}
                 </button>
               ))}
@@ -224,6 +224,12 @@ export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove,
                             </>
                           )}
                           {r.kind === 'wait' && <>{waitText(r)}</>}
+                          {r.kind === 'fix' && (
+                            <>
+                              <span className="badge soft">{FIX_LABELS[r.fixType ?? 'etc']}</span>{' '}
+                              {r.fixType === 'price' ? `${r.fixMenu} ${r.fixPrice?.toLocaleString('ko-KR')}원` : r.comment}
+                            </>
+                          )}
                           {r.kind === 'tag' && <>{r.tag === 'hidden' ? '🤫 숨은맛집' : r.tag === 'fav' ? '⭐ 관심 저장' : r.tag === 'delivery' ? '🛵 배달 돼요' : '👍 역시맛집'}</>}
                         </div>
                         <div className="small">기기 {r.deviceId?.slice(0, 8) ?? '-'}</div>

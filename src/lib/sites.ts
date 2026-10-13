@@ -33,7 +33,7 @@ export const SITES: Record<SiteId, Site> = {
     station: { lat: 37.5133, lng: 127.1001, popup: '잠실역 (2·8호선)' },
     // 예전 화면 문구 그대로 (지금 쓰는 사람들이 보던 대로)
     walkFrom: '잠실역',
-    brand: { accent: '잠심', sub: '잠실점심', tagline: '구내식당 공사 이슈로 인한 식사 문제 해결을 위한 어플!' },
+    brand: { accent: '잠심', sub: '잠실점심', tagline: '구내식당 공사 이슈로 인한 식사 문제 해결!' },
     color: '#ff6b35',
     themeColor: '#f64610',
     defaultBudget: 12000,

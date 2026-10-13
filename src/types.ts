@@ -19,6 +19,8 @@ export type WaitLevel = 'low' | 'medium' | 'high' | 'unknown';
 export interface MenuItem {
   name: string;
   price: number;
+  /** 사용자가 "직접 수정"으로 알려준 가격 */
+  reported?: boolean;
 }
 
 export interface Restaurant {
@@ -50,6 +52,8 @@ export interface Restaurant {
   approxLocation?: boolean;
   phone: string | null;
   hours?: string | null;
+  /** 영업시간을 사용자가 "직접 수정"으로 알려줬는지 (화면에 (제보) 표시) */
+  hoursReported?: boolean;
   breakTime?: string | null;
   closedDays?: string | null;
   reservation: {

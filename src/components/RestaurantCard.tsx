@@ -14,9 +14,12 @@ interface Props {
   now: number;
   onSelect: () => void;
   onToggleFavorite: () => void;
+  /** 찜 목록에서만: 나만보기 단추를 카드 안에 보여준다 */
+  privateFav?: boolean;
+  onTogglePrivate?: () => void;
 }
 
-export function RestaurantCard({ r, walk, selected, favorite, budget, summary, now, onSelect, onToggleFavorite }: Props) {
+export function RestaurantCard({ r, walk, selected, favorite, budget, summary, now, onSelect, onToggleFavorite, privateFav = false, onTogglePrivate }: Props) {
   const live = summary?.liveWait ?? null;
   const liveWait = live ? WAIT_LABELS[live.waitLevel ?? 'unknown'] : null;
   const overBudget = !!r.priceRange && r.priceRange[0] > budget;
@@ -128,6 +131,21 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
           </span>
         ))}
       </div>
+      {onTogglePrivate && (
+        <div className="card-private">
+          <button
+            className={'chip sm fav-private' + (privateFav ? ' on' : '')}
+            aria-pressed={privateFav}
+            title={privateFav ? '눌러서 동료에게 공개' : '동료 추천·찜 수에 안 잡히게'}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePrivate();
+            }}
+          >
+            {privateFav ? '🔒 나만보기' : '🔓 나만보기'}
+          </button>
+        </div>
+      )}
     </article>
   );
 }

@@ -621,6 +621,23 @@ export default function App() {
       onToggleFavorite={() => toggleFav(r.id)}
     />
   );
+  /** 찜 목록 카드: 카드 안에 나만보기 단추 */
+  const favCard = (r: Restaurant) => (
+    <RestaurantCard
+      key={r.id}
+      r={r}
+      walk={walkById.get(r.id) ?? null}
+      selected={r.id === selectedId}
+      favorite={favorites.has(r.id)}
+      budget={filters.maxPrice}
+      summary={live.summaries.get(r.id)}
+      now={live.now}
+      onSelect={() => open(r.id)}
+      onToggleFavorite={() => toggleFav(r.id)}
+      privateFav={privateFavs.has(r.id)}
+      onTogglePrivate={() => togglePrivateFav(r.id)}
+    />
+  );
 
   /** 오늘의 추천 탭: 날씨·요일 추천 + 점심 투표 */
   const todayView = (
@@ -973,22 +990,7 @@ export default function App() {
                 마음에 드는 식당 카드의 ♡ 를 눌러보세요.
               </div>
             ) : (
-              favoriteList.map((r) => {
-                const priv = privateFavs.has(r.id);
-                return (
-                  <div key={r.id} className="fav-item">
-                    {card(r)}
-                    <button
-                      className={'chip sm fav-private' + (priv ? ' on' : '')}
-                      aria-pressed={priv}
-                      title={priv ? '눌러서 동료에게 공개' : '동료 추천·찜 수에 안 잡히게'}
-                      onClick={() => togglePrivateFav(r.id)}
-                    >
-                      {priv ? '🔒 나만보기' : '🔓 나만보기'}
-                    </button>
-                  </div>
-                );
-              })
+              favoriteList.map(favCard)
             )}
           </div>
         )}

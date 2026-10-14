@@ -26,6 +26,8 @@ interface Props {
 
 /** 옆으로 넘기는 줄의 위치 — 식당·건물을 보고 돌아와도 보던 곳에서 이어지게 (홈은 탭을 옮기면 다시 그려진다) */
 const scrollXByRow = new Map<string, number>();
+/** 주요장소 전체보기 펼침 상태 — 건물을 눌러 들어갔다 뒤로 와도 펼친 그대로 */
+let buildingsExpanded = false;
 
 function useKeepScrollX(key: string) {
   const ref = useRef<HTMLDivElement>(null);
@@ -43,7 +45,9 @@ export function HomeView({ talk, ticker, nearby, restaurants, recent, buildings,
   const { ref: buildingRef, onScroll: onBuildingScroll } = useKeepScrollX('buildings');
   const { ref: recentRef, onScroll: onRecentScroll } = useKeepScrollX('recent');
   // 옆으로 밀기 힘든 사람을 위해 주요장소를 한 번에 펼쳐 볼 수 있게
-  const [allBuildings, setAllBuildings] = useState(false);
+  const [allBuildings, setAllBuildingsState] = useState(buildingsExpanded);
+  const setAllBuildings = (f: (v: boolean) => boolean) =>
+    setAllBuildingsState((v) => (buildingsExpanded = f(v)));
   const counts = new Map<DishTag, number>();
   for (const r of restaurants) for (const t of dishTags(r)) counts.set(t, (counts.get(t) ?? 0) + 1);
 

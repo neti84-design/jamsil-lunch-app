@@ -2556,6 +2556,28 @@ img.tower-logo {
   font-weight: 500;
   color: var(--muted);
 }
+.share-msg {
+  margin: 6px 0 0;
+}
+.share-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 4px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.share-btn:hover {
+  color: var(--accent);
+}
+.section-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
 /* 자동으로 흐르는 줄의 이어 붙인 두 번째 벌 — 감싸는 상자 없이 같은 줄 항목처럼 */
 .hscroll-loop {
   display: contents;

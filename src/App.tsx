@@ -306,6 +306,19 @@ export default function App() {
     () => new Map(applyFixes(Object.values(lists).flat(), live.reports).map((r) => [r.id, r] as const)),
     [lists, live.reports],
   );
+
+  // 공유받은 식당 링크(?r=…)로 들어오면 식당 목록을 불러온 뒤 그 식당 정보를 바로 연다
+  const sharedR = useRef(new URLSearchParams(location.search).get('r'));
+  useEffect(() => {
+    const id = sharedR.current;
+    if (!id || loading) return;
+    sharedR.current = null;
+    const q = new URLSearchParams(location.search);
+    q.delete('r');
+    history.replaceState(history.state, '', location.pathname + (q.size ? `?${q}` : ''));
+    if (byId.has(id)) open(id);
+  }, [loading]); // 처음 불러왔을 때 한 번만
+
   // 근무지에서 가까운 건물부터
   const buildings = useMemo(() => bigBuildings(restaurants, site.office), [restaurants, site]);
 

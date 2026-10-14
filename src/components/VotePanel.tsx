@@ -5,6 +5,8 @@ import { makeNameMatcher } from '../lib/search';
 import { formatWon } from '../lib/links';
 import { DEFAULT_POLL_TITLE, POLL_MAX, POLL_MIN, POLL_TITLE_MAX, pollDateLabel, pollLink, tally, voterCount, type Poll } from '../lib/vote';
 import type { Votes } from '../hooks/useVotes';
+import { useSite } from '../lib/sites';
+import { shareWithApp } from '../lib/share';
 
 export type VoteView = { mode: 'create' } | { mode: 'poll'; id: string };
 
@@ -208,6 +210,7 @@ function PollView({ id, votes, restaurants, byId, walkById, suggestions, onSelec
   const [msg, setMsg] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const poll = votes.polls.get(id);
+  const site = useSite();
 
   if (!poll) {
     return votes.loaded.has(id) ? (
@@ -241,19 +244,14 @@ function PollView({ id, votes, restaurants, byId, walkById, suggestions, onSelec
   };
 
   const share = async () => {
-    const url = pollLink(poll.id);
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: poll.title, text: `🗳️ ${poll.title}`, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setMsg('링크를 복사했어요. 단톡방에 붙여 넣으세요!');
-    } catch (e) {
-      // 공유 창을 닫은 경우는 조용히
-      if (e instanceof Error && e.name === 'AbortError') return;
-      setMsg(`링크: ${url}`);
-    }
+    const names = poll.candidates.map((rid) => byId.get(rid)?.name).filter(Boolean);
+    const m = await shareWithApp({
+      title: poll.title,
+      text: `🗳️ ${poll.title}\n${names.length ? `후보: ${names.join(', ')}\n` : ''}눌러서 투표해 주세요!`,
+      url: pollLink(poll.id),
+      site: site.id,
+    });
+    if (m) setMsg(m);
   };
 
   return (

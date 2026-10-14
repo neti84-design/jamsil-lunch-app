@@ -41,6 +41,8 @@ import type { Restaurant } from './types';
 /** 만든 사람 (화면 맨 아래 작게) */
 const MAKER = 'cjy1***';
 const FAV_KEY = 'jamsil-lunch:favorites';
+/** 찜 중 '나만보기' — 동료 집계(찜 N명·추천 식당)에 올리지 않는다 */
+const PRIVATE_FAV_KEY = 'jamsil-lunch:favorites-private';
 const RECENT_KEY = 'jamsil-lunch:recent';
 const SEARCH_KEY = 'jamsil-lunch:searches';
 const VOTE_DRAFT_KEY = 'jamsil-lunch:vote-draft';
@@ -194,6 +196,7 @@ export default function App() {
   // 바꾼 조건은 앱을 쓰는 동안만 유지
   const [filters, setFilters] = useState<Filters>(() => defaultFilters(SITES[siteId]));
   const [favorites, setFavorites] = useState<Set<string>>(() => new Set(loadJSON<string[]>(FAV_KEY, [])));
+  const [privateFavs, setPrivateFavs] = useState<Set<string>>(() => new Set(loadJSON<string[]>(PRIVATE_FAV_KEY, [])));
   const [recentIds, setRecentIds] = useState<string[]>(() => loadJSON<string[]>(RECENT_KEY, []));
   const [searches, setSearches] = useState<string[]>(() => loadJSON<string[]>(SEARCH_KEY, []));
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -242,6 +245,7 @@ export default function App() {
   const [seed] = useState(deviceSeed);
 
   useEffect(() => saveJSON(FAV_KEY, [...favorites]), [favorites]);
+  useEffect(() => saveJSON(PRIVATE_FAV_KEY, [...privateFavs]), [privateFavs]);
   useEffect(() => saveJSON(RECENT_KEY, recentIds), [recentIds]);
   useEffect(() => saveJSON(SEARCH_KEY, searches), [searches]);
   useEffect(() => saveJSON(VOTE_DRAFT_KEY, voteDraft), [voteDraft]);
@@ -478,12 +482,12 @@ export default function App() {
     if (!on && mine) live.remove(mine).catch((e) => console.warn('[jamsil-lunch] 관심 공유 해제 실패:', e));
   };
 
-  // 예전에 저장한 관심 매장도 한 번 공유
+  // 예전에 저장한 관심 매장도 한 번 공유 (나만보기는 공유된 것도 거둔다)
   const synced = useRef(false);
   useEffect(() => {
     if (synced.current || live.status !== 'ready') return;
     synced.current = true;
-    for (const id of favorites) if (!live.summaries.get(id)?.myTags.fav) publishFav(id, true);
+    for (const id of favorites) publishFav(id, !privateFavs.has(id));
     // 불러오기가 끝난 순간 한 번만 실행
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live.status]);
@@ -500,7 +504,20 @@ export default function App() {
       else next.delete(id);
       return next;
     });
-    publishFav(id, on);
+    if (!on) setPrivateFavs((prev) => (prev.has(id) ? new Set([...prev].filter((x) => x !== id)) : prev));
+    publishFav(id, on && !privateFavs.has(id));
+  };
+
+  /** 찜한 식당을 나만보기로 돌리거나 다시 동료에게 공개 */
+  const togglePrivateFav = (id: string) => {
+    const priv = !privateFavs.has(id);
+    setPrivateFavs((prev) => {
+      const next = new Set(prev);
+      if (priv) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+    publishFav(id, !priv);
   };
 
   /** 근무지 바꾸기: 건물·검색어는 그 동네 것이라 비우고, 열어 둔 식당은 닫는다 */
@@ -824,7 +841,7 @@ export default function App() {
           {backButton}
           <h2>❤️ 찜한 식당</h2>
           <span className="small">
-            {favView === 'mine' ? '카드의 ♡ 를 누르면 여기에 모여요' : '동료들이 찜·맛집 체크·별점을 남긴 곳'}
+            {favView === 'mine' ? '🔒 나만보기는 동료에게 안 보여요' : '동료들이 찜·맛집 체크·별점을 남긴 곳'}
           </span>
           <div className="chips fav-switch">
             <button className={'chip' + (favView === 'mine' ? ' on' : '')} onClick={() => setFavView('mine')}>
@@ -956,7 +973,22 @@ export default function App() {
                 마음에 드는 식당 카드의 ♡ 를 눌러보세요.
               </div>
             ) : (
-              favoriteList.map(card)
+              favoriteList.map((r) => {
+                const priv = privateFavs.has(r.id);
+                return (
+                  <div key={r.id} className="fav-item">
+                    {card(r)}
+                    <button
+                      className={'chip sm fav-private' + (priv ? ' on' : '')}
+                      aria-pressed={priv}
+                      title={priv ? '눌러서 동료에게 공개' : '동료 추천·찜 수에 안 잡히게'}
+                      onClick={() => togglePrivateFav(r.id)}
+                    >
+                      {priv ? '🔒 나만보기' : '🔓 나만보기'}
+                    </button>
+                  </div>
+                );
+              })
             )}
           </div>
         )}

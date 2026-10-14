@@ -485,6 +485,15 @@ select {
   flex-direction: column;
   gap: 10px;
 }
+/* 찜 목록: 카드 아래 오른쪽에 나만보기 단추 */
+.fav-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fav-private {
+  align-self: flex-end;
+}
 .page-head {
   flex: none;
   background: var(--surface);

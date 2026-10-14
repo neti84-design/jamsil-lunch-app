@@ -108,7 +108,7 @@ export function TodayPick({
           ...(picks.length ? ['', ...picks.map(line)] : []),
           ...(taste && tastePicks.length ? ['', '♥ 내 취향 추천', ...tastePicks.map(line)] : []),
         ];
-    setShareMsg(await shareWithApp({ title: '오늘의 점심 추천', text: [...head, ...body].join('\n'), site: site.id }));
+    setShareMsg(await shareWithApp({ text: [...head, ...body].join('\n'), site: site.id }));
   };
   const refresh = () => {
     setLuckyId(null);

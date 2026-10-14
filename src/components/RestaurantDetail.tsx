@@ -96,7 +96,6 @@ export function RestaurantDetail({
     ].filter(Boolean);
     setShareMsg(
       await shareWithApp({
-        title: name,
         text: `${CUISINE_EMOJI[r.cuisine]} ${name}\n${facts.join(' · ')}`,
         url: `${location.origin}/?site=${site.id}&r=${encodeURIComponent(r.id)}`,
         site: site.id,

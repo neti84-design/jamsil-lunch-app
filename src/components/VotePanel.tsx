@@ -246,7 +246,6 @@ function PollView({ id, votes, restaurants, byId, walkById, suggestions, onSelec
   const share = async () => {
     const names = poll.candidates.map((rid) => byId.get(rid)?.name).filter(Boolean);
     const m = await shareWithApp({
-      title: poll.title,
       text: `🗳️ ${poll.title}\n${names.length ? `후보: ${names.join(', ')}\n` : ''}눌러서 투표해 주세요!`,
       url: pollLink(poll.id),
       site: site.id,

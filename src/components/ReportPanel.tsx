@@ -145,7 +145,11 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
       </section>
 
       <section className="report">
-        <h4>🍽️ 먹어봤다면 체크</h4>
+        <h4>
+          💬 한 줄 후기 {reviews.length > 0 && <span className="badge">{reviews.length}개</span>}
+          {isAdmin && <span className="badge team">관리자</span>}
+        </h4>
+        <p className="small">🍽️ 먹어봤다면 체크 (다시 누르면 취소)</p>
         <div className="chips">
           {(Object.keys(TASTE_TAG_LABELS) as TasteTag[]).map((tag) => {
             const on = !!summary?.myTags[tag];
@@ -163,14 +167,6 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
             );
           })}
         </div>
-        <p className="small">한 기기당 한 번씩만 세요. 다시 누르면 취소돼요.</p>
-      </section>
-
-      <section className="report">
-        <h4>
-          💬 한 줄 후기 {reviews.length > 0 && <span className="badge">{reviews.length}개</span>}
-          {isAdmin && <span className="badge team">관리자</span>}
-        </h4>
         <div className="review-form">
           <span className="stars-input" role="radiogroup" aria-label="별점">
             {[1, 2, 3, 4, 5].map((n) => (

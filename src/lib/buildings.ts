@@ -4,8 +4,9 @@ import { haversineMeters } from './geo';
 /**
  * 식당이 몰려 있는 건물·상가. 주소/지점명/출구 안내에서 찾아낸다.
  * 필터에는 MIN_BUILDING_COUNT 곳 이상 모인 건물만 보여준다(데이터가 늘면 자동으로 추가됨).
+ * after: 거리순과 상관없이 이 건물 바로 뒤에 보여준다
  */
-export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
+export const BUILDINGS: { name: string; emoji: string; re: RegExp; after?: string }[] = [
   // 영등포맥스 주변 — 주소가 영등포 쪽에만 있는 것이라 잠실 건물보다 먼저 본다 (롯데백화점 영등포점이 잠실 롯데백화점으로 잡히지 않게)
   { name: '타임스퀘어', emoji: '🏬', re: /타임스퀘어|영중로 15(?!\d)/ },
   { name: '신세계백화점', emoji: '🛍️', re: /신세계백화점|신세계 ?영등포|영중로 9(?!\d)/ },
@@ -16,14 +17,14 @@ export const BUILDINGS: { name: string; emoji: string; re: RegExp }[] = [
   { name: '홈플러스 문래점', emoji: '🛒', re: /홈플러스 ?문래|당산로 34(?!\d)/ },
   { name: '영등포시장', emoji: '🏮', re: /영등포(전통)?시장(?!역)/ },
   { name: '장미상가', emoji: '🌹', re: /장미\s*(아파트\s*)?[AB]?\s*상가|장미[AB]상가|장미상가|잠실장미점|올림픽로\s*35길\s*(104|112|124)(?!\d)/ },
-  { name: '롯데월드몰', emoji: '🏬', re: /롯데월드몰|올림픽로 300(?!\d)/ },
+  { name: '롯데월드몰', emoji: '🏬', re: /롯데월드몰|올림픽로 300(?!\d)/, after: '롯데백화점' },
   { name: '롯데백화점', emoji: '🛍️', re: /롯데백화점/ },
   { name: '잠실역 지하상가', emoji: '🚇', re: /잠실역\s*지하상가|잠실지하상가|잠실역 역사 내|올림픽로 지하 265(?!\d)/ },
   { name: '리센츠상가', emoji: '🏢', re: /리센츠/ },
-  { name: '월드타워빌딩', emoji: '🏢', re: /송파대로 558|월드타워빌딩/ },
+  { name: '월드타워빌딩', emoji: '🏢', re: /송파대로 558|월드타워빌딩/, after: '타워730 (구쿠팡)' },
   { name: '시그마타워', emoji: '🏢', re: /시그마타워|올림픽로 289(?!\d)/ },
   { name: '현대타워', emoji: '🏢', re: /현대타워|올림픽로 293-19/ },
-  { name: '타워730', emoji: '🏢', re: /타워730|송파대로 570/ },
+  { name: '타워730 (구쿠팡)', emoji: '🏢', re: /타워730|송파대로 570/ },
   { name: '삼성생명빌딩', emoji: '🏢', re: /삼성생명|올림픽로 295(?!\d)/ },
   { name: '갤러리아팰리스', emoji: '🏬', re: /갤러리아\s*팰리스|올림픽로 212(?!\d)/ },
   { name: '캐슬플라자', emoji: '🏰', re: /캐슬플라자|올림픽로 269(?!\d)/ },
@@ -72,7 +73,16 @@ export function bigBuildings(
     const s = sum.get(name);
     return from && s ? haversineMeters(from.lat, from.lng, s.lat / s.n, s.lng / s.n) : Infinity;
   };
-  return BUILDINGS.map((b) => ({ name: b.name, emoji: b.emoji, count: counts.get(b.name) ?? 0 }))
+  const shown = BUILDINGS.map((b) => ({ name: b.name, emoji: b.emoji, count: counts.get(b.name) ?? 0 }))
     .filter((b) => b.count >= MIN_BUILDING_COUNT)
     .sort((a, b) => dist(a.name) - dist(b.name) || b.count - a.count);
+  // after 가 있는 건물은 그 건물 바로 뒤로 옮긴다
+  for (const b of BUILDINGS) {
+    if (!b.after) continue;
+    const i = shown.findIndex((x) => x.name === b.name);
+    if (i < 0 || !shown.some((x) => x.name === b.after)) continue;
+    const [item] = shown.splice(i, 1);
+    shown.splice(shown.findIndex((x) => x.name === b.after) + 1, 0, item);
+  }
+  return shown;
 }

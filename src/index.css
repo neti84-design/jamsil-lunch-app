@@ -2556,3 +2556,6 @@ img.tower-logo {
   font-weight: 500;
   color: var(--muted);
 }
+.share-msg {
+  margin: 6px 0 0;
+}

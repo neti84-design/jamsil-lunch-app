@@ -17,6 +17,7 @@ import { Thumb } from './Thumb';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { useTileStatus } from '../hooks/useTileStatus';
 import { useSite } from '../lib/sites';
+import { shareWithApp } from '../lib/share';
 import { LIVE_WINDOW_MS, timeAgo, waitText, type FixType, type LocalReason, type NewReport, type Report, type ReportSummary } from '../lib/reports';
 
 interface Props {
@@ -83,6 +84,24 @@ export function RestaurantDetail({
   const live = reports.find(
     (x) => x.restaurantId === r.id && x.kind === 'wait' && now - new Date(x.createdAt).getTime() <= LIVE_WINDOW_MS,
   );
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
+  /** 이 식당 링크 공유 — 받은 사람은 같은 근무지 화면에서 이 식당 정보가 바로 열린다 */
+  const share = async () => {
+    const name = `${r.name}${r.branch ? ' ' + r.branch : ''}`;
+    const facts = [
+      cuisineText(r),
+      r.priceRange && `인당 ${formatWon(r.priceRange[0])}~`,
+      walk != null && `${site.walkFrom} 도보 ${walk}분`,
+    ].filter(Boolean);
+    setShareMsg(
+      await shareWithApp({
+        title: name,
+        text: `${CUISINE_EMOJI[r.cuisine]} ${name}\n${facts.join(' · ')}`,
+        url: `${location.origin}/?site=${site.id}&r=${encodeURIComponent(r.id)}`,
+        site: site.id,
+      }),
+    );
+  };
   const icon = L.divIcon({ className: 'pin selected', html: `<span>${CUISINE_EMOJI[r.cuisine]}</span>`, iconSize: [34, 34], iconAnchor: [17, 34] });
 
   return (
@@ -138,12 +157,16 @@ export function RestaurantDetail({
               📞 {r.phone}
             </a>
           ) : null}
+          <button className="btn" onClick={() => void share()}>
+            📤 공유하기
+          </button>
           {onToggleVote && (
             <button className={'btn' + (inVote ? ' on' : '')} onClick={onToggleVote} aria-pressed={inVote}>
               🗳️ {inVote ? '투표에 담김 ✓' : '투표에 담기'}
             </button>
           )}
         </div>
+        {shareMsg && <p className="small share-msg">{shareMsg}</p>}
 
         <section>
           <h4>

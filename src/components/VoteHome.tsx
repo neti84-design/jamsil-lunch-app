@@ -1,5 +1,5 @@
 import type { Restaurant } from '../types';
-import { pollDateLabel, tally, voterCount } from '../lib/vote';
+import { candidateText, pollDateLabel, tally, voterCount } from '../lib/vote';
 import type { Votes } from '../hooks/useVotes';
 
 interface Props {
@@ -24,14 +24,14 @@ export function VoteHome({ votes, byId, draftCount, onCreate, onOpen }: Props) {
         {recent.map((p) => {
           const list = votes.votes.filter((v) => v.pollId === p.id);
           const lead = tally(p, list)[0];
-          const leader = lead && lead.count > 0 ? byId.get(lead.id) : null;
+          const leader = lead && lead.count > 0 ? (candidateText(lead.id) ?? byId.get(lead.id)?.name) : null;
           return (
             <div key={p.id} className="vote-home-item">
               <button className="vote-home-open" onClick={() => onOpen(p.id)}>
                 <strong>{p.title}</strong>
                 <span className="small">
                   {pollDateLabel(p.createdAt)} · {voterCount(p, list)}명 참여
-                  {leader && <> · 👑 {leader.name}</>}
+                  {leader && <> · 👑 {leader}</>}
                 </span>
               </button>
               <button className="link del" onClick={() => votes.forget(p.id)} aria-label="목록에서 빼기">
@@ -41,7 +41,7 @@ export function VoteHome({ votes, byId, draftCount, onCreate, onOpen }: Props) {
           );
         })}
         <button className="btn sm primary vote-new" onClick={onCreate}>
-          + 투표 만들기{draftCount > 0 && ` (담은 곳 ${draftCount})`}
+          + 투표 만들기{draftCount > 0 && ` (담은 후보 ${draftCount})`}
         </button>
       </div>
     </section>

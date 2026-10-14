@@ -3,7 +3,20 @@ import { CUISINE_EMOJI, type Restaurant } from '../types';
 import { deviceId } from '../lib/reports';
 import { makeNameMatcher } from '../lib/search';
 import { formatWon } from '../lib/links';
-import { DEFAULT_POLL_TITLE, POLL_MAX, POLL_MIN, POLL_TITLE_MAX, pollDateLabel, pollLink, tally, voterCount, type Poll } from '../lib/vote';
+import {
+  CANDIDATE_TEXT_MAX,
+  DEFAULT_POLL_TITLE,
+  POLL_MAX,
+  POLL_MIN,
+  POLL_TITLE_MAX,
+  candidateText,
+  pollDateLabel,
+  pollLink,
+  tally,
+  textCandidate,
+  voterCount,
+  type Poll,
+} from '../lib/vote';
 import type { Votes } from '../hooks/useVotes';
 import { useSite } from '../lib/sites';
 import { shareWithApp } from '../lib/share';
@@ -39,7 +52,15 @@ function metaOf(r: Restaurant, walk: number | null | undefined): string {
   return parts.join(' · ');
 }
 
-/** 이름으로 식당 찾아 담기 + 추천·관심매장 빠르게 담기 */
+/** 후보 이름: 식당이면 이모지·이름, 직접 입력이면 그 글자 */
+function candidateLabel(id: string, byId: Map<string, Restaurant>): string {
+  const t = candidateText(id);
+  if (t != null) return `✏️ ${t}`;
+  const r = byId.get(id);
+  return r ? `${CUISINE_EMOJI[r.cuisine]} ${r.name}` : '(목록에 없는 식당)';
+}
+
+/** 이름으로 식당 찾아 담기 + 직접 입력(사람 이름 등) + 추천·관심매장 빠르게 담기 */
 function CandidatePicker({
   restaurants,
   exclude,
@@ -51,7 +72,8 @@ function CandidatePicker({
   exclude: Set<string>;
   suggestions: Props['suggestions'];
   full: boolean;
-  onPick: (r: Restaurant) => void;
+  /** 식당 id 또는 직접 입력 후보 id */
+  onPick: (id: string) => void;
 }) {
   const [q, setQ] = useState('');
   const found = useMemo(() => {
@@ -64,16 +86,27 @@ function CandidatePicker({
       .slice(0, 8);
   }, [q, restaurants, exclude]);
 
-  if (full) return <p className="small">후보는 {POLL_MAX}곳까지 올릴 수 있어요.</p>;
+  const typed = q.trim().slice(0, CANDIDATE_TEXT_MAX);
+  const typedId = typed ? textCandidate(typed) : null;
+  const addTyped = () => {
+    if (!typedId || exclude.has(typedId)) return;
+    onPick(typedId);
+    setQ('');
+  };
+
+  if (full) return <p className="small">후보는 {POLL_MAX}개까지 올릴 수 있어요.</p>;
 
   return (
     <div className="vote-picker">
       <input
         className="mini grow vote-search"
-        placeholder="식당 이름으로 찾아 담기"
+        placeholder="식당 찾기 · 사람 이름 등 직접 입력"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        enterKeyHint="search"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.nativeEvent.isComposing && found.length === 0) addTyped();
+        }}
+        enterKeyHint="done"
       />
       {found.length > 0 && (
         <ul className="vote-found">
@@ -81,7 +114,7 @@ function CandidatePicker({
             <li key={r.id}>
               <button
                 onClick={() => {
-                  onPick(r);
+                  onPick(r.id);
                   setQ('');
                 }}
               >
@@ -95,7 +128,16 @@ function CandidatePicker({
           ))}
         </ul>
       )}
-      {q.trim() && found.length === 0 && <p className="small">"{q.trim()}" 이름의 식당이 없어요.</p>}
+      {typedId && !exclude.has(typedId) && (
+        <ul className="vote-found">
+          <li>
+            <button onClick={addTyped}>
+              <span>✏️ "{typed}" 그대로 후보로</span>
+              <span className="vote-add">+ 담기</span>
+            </button>
+          </li>
+        </ul>
+      )}
       {suggestions.map(
         (s) =>
           s.list.some((r) => !exclude.has(r.id)) && (
@@ -106,7 +148,7 @@ function CandidatePicker({
                   .filter((r) => !exclude.has(r.id))
                   .slice(0, 8)
                   .map((r) => (
-                    <button key={r.id} className="chip sm" onClick={() => onPick(r)}>
+                    <button key={r.id} className="chip sm" onClick={() => onPick(r.id)}>
                       + {r.name}
                     </button>
                   ))}
@@ -130,7 +172,9 @@ export function VotePanel(props: Props) {
         <div className="detail-title">
           <h2>🗳️ 점심 투표</h2>
           <div className="sub">
-            {view.mode === 'create' ? '후보를 담고 투표를 만들면 링크로 공유할 수 있어요' : '가고 싶은 곳을 눌러 투표 (여러 곳 골라도 돼요)'}
+            {view.mode === 'create'
+              ? '식당이나 사람 이름 등 후보를 담고 투표를 만들면 링크로 공유할 수 있어요'
+              : '원하는 후보를 눌러 투표 (여러 개 골라도 돼요)'}
           </div>
         </div>
       </header>
@@ -143,13 +187,14 @@ function CreatePoll({ votes, restaurants, byId, walkById, draft, onDraftChange, 
   const [title, setTitle] = useState(DEFAULT_POLL_TITLE);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const picked = draft.map((id) => byId.get(id)).filter((r): r is Restaurant => !!r);
+  // 다른 근무지 식당은 빠지고, 직접 입력한 후보는 그대로
+  const picked = draft.filter((id) => candidateText(id) != null || byId.has(id));
 
   const create = async () => {
     setBusy(true);
     setErr(null);
     try {
-      const p = await votes.createPoll(title.trim() || DEFAULT_POLL_TITLE, picked.map((r) => r.id));
+      const p = await votes.createPoll(title.trim() || DEFAULT_POLL_TITLE, picked);
       onDraftChange([]);
       onCreated(p);
     } catch (e) {
@@ -168,23 +213,28 @@ function CreatePoll({ votes, restaurants, byId, walkById, draft, onDraftChange, 
 
       <section>
         <h4>
-          후보 {picked.length}곳 <span className="small">({POLL_MIN}~{POLL_MAX}곳)</span>
+          후보 {picked.length}개 <span className="small">({POLL_MIN}~{POLL_MAX}개)</span>
         </h4>
         {picked.length === 0 ? (
-          <p className="small">아래에서 식당을 담거나, 식당 상세의 "🗳️ 투표에 담기"를 눌러 보세요.</p>
+          <p className="small">
+            아래에서 식당을 담거나, 식당 상세의 "🗳️ 투표에 담기"를 눌러 보세요. "누가 정할까?"처럼 사람 이름을 직접 적어도 돼요.
+          </p>
         ) : (
           <ul className="vote-list">
-            {picked.map((r) => (
-              <li key={r.id} className="vote-row static">
-                <span className="vote-name">
-                  {CUISINE_EMOJI[r.cuisine]} {r.name}
-                  <span className="small vote-meta">{metaOf(r, walkById.get(r.id))}</span>
-                </span>
-                <button className="link del" onClick={() => onDraftChange(draft.filter((x) => x !== r.id))}>
-                  빼기
-                </button>
-              </li>
-            ))}
+            {picked.map((id) => {
+              const r = byId.get(id);
+              return (
+                <li key={id} className="vote-row static">
+                  <span className="vote-name">
+                    {candidateLabel(id, byId)}
+                    {r && <span className="small vote-meta">{metaOf(r, walkById.get(id))}</span>}
+                  </span>
+                  <button className="link del" onClick={() => onDraftChange(draft.filter((x) => x !== id))}>
+                    빼기
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
         <CandidatePicker
@@ -192,12 +242,12 @@ function CreatePoll({ votes, restaurants, byId, walkById, draft, onDraftChange, 
           exclude={new Set(draft)}
           suggestions={suggestions}
           full={picked.length >= POLL_MAX}
-          onPick={(r) => onDraftChange([...draft, r.id])}
+          onPick={(id) => onDraftChange([...draft, id])}
         />
       </section>
 
       <button className="btn primary vote-create" disabled={busy || picked.length < POLL_MIN} onClick={() => void create()}>
-        {picked.length < POLL_MIN ? `후보를 ${POLL_MIN}곳 이상 담아 주세요` : `투표 만들기 (${picked.length}곳)`}
+        {picked.length < POLL_MIN ? `후보를 ${POLL_MIN}개 이상 담아 주세요` : `투표 만들기 (${picked.length}개)`}
       </button>
       {votes.mode === 'local' && <p className="small">지금은 이 기기에만 저장돼요 (Supabase 연결 전). 링크를 보내도 다른 사람은 볼 수 없어요.</p>}
       {err && <p className="small error">{err}</p>}
@@ -244,7 +294,7 @@ function PollView({ id, votes, restaurants, byId, walkById, suggestions, onSelec
   };
 
   const share = async () => {
-    const names = poll.candidates.map((rid) => byId.get(rid)?.name).filter(Boolean);
+    const names = poll.candidates.map((rid) => candidateText(rid) ?? byId.get(rid)?.name).filter(Boolean);
     const m = await shareWithApp({
       text: `🗳️ ${poll.title}\n${names.length ? `후보: ${names.join(', ')}\n` : ''}눌러서 투표해 주세요!`,
       url: pollLink(poll.id),
@@ -279,7 +329,7 @@ function PollView({ id, votes, restaurants, byId, walkById, suggestions, onSelec
                 </span>
                 <span className="vote-name">
                   {lead && '👑 '}
-                  {r ? `${CUISINE_EMOJI[r.cuisine]} ${r.name}` : '(목록에 없는 식당)'}
+                  {candidateLabel(rid, byId)}
                   {r && <span className="small vote-meta">{metaOf(r, walkById.get(rid))}</span>}
                 </span>
                 <span className="vote-count">{count}</span>
@@ -302,7 +352,7 @@ function PollView({ id, votes, restaurants, byId, walkById, suggestions, onSelec
             exclude={new Set(poll.candidates)}
             suggestions={suggestions}
             full={poll.candidates.length >= POLL_MAX}
-            onPick={(r) => void run(() => votes.addCandidate(poll.id, r.id))}
+            onPick={(cid) => void run(() => votes.addCandidate(poll.id, cid))}
           />
         </section>
       ) : (

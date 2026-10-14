@@ -8,11 +8,13 @@ interface Props {
   /** 투표 만들기에 담아 둔 후보 수 */
   draftCount: number;
   onCreate: () => void;
+  /** 누가 메뉴를 정할지 투표 */
+  onCreateWho: () => void;
   onOpen: (id: string) => void;
 }
 
 /** 오늘의 추천 탭: 점심 투표 — 새 투표 만들기 + 내가 만들었거나 받은 투표 */
-export function VoteHome({ votes, byId, draftCount, onCreate, onOpen }: Props) {
+export function VoteHome({ votes, byId, draftCount, onCreate, onCreateWho, onOpen }: Props) {
   const recent = votes.myPolls.slice(0, 3);
   return (
     <section className="home-section" aria-label="점심 투표">
@@ -40,9 +42,14 @@ export function VoteHome({ votes, byId, draftCount, onCreate, onOpen }: Props) {
             </div>
           );
         })}
-        <button className="btn sm primary vote-new" onClick={onCreate}>
-          + 투표 만들기{draftCount > 0 && ` (담은 후보 ${draftCount})`}
-        </button>
+        <div className="vote-new">
+          <button className="btn sm primary" onClick={onCreate}>
+            + 투표 만들기{draftCount > 0 && ` (담은 후보 ${draftCount})`}
+          </button>
+          <button className="btn sm" onClick={onCreateWho}>
+            🙋 누가 정할까 투표
+          </button>
+        </div>
       </div>
     </section>
   );

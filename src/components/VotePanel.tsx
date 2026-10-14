@@ -9,6 +9,7 @@ import {
   POLL_MAX,
   POLL_MIN,
   POLL_TITLE_MAX,
+  WHO_POLL_TITLE,
   candidateText,
   pollDateLabel,
   pollLink,
@@ -21,7 +22,8 @@ import type { Votes } from '../hooks/useVotes';
 import { useSite } from '../lib/sites';
 import { shareWithApp } from '../lib/share';
 
-export type VoteView = { mode: 'create' } | { mode: 'poll'; id: string };
+/** who: 식당 대신 사람 이름을 후보로 (누가 메뉴를 정할지) */
+export type VoteView = { mode: 'create'; who?: boolean } | { mode: 'poll'; id: string };
 
 interface Props {
   view: VoteView;
@@ -66,12 +68,14 @@ function CandidatePicker({
   exclude,
   suggestions,
   full,
+  placeholder = '식당 찾기 · 사람 이름 등 직접 입력',
   onPick,
 }: {
   restaurants: Restaurant[];
   exclude: Set<string>;
   suggestions: Props['suggestions'];
   full: boolean;
+  placeholder?: string;
   /** 식당 id 또는 직접 입력 후보 id */
   onPick: (id: string) => void;
 }) {
@@ -100,7 +104,7 @@ function CandidatePicker({
     <div className="vote-picker">
       <input
         className="mini grow vote-search"
-        placeholder="식당 찾기 · 사람 이름 등 직접 입력"
+        placeholder={placeholder}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={(e) => {
@@ -170,23 +174,39 @@ export function VotePanel(props: Props) {
           ✕
         </button>
         <div className="detail-title">
-          <h2>🗳️ 점심 투표</h2>
+          <h2>{view.mode === 'create' && view.who ? '🙋 누가 정할까 투표' : '🗳️ 점심 투표'}</h2>
           <div className="sub">
             {view.mode === 'create'
-              ? '식당이나 사람 이름 등 후보를 담고 투표를 만들면 링크로 공유할 수 있어요'
+              ? view.who
+                ? '이름을 적어 후보로 담고 투표를 만들면 링크로 공유할 수 있어요'
+                : '식당이나 사람 이름 등 후보를 담고 투표를 만들면 링크로 공유할 수 있어요'
               : '원하는 후보를 눌러 투표 (여러 개 골라도 돼요)'}
           </div>
         </div>
       </header>
-      <div className="detail-body">{view.mode === 'create' ? <CreatePoll {...props} /> : <PollView {...props} id={view.id} />}</div>
+      <div className="detail-body">{view.mode === 'create' ? <CreatePoll {...props} who={!!view.who} /> : <PollView {...props} id={view.id} />}</div>
     </aside>
   );
 }
 
-function CreatePoll({ votes, restaurants, byId, walkById, draft, onDraftChange, suggestions, onCreated }: Props) {
-  const [title, setTitle] = useState(DEFAULT_POLL_TITLE);
+function CreatePoll({
+  votes,
+  restaurants,
+  byId,
+  walkById,
+  draft: foodDraft,
+  onDraftChange: onFoodDraftChange,
+  suggestions,
+  onCreated,
+  who,
+}: Props & { who: boolean }) {
+  const [title, setTitle] = useState(who ? WHO_POLL_TITLE : DEFAULT_POLL_TITLE);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // 누가 정할까 투표는 식당 담아 둔 것과 따로, 이름만
+  const [names, setNames] = useState<string[]>([]);
+  const draft = who ? names : foodDraft;
+  const onDraftChange = who ? setNames : onFoodDraftChange;
   // 다른 근무지 식당은 빠지고, 직접 입력한 후보는 그대로
   const picked = draft.filter((id) => candidateText(id) != null || byId.has(id));
 
@@ -194,7 +214,7 @@ function CreatePoll({ votes, restaurants, byId, walkById, draft, onDraftChange, 
     setBusy(true);
     setErr(null);
     try {
-      const p = await votes.createPoll(title.trim() || DEFAULT_POLL_TITLE, picked);
+      const p = await votes.createPoll(title.trim() || (who ? WHO_POLL_TITLE : DEFAULT_POLL_TITLE), picked);
       onDraftChange([]);
       onCreated(p);
     } catch (e) {
@@ -213,11 +233,16 @@ function CreatePoll({ votes, restaurants, byId, walkById, draft, onDraftChange, 
 
       <section>
         <h4>
-          후보 {picked.length}개 <span className="small">({POLL_MIN}~{POLL_MAX}개)</span>
+          후보 {picked.length}개{' '}
+          <span className="small">
+            ({POLL_MIN}~{POLL_MAX}개)
+          </span>
         </h4>
         {picked.length === 0 ? (
           <p className="small">
-            아래에서 식당을 담거나, 식당 상세의 "🗳️ 투표에 담기"를 눌러 보세요. "누가 정할까?"처럼 사람 이름을 직접 적어도 돼요.
+            {who
+              ? '아래에 이름을 적고 담아 주세요 (예: 김대리, 박과장).'
+              : '아래에서 식당을 담거나, 식당 상세의 "🗳️ 투표에 담기"를 눌러 보세요. 사람 이름을 직접 적어도 돼요.'}
           </p>
         ) : (
           <ul className="vote-list">
@@ -238,10 +263,11 @@ function CreatePoll({ votes, restaurants, byId, walkById, draft, onDraftChange, 
           </ul>
         )}
         <CandidatePicker
-          restaurants={restaurants}
+          restaurants={who ? [] : restaurants}
           exclude={new Set(draft)}
-          suggestions={suggestions}
+          suggestions={who ? [] : suggestions}
           full={picked.length >= POLL_MAX}
+          placeholder={who ? '이름 입력 (예: 김대리)' : undefined}
           onPick={(id) => onDraftChange([...draft, id])}
         />
       </section>

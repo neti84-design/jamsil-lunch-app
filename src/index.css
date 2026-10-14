@@ -2397,6 +2397,45 @@ img.tower-logo {
   width: 96px;
   flex: none;
 }
+/* 직접 수정: 메인 사진 바꾸기 */
+.fix-photo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fix-photo-pair {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fix-photo-pair figure {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.fix-photo-thumb {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 16 / 11;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+}
+.fix-photo-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .fix-actions {
   display: flex;
   align-items: center;

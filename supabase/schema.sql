@@ -407,3 +407,17 @@ end;
 $$;
 
 grant execute on function public.admin_talk_update(uuid, text, text) to anon, authenticated;
+
+-- ---------- v9: 메인 사진 제보 ----------
+-- 식당 상세 > 정보가 틀렸나요? > 메인 사진 에서 올린 사진을 담는 공개 버킷.
+-- 앱이 사진을 줄여(긴 쪽 900px JPEG) 올리고, 주소는 제보(reports)에 "[fix:photo]주소" 로 남긴다.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values ('photos', 'photos', true, 2097152, array['image/jpeg', 'image/png', 'image/webp'])
+  on conflict (id) do update
+    set public = true, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+-- 누구나 올리기만 (덮어쓰기·삭제는 안 됨). 보기는 공개 버킷이라 주소로 바로 열린다
+drop policy if exists "photos_insert_all" on storage.objects;
+create policy "photos_insert_all" on storage.objects
+  for insert to anon, authenticated
+  with check (bucket_id = 'photos');

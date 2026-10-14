@@ -1633,13 +1633,71 @@ input.mini.grow {
   background: var(--bg);
   border: 1px solid var(--line);
 }
-.today-box .recent-row {
-  margin: 0 -12px;
-  padding: 0 12px;
-  scrollbar-width: none;
+.today-note {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted);
 }
-.today-box .recent-row::-webkit-scrollbar {
-  display: none;
+/* 오늘의 추천: 옆으로 넘기지 않고 3칸 격자로 한눈에 */
+.today-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 8px;
+}
+.today-card {
+  min-width: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+.today-thumb,
+.today-lucky-thumb {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+}
+.today-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* 랜덤으로 뽑은 딱 한 곳 */
+.today-lucky {
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.today-lucky-thumb {
+  aspect-ratio: 16 / 9;
+  max-width: 420px;
+  font-size: 64px;
+  margin-bottom: 4px;
+}
+.today-lucky-label {
+  color: var(--accent);
+  font-weight: 700;
+}
+.today-lucky-name {
+  font-size: 20px;
 }
 .today-vote {
   align-self: flex-start;

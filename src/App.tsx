@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 import { loadRestaurants } from './data';
-import { ALL_WALK, FilterBar, defaultFilters, NO_LIMIT, type Filters } from './components/FilterBar';
+import { FilterBar, defaultFilters, NO_LIMIT, type Filters } from './components/FilterBar';
 import { RestaurantCard } from './components/RestaurantCard';
 import { RestaurantDetail } from './components/RestaurantDetail';
 import { AdminPanel } from './components/AdminPanel';
@@ -62,6 +62,16 @@ function deviceSeed(): string {
 }
 /** 오늘의 추천을 "이 중에서 투표"로 담을 때 몇 곳까지 */
 const VOTE_FROM_PICKS = 4;
+/** 오늘의 추천: 한 번에 보여 줄 수와 기본 도보(분) */
+const TODAY_COUNT = 6;
+const TODAY_WALK = 10;
+
+/** 추천 후보에서 round 번째 묶음 (끝까지 가면 처음부터 다시) */
+function pageOf<T>(list: T[], round: number, n = TODAY_COUNT): T[] {
+  if (list.length <= n) return list;
+  const start = (round * n) % list.length;
+  return Array.from({ length: n }, (_, i) => list[(start + i) % list.length]);
+}
 /** 홈 아래 '추천': 최근 며칠 / 몇 곳 */
 const BUZZ_DAYS = 14;
 const BUZZ_SHOWN = 10;
@@ -349,25 +359,35 @@ export default function App() {
         .sort((a, b) => peerScore(live.summaries.get(b.id)) - peerScore(live.summaries.get(a.id))),
     [restaurants, live.summaries],
   );
-  /** 오늘의 추천: 날씨가 특별하면 날씨, 아니면 요일 주제. 예산·도보는 지금 조건을 따른다 */
-  const theme = useMemo(
-    () => dayTheme(live.now, weather, filters.maxWalk >= ALL_WALK ? 15 : filters.maxWalk),
-    [live.now, weather, filters.maxWalk],
-  );
+  /** 오늘의 추천: 날씨가 특별하면 날씨, 아니면 요일 주제. 예산·도보는 지금 조건과 상관없이 기본값(도보 10분·근무지 기본 예산) */
+  const theme = useMemo(() => dayTheme(live.now, weather, TODAY_WALK), [live.now, weather]);
   /** 이 기기 관심매장으로 만든 취향 — 오늘의 추천에서 비슷한 메뉴·위치를 더 올린다 */
   const taste = useMemo(() => tasteFrom(favoriteList), [favoriteList]);
-  /** 오늘의 추천 두 줄: 날씨·요일 추천(취향 빼고) / 내 취향 추천(날씨 추천과 안 겹치게) */
-  const { weatherPicks, tastePicks } = useMemo(() => {
-    const base = { theme, now: live.now, budget: filters.maxPrice, walkById, summaries: live.summaries, seed };
+  /** 오늘의 추천 후보 전부 (앞 6곳이 처음 보이는 추천, 새로고침하면 다음 6곳) */
+  const { weatherAll, tasteAll } = useMemo(() => {
+    const base = { theme, now: live.now, budget: site.defaultBudget, walkById, summaries: live.summaries, seed };
     const openNow = (r: Restaurant) => maybeOpen(r, live.now);
-    const open = pickForToday(restaurants, { ...base, isOpen: openNow });
+    const first = pickForToday(restaurants, { ...base, isOpen: openNow });
     // 영업 끝난 시간(저녁·주말)엔 영업시간과 상관없이 — 다음 점심 고민용
-    const anyHours = open.length < 3;
-    const w = anyHours ? pickForToday(restaurants, { ...base, isOpen: () => true }) : open;
-    const exclude = new Set(w.map((r) => r.id));
-    const t = pickForTaste(restaurants, { ...base, taste, exclude, isOpen: anyHours ? () => true : openNow });
-    return { weatherPicks: w, tastePicks: t };
-  }, [restaurants, theme, live.now, live.summaries, filters.maxPrice, walkById, taste, seed]);
+    const anyHours = first.length < 3;
+    const isOpen = anyHours ? () => true : openNow;
+    const head = anyHours ? pickForToday(restaurants, { ...base, isOpen }) : first;
+    const headIds = new Set(head.map((r) => r.id));
+    const rest = pickForToday(restaurants, { ...base, isOpen, limit: Infinity }).filter((r) => !headIds.has(r.id));
+    const t = pickForTaste(restaurants, { ...base, taste, isOpen, limit: Infinity });
+    return { weatherAll: [...head, ...rest], tasteAll: t };
+  }, [restaurants, theme, live.now, live.summaries, site.defaultBudget, walkById, taste, seed]);
+  /** 오늘의 추천 새로고침 횟수 — 누를 때마다 다음 묶음 */
+  const [pickRound, setPickRound] = useState(0);
+  const weatherPicks = useMemo(() => pageOf(weatherAll, pickRound), [weatherAll, pickRound]);
+  /** 내 취향 추천: 지금 보이는 날씨 추천과 안 겹치게 */
+  const tastePicks = useMemo(() => {
+    const shown = new Set(weatherPicks.map((r) => r.id));
+    return pageOf(
+      tasteAll.filter((r) => !shown.has(r.id)),
+      pickRound,
+    );
+  }, [tasteAll, weatherPicks, pickRound]);
   const todayPicks = useMemo(() => [...weatherPicks, ...tastePicks], [weatherPicks, tastePicks]);
 
   const topRated = useMemo(
@@ -658,6 +678,10 @@ export default function App() {
         walkById={walkById}
         now={live.now}
         onSelect={open}
+        budget={site.defaultBudget}
+        walk={TODAY_WALK}
+        canRefresh={weatherAll.length > TODAY_COUNT || tasteAll.length > TODAY_COUNT}
+        onRefresh={() => setPickRound((n) => n + 1)}
         onSeeAll={() => searchWith({ dishes: theme.dishes, maxWalk: theme.maxWalk, openNow: true })}
         onVote={() => {
           // 두 줄에서 고루 (내 취향 줄이 없으면 날씨 추천에서만)

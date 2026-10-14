@@ -2,9 +2,11 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { TasteTag, WaitLevel } from '../types';
 
 export type ReportKind = 'wait' | 'review' | 'tag' | 'fix' | 'feedback';
-/** 직접 수정: 가격정보 / 운영 정보 / 영업시간 / 기타 */
-export type FixType = 'price' | 'info' | 'hours' | 'etc';
-export const FIX_LABELS: Record<FixType, string> = { price: '가격정보', info: '운영 정보', hours: '영업시간', etc: '기타' };
+/** 직접 수정: 가격정보 / 운영 정보 / 영업시간 / 메인 사진 / 기타 */
+export type FixType = 'price' | 'info' | 'hours' | 'photo' | 'etc';
+export const FIX_LABELS: Record<FixType, string> = { price: '가격정보', info: '운영 정보', hours: '영업시간', photo: '메인 사진', etc: '기타' };
+/** 메인 사진 제보에서 "사진 빼기"(음식 이모지로)를 뜻하는 값 */
+export const NO_PHOTO = 'none';
 /** 앱 제보·의견 (식당과 상관없는 것) */
 export type FeedbackType = 'new' | 'closed' | 'bad' | 'good' | 'etc';
 export const FEEDBACK_LABELS: Record<FeedbackType, string> = {
@@ -200,7 +202,7 @@ interface Row {
  * 직접 수정은 DB 를 바꾸지 않으려고 후기(review, 별점 없음) 칸에 "[fix:종류]내용" 으로 저장한다.
  * 가격정보는 "[fix:price]메뉴|가격"
  */
-const FIX_RE = /^\[fix:(price|info|hours|etc)\]([\s\S]*)$/;
+const FIX_RE = /^\[fix:(price|info|hours|photo|etc)\]([\s\S]*)$/;
 
 function encodeFix(r: NewReport): string {
   const body = r.fixType === 'price' ? `${r.fixMenu ?? ''}|${r.fixPrice ?? ''}` : (r.comment ?? '');

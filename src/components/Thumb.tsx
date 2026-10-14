@@ -23,7 +23,8 @@ function kakaoThumb(url: string, width: number, height: number) {
 /** 가게 대표 사진. 썸네일 → 원본 순으로 시도하고, 둘 다 안 되면 음식 종류 이모지 */
 export function Thumb({ r, width, height, className, fallback = CUISINE_EMOJI[r.cuisine] }: Props) {
   const [failed, setFailed] = useState<{ photo: string; count: number } | null>(null);
-  const tries = r.photo ? [kakaoThumb(r.photo, width, height), r.photo] : [];
+  // 이 기기에만 저장된 제보 사진(data URL)은 썸네일 서버를 거치지 않는다
+  const tries = r.photo ? (r.photo.startsWith('data:') ? [r.photo] : [kakaoThumb(r.photo, width, height), r.photo]) : [];
   const step = failed && failed.photo === r.photo ? failed.count : 0;
   const src = tries[step];
   if (!src) return <>{fallback}</>;

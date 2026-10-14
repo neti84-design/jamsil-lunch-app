@@ -7,13 +7,12 @@ interface Props {
   scrollRef?: Ref<HTMLDivElement>;
   onScroll?: () => void;
   label?: string;
-  /** 넘칠 때 저절로 천천히 옆으로 흘러가게 (손을 대면 잠깐 멈춤) */
+  /** 넘칠 때 저절로 천천히 옆으로 흘러가게 — 끝 뒤에 처음이 이어 붙어 끊김 없이 계속 돈다 (손을 대면 잠깐 멈춤) */
   auto?: boolean;
 }
 
-/** 자동으로 흐르는 속도(px/초)와 끝에서 쉬는 시간 */
+/** 자동으로 흐르는 속도(px/초) */
 const AUTO_SPEED = 24;
-const AUTO_PAUSE_MS = 1800;
 /** 손을 뗀 뒤 다시 흐르기까지 */
 const AUTO_RESUME_MS = 2500;
 
@@ -21,12 +20,31 @@ const AUTO_RESUME_MS = 2500;
 export function HScroll({ className, children, scrollRef, onScroll, label, auto = false }: Props) {
   const el = useRef<HTMLDivElement | null>(null);
   const [edge, setEdge] = useState({ prev: false, next: false });
+  /** 자동으로 흐르면서 넘칠 때만 뒤에 한 벌 더 붙여 이어지게 한다 */
+  const [loop, setLoop] = useState(false);
+  const loopRef = useRef<HTMLSpanElement | null>(null);
+
+  /** 한 바퀴 길이 = 붙여 놓은 두 번째 벌이 시작하는 곳까지 */
+  const loopWidth = useCallback(() => {
+    const s = el.current;
+    const first = s?.firstElementChild as HTMLElement | null;
+    const copy = loopRef.current?.firstElementChild as HTMLElement | null;
+    return first && copy ? copy.offsetLeft - first.offsetLeft : 0;
+  }, []);
 
   const update = useCallback(() => {
     const s = el.current;
     if (!s) return;
     setEdge({ prev: s.scrollLeft > 4, next: s.scrollLeft + s.clientWidth < s.scrollWidth - 4 });
-  }, []);
+    if (!auto) return;
+    // 붙인 벌을 뺀 원래 항목들 길이가 화면보다 길 때만 돈다
+    const first = s.firstElementChild as HTMLElement | null;
+    const last = (loopRef.current ? loopRef.current.previousElementSibling : s.lastElementChild) as HTMLElement | null;
+    if (!first || !last) return setLoop(false);
+    const cs = getComputedStyle(s);
+    const content = last.offsetLeft + last.offsetWidth - first.offsetLeft + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+    setLoop(content > s.clientWidth + 4);
+  }, [auto]);
 
   useEffect(() => {
     const s = el.current;
@@ -36,7 +54,7 @@ export function HScroll({ className, children, scrollRef, onScroll, label, auto 
     ro.observe(s);
     for (const c of Array.from(s.children)) ro.observe(c);
     return () => ro.disconnect();
-  }, [update, children]);
+  }, [update, children, loop]);
 
   /** 사람이 만지고 있으면(또는 막 손을 뗐으면) 자동 흐름을 멈춘다 */
   const holdUntil = useRef(0);
@@ -59,18 +77,17 @@ export function HScroll({ className, children, scrollRef, onScroll, label, auto 
       if (max > 4 && !hovering.current && t >= holdUntil.current && !document.hidden) {
         if (Math.abs(s.scrollLeft - pos) > 2) pos = s.scrollLeft; // 손으로 옮긴 위치에서 이어서
         pos += (AUTO_SPEED * dt) / 1000;
-        if (pos >= max) {
-          // 끝까지 가면 잠깐 쉬었다가 처음으로
-          pos = 0;
-          holdUntil.current = t + AUTO_PAUSE_MS;
-          setTimeout(() => s.scrollTo({ left: 0, behavior: 'smooth' }), AUTO_PAUSE_MS / 2);
-        } else s.scrollLeft = pos;
+        // 한 바퀴 돌면 붙여 둔 두 번째 벌이 처음과 똑같은 자리라, 몰래 한 바퀴만큼 되돌려 계속 흐르게
+        const w = loopWidth();
+        if (w > 0 && pos >= w) pos -= w;
+        else if (pos > max) pos = max;
+        s.scrollLeft = pos;
       } else pos = s.scrollLeft;
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [auto]);
+  }, [auto, loopWidth]);
 
   const setRef = (node: HTMLDivElement | null) => {
     el.current = node;
@@ -104,6 +121,12 @@ export function HScroll({ className, children, scrollRef, onScroll, label, auto 
         }}
       >
         {children}
+        {/* 끝 뒤에 이어 붙이는 두 번째 벌 (보이기만 하고 읽어 주지는 않음) */}
+        {loop && (
+          <span ref={loopRef} className="hscroll-loop" aria-hidden>
+            {children}
+          </span>
+        )}
       </div>
       {edge.prev && (
         <button

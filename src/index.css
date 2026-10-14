@@ -2578,3 +2578,7 @@ img.tower-logo {
   align-items: center;
   gap: 2px;
 }
+/* 자동으로 흐르는 줄의 이어 붙인 두 번째 벌 — 감싸는 상자 없이 같은 줄 항목처럼 */
+.hscroll-loop {
+  display: contents;
+}

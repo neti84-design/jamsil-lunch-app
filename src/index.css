@@ -2559,3 +2559,22 @@ img.tower-logo {
 .share-msg {
   margin: 6px 0 0;
 }
+.share-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 4px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.share-btn:hover {
+  color: var(--accent);
+}
+.section-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}

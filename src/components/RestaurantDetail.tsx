@@ -18,6 +18,7 @@ import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
 import { useTileStatus } from '../hooks/useTileStatus';
 import { useSite } from '../lib/sites';
 import { shareWithApp } from '../lib/share';
+import { ShareButton } from './ShareButton';
 import { LIVE_WINDOW_MS, timeAgo, waitText, type FixType, type LocalReason, type NewReport, type Report, type ReportSummary } from '../lib/reports';
 
 interface Props {
@@ -121,6 +122,7 @@ export function RestaurantDetail({
             {r.nearestExit && <> ({r.nearestExit})</>}
           </div>
         </div>
+        <ShareButton onClick={() => void share()} label="이 식당 공유하기" />
         <button className={'fav big' + (favorite ? ' on' : '')} onClick={onToggleFavorite} aria-label={favorite ? '찜 해제' : '찜하기'} aria-pressed={favorite}>
           {favorite ? '♥' : '♡'}
         </button>
@@ -157,9 +159,6 @@ export function RestaurantDetail({
               📞 {r.phone}
             </a>
           ) : null}
-          <button className="btn" onClick={() => void share()}>
-            📤 공유하기
-          </button>
           {onToggleVote && (
             <button className={'btn' + (inVote ? ' on' : '')} onClick={onToggleVote} aria-pressed={inVote}>
               🗳️ {inVote ? '투표에 담김 ✓' : '투표에 담기'}

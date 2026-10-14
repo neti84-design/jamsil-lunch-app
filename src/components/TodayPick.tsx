@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import type { Restaurant } from '../types';
+import { CUISINE_EMOJI, type Restaurant } from '../types';
 import { Thumb } from './Thumb';
 import { formatWon } from '../lib/links';
 import { WEEKDAY_NAMES, kstDay, type DayTheme, type Taste } from '../lib/recommend';
 import type { LunchWeather } from '../lib/weather';
+import { useSite } from '../lib/sites';
+import { shareWithApp } from '../lib/share';
+import { ShareButton } from './ShareButton';
 
 interface Props {
   theme: DayTheme;
@@ -77,6 +80,8 @@ export function TodayPick({
 }: Props) {
   /** 랜덤으로 뽑은 한 곳 (없으면 전체 보기) */
   const [luckyId, setLuckyId] = useState<string | null>(null);
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
+  const site = useSite();
   if (picks.length === 0 && tastePicks.length === 0) return null;
 
   const pool = picks.length > 0 ? picks : tastePicks;
@@ -85,6 +90,25 @@ export function TodayPick({
     // 방금 뽑힌 곳은 빼고 (한 곳뿐이면 그대로)
     const others = pool.length > 1 ? pool.filter((r) => r.id !== luckyId) : pool;
     setLuckyId(others[Math.floor(Math.random() * others.length)].id);
+  };
+  /** 지금 보이는 추천 전체(랜덤으로 뽑았으면 그 한 곳)를 글로 묶어 공유 */
+  const share = async () => {
+    const line = (r: Restaurant, i: number) => {
+      const w = walkById.get(r.id);
+      const facts = [r.priceRange ? `${formatWon(r.priceRange[0])}~` : r.subcategory, w != null && `도보 ${w}분`].filter(Boolean);
+      return `${i + 1}. ${CUISINE_EMOJI[r.cuisine]} ${r.name}${r.branch ? ' ' + r.branch : ''} · ${facts.join(' · ')}`;
+    };
+    const head = [
+      `${theme.emoji} 오늘의 점심 추천 (${WEEKDAY_NAMES[kstDay(now)]}요일${weather ? ` · ${weather.emoji} ${weather.label} ${weather.temp}°` : ''})`,
+      theme.reason,
+    ];
+    const body = lucky
+      ? ['🎲 오늘 점심은 여기!', line(lucky, 0)]
+      : [
+          ...(picks.length ? ['', ...picks.map(line)] : []),
+          ...(taste && tastePicks.length ? ['', '♥ 내 취향 추천', ...tastePicks.map(line)] : []),
+        ];
+    setShareMsg(await shareWithApp({ title: '오늘의 점심 추천', text: [...head, ...body].join('\n'), site: site.id }));
   };
   const refresh = () => {
     setLuckyId(null);
@@ -97,9 +121,12 @@ export function TodayPick({
         <h3 className="section-title">
           {theme.emoji} 오늘의 추천
         </h3>
-        <button className="link-more" onClick={onSeeAll}>
-          더보기 ›
-        </button>
+        <span className="section-head-actions">
+          <ShareButton onClick={() => void share()} label="오늘의 추천 공유하기" />
+          <button className="link-more" onClick={onSeeAll}>
+            더보기 ›
+          </button>
+        </span>
       </div>
       <div className="today-box">
         <p className="small today-note">
@@ -132,6 +159,7 @@ export function TodayPick({
             🎲 {lucky ? '다시 뽑기' : '랜덤뽑기'}
           </button>
         </div>
+        {shareMsg && <p className="small share-msg">{shareMsg}</p>}
 
         {lucky ? (
           <button className="today-lucky" onClick={() => onSelect(lucky.id)}>

@@ -137,6 +137,13 @@ function recommendScore(x?: ReportSummary): number {
   return x ? x.favs * 3 + (x.hidden + x.classic) * 2 + x.totalStars : 0;
 }
 
+/** 내 찜·숨은맛집·또 갈래요를 뺀 점수 — 별점은 공개라 그대로 센다 */
+function peerScore(x?: ReportSummary): number {
+  if (!x) return 0;
+  const mine = (x.myTags.fav ? 3 : 0) + ((x.myTags.hidden ? 1 : 0) + (x.myTags.classic ? 1 : 0)) * 2;
+  return recommendScore(x) - mine;
+}
+
 function saveJSON(key: string, v: unknown) {
   try {
     localStorage.setItem(key, JSON.stringify(v));
@@ -336,11 +343,10 @@ export default function App() {
   }, [recentIds, byId, restaurants]);
   const recommended = useMemo(
     () =>
-      restaurants.filter((r) => {
-        const s = live.summaries.get(r.id);
-        // 내 관심 저장만 있는 곳은 "다른 사람" 추천이 아니므로 뺀다
-        return recommendScore(s) - (s?.myTags.fav ? 3 : 0) > 0;
-      }).sort((a, b) => recommendScore(live.summaries.get(b.id)) - recommendScore(live.summaries.get(a.id))),
+      // 내 찜·체크만 있는 곳은 "동료" 추천이 아니므로 뺀다 (별점은 그대로)
+      restaurants
+        .filter((r) => peerScore(live.summaries.get(r.id)) > 0)
+        .sort((a, b) => peerScore(live.summaries.get(b.id)) - peerScore(live.summaries.get(a.id))),
     [restaurants, live.summaries],
   );
   /** 오늘의 추천: 날씨가 특별하면 날씨, 아니면 요일 주제. 예산·도보는 지금 조건을 따른다 */
@@ -1011,12 +1017,14 @@ export default function App() {
               recommended.map((r) => {
                 const s = live.summaries.get(r.id)!;
                 const others = s.favs - (s.myTags.fav ? 1 : 0);
+                const hidden = s.hidden - (s.myTags.hidden ? 1 : 0);
+                const classic = s.classic - (s.myTags.classic ? 1 : 0);
                 return (
                   <div key={r.id} className="recommend-item">
                     <div className="recommend-why small">
                       {others > 0 && <span>♥ 찜 {others}명</span>}
-                      {s.hidden > 0 && <span>🤫 숨은맛집 {s.hidden}</span>}
-                      {s.classic > 0 && <span>🔁 또 갈래요 {s.classic}</span>}
+                      {hidden > 0 && <span>🤫 숨은맛집 {hidden}</span>}
+                      {classic > 0 && <span>🔁 또 갈래요 {classic}</span>}
                       {s.reviewCount > 0 && <span>★ {s.avgRating!.toFixed(1)} ({s.reviewCount})</span>}
                     </div>
                     {card(r)}

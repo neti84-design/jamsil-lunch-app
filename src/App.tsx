@@ -19,6 +19,7 @@ import { ShareTalk } from './components/ShareTalk';
 import { RecentReviews } from './components/RecentReviews';
 import { TodayPick } from './components/TodayPick';
 import { VoteHome } from './components/VoteHome';
+import { WhoPicker } from './components/WhoPicker';
 import { VotePanel, type VoteView } from './components/VotePanel';
 import { useReports } from './hooks/useReports';
 import { useTalk } from './hooks/useTalk';
@@ -256,6 +257,7 @@ export default function App() {
     const id = new URLSearchParams(location.search).get('vote');
     return id ? { mode: 'poll', id } : null;
   });
+  const [whoOpen, setWhoOpen] = useState(false);
   const [voteDraft, setVoteDraft] = useState<string[]>(() => loadJSON<string[]>(VOTE_DRAFT_KEY, []));
   const votes = useVotes(voteView?.mode === 'poll' ? voteView.id : null);
   const [weather, setWeather] = useState<LunchWeather | null>(null);
@@ -708,7 +710,7 @@ export default function App() {
         byId={byId}
         draftCount={voteDraft.length}
         onCreate={() => setVoteView({ mode: 'create' })}
-        onCreateWho={() => setVoteView({ mode: 'create', who: true })}
+        onWho={() => setWhoOpen(true)}
         onOpen={(id) => setVoteView({ mode: 'poll', id })}
       />
     </div>
@@ -1127,6 +1129,12 @@ export default function App() {
 
       {!wide && <BottomNav tab={tab} favCount={favoriteList.length} onChange={goTab} />}
 
+      {whoOpen && (
+        <>
+          <div className="backdrop" onClick={() => setWhoOpen(false)} />
+          <WhoPicker onClose={() => setWhoOpen(false)} />
+        </>
+      )}
       {voteView && (
         <>
           <div className="backdrop" onClick={() => setVoteView(null)} />

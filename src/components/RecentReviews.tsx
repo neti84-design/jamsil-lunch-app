@@ -11,14 +11,14 @@ interface Props {
 }
 
 /** 최근 이만큼 안에 쓴 후기만 */
-const DAYS = 3;
+const DAYS = 7;
 /** 한 번에 보여 줄 줄 수 (더보기마다 이만큼 더) */
 const STEP = 3;
 /** 전광판처럼 한 줄씩 올라가는 간격·속도 */
 const ROLL_MS = 3000;
 const ROLL_ANIM_MS = 500;
 
-/** 공유톡 아래: 최근 3일 후기 — 매장 이름 → 별점·한 줄. 매장을 누르면 매장 정보로 */
+/** 공유톡 아래: 최근 7일 후기 — 매장 이름 → 별점·한 줄. 매장을 누르면 매장 정보로 */
 export function RecentReviews({ reports, restaurants, now, onSelect }: Props) {
   const [shown, setShown] = useState(STEP);
   const rows = useMemo(() => {

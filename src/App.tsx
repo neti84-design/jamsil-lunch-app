@@ -708,6 +708,7 @@ export default function App() {
         byId={byId}
         draftCount={voteDraft.length}
         onCreate={() => setVoteView({ mode: 'create' })}
+        onCreateWho={() => setVoteView({ mode: 'create', who: true })}
         onOpen={(id) => setVoteView({ mode: 'poll', id })}
       />
     </div>

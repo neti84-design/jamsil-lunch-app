@@ -485,14 +485,11 @@ select {
   flex-direction: column;
   gap: 10px;
 }
-/* 찜 목록: 카드 아래 오른쪽에 나만보기 단추 */
-.fav-item {
+/* 찜 목록: 카드 안 오른쪽 아래 나만보기 단추 */
+.card-private {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.fav-private {
-  align-self: flex-end;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 .page-head {
   flex: none;

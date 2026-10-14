@@ -370,12 +370,10 @@ export interface ReportSummary {
   delivery: number; // 🛵 배달 돼요 체크 수
   /** 이 기기에서 체크한 태그 */
   myTags: Partial<Record<ReportTag, string>>; // tag → report id
-  /** 이 기기에서 남긴 별점 합계 — "동료" 추천에서 내 몫을 뺄 때 */
-  myStars: number;
 }
 
 export function emptySummary(): ReportSummary {
-  return { liveWait: null, reviewCount: 0, avgRating: null, totalStars: 0, hidden: 0, classic: 0, favs: 0, delivery: 0, myTags: {}, myStars: 0 };
+  return { liveWait: null, reviewCount: 0, avgRating: null, totalStars: 0, hidden: 0, classic: 0, favs: 0, delivery: 0, myTags: {} };
 }
 
 export function summarize(reports: Report[], now = Date.now()): Map<string, ReportSummary> {
@@ -394,7 +392,6 @@ export function summarize(reports: Report[], now = Date.now()): Map<string, Repo
       s.totalStars += r.rating;
       s.reviewCount += 1;
       s.avgRating = s.totalStars / s.reviewCount;
-      if (r.deviceId === me) s.myStars += r.rating;
     } else if (r.kind === 'tag' && r.tag) {
       if (r.tag === 'fav') s.favs += 1;
       else if (r.tag === 'delivery') s.delivery += 1;

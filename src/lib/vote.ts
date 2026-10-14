@@ -24,7 +24,6 @@ export const POLL_TITLE_MAX = 40;
 export const POLL_MIN = 2;
 export const POLL_MAX = 12;
 export const DEFAULT_POLL_TITLE = '오늘 점심 어디 갈까요?';
-export const WHO_POLL_TITLE = '오늘 메뉴 누가 정할까요?';
 
 /** 직접 입력한 후보 (사람 이름 등). 식당 id 와 섞이지 않게 앞에 붙인다 */
 const TEXT_PREFIX = 't:';

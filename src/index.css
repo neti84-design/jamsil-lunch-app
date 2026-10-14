@@ -2584,3 +2584,31 @@ img.tower-logo {
 .hscroll-loop {
   display: contents;
 }
+
+/* 누가 정할까 (랜덤 뽑기) */
+.who-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.who-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 12px;
+  margin: 4px 0 12px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: center;
+  font-size: 16px;
+}
+.who-result strong {
+  font-size: 30px;
+  color: var(--accent);
+}
+.who-result.rolling strong {
+  color: inherit;
+  opacity: 0.6;
+}

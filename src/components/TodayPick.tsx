@@ -117,9 +117,6 @@ export function TodayPick({
         </p>
 
         <div className="today-actions">
-          <button className="btn sm primary" onClick={draw}>
-            🎲 {lucky ? '다시 뽑기' : '랜덤으로 하나만'}
-          </button>
           {lucky ? (
             <button className="btn sm" onClick={() => setLuckyId(null)}>
               전체 보기
@@ -131,6 +128,9 @@ export function TodayPick({
               </button>
             )
           )}
+          <button className="btn sm primary" onClick={draw}>
+            🎲 {lucky ? '다시 뽑기' : '랜덤뽑기'}
+          </button>
         </div>
 
         {lucky ? (

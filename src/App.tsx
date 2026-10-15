@@ -892,13 +892,8 @@ export default function App() {
       )}
       {!wide && tab === 'search' && filterBar}
       {!wide && tab === 'map' && filterBar}
-      {tab === 'today' && (
-        <header className="page-head">
-          {backButton}
-          <h2>☀️ 오늘의 추천</h2>
-          <span className="small">날씨·요일에 맞춘 추천과 점심 투표</span>
-        </header>
-      )}
+      {/* 제목은 아래 "오늘의 추천" 칸과 겹쳐서 뺐다 — 뒤로 가기만 남김 */}
+      {tab === 'today' && backButton && <header className="page-head">{backButton}</header>}
       {tab === 'favorites' && (
         <header className="page-head">
           {backButton}

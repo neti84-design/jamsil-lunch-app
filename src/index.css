@@ -2580,6 +2580,40 @@ img.tower-logo {
 .share-btn:hover {
   color: var(--accent);
 }
+/* 식당 상세 머리의 투표 후보 담기 (공유·찜 사이) — 담기면 흐림이 풀리고 ✓ 표시 */
+.vote-btn {
+  flex: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 4px;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+.vote-btn.on {
+  filter: none;
+  opacity: 1;
+}
+.vote-check {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}
 .section-head-actions {
   display: inline-flex;
   align-items: center;

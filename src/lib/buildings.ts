@@ -36,6 +36,7 @@ export const BUILDINGS: { name: string; emoji: string; re: RegExp; after?: strin
   { name: '잠실역 지하상가', emoji: '🚇', re: /잠실역\s*지하상가|잠실지하상가|잠실역 역사 내|올림픽로 지하 265(?!\d)/ },
   { name: '리센츠상가', emoji: '🏢', re: /리센츠/ },
   { name: '월드타워빌딩', emoji: '🏢', re: /송파대로 558|월드타워빌딩/, after: '타워730 (구쿠팡)' },
+  { name: '예전빌딩', emoji: '🏢', re: /예전빌딩|올림픽로\s*35다길\s*32(?!\d)/ },
   { name: '시그마타워', emoji: '🏢', re: /시그마타워|올림픽로 289(?!\d)/ },
   { name: '현대타워', emoji: '🏢', re: /현대타워|올림픽로 293-19/ },
   { name: '타워730 (구쿠팡)', emoji: '🏢', re: /타워730|송파대로 570/ },

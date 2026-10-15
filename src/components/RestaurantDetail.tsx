@@ -339,12 +339,6 @@ export function RestaurantDetail({
           </section>
         )}
 
-        <footer className="detail-foot small">
-          정보가 틀렸나요?{' '}
-          <button className="link" onClick={() => openFix('info')}>
-            ✏️ 직접 수정
-          </button>
-        </footer>
       </div>
     </aside>
   );

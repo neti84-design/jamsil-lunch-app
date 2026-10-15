@@ -149,6 +149,28 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
           💬 한 줄 후기 {reviews.length > 0 && <span className="badge">{reviews.length}개</span>}
           {isAdmin && <span className="badge team">관리자</span>}
         </h4>
+        {reviews.length === 0 && <p className="small">아직 후기가 없어요. 별점만 남겨도 돼요.</p>}
+        <ul className="report-list">
+          {reviews.slice(0, 20).map((r) => {
+            const own = r.deviceId === me;
+            return (
+              <li key={r.id} className={own ? 'own' : ''}>
+                <span className="stars">{'★'.repeat(r.rating ?? 0)}</span>
+                {r.comment && <> {r.comment}</>}
+                <span className="small">
+                  {' '}
+                  · {timeAgo(r.createdAt, now)}
+                  {own && <span className="badge mine">내 후기</span>}
+                </span>
+                {(own || isAdmin) && (
+                  <button className="link del" disabled={busy === 'del'} onClick={() => remove(r)} aria-label="후기 삭제">
+                    삭제
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
         <p className="small">🍽️ 먹어봤다면 체크 (다시 누르면 취소)</p>
         <div className="chips">
           {(Object.keys(TASTE_TAG_LABELS) as TasteTag[]).map((tag) => {
@@ -189,28 +211,6 @@ export function ReportPanel({ restaurantId, reports, summary, mode, localReason,
             {busy === 'review' ? '…' : '등록'}
           </button>
         </div>
-        {reviews.length === 0 && <p className="small">아직 후기가 없어요. 별점만 남겨도 돼요.</p>}
-        <ul className="report-list">
-          {reviews.slice(0, 20).map((r) => {
-            const own = r.deviceId === me;
-            return (
-              <li key={r.id} className={own ? 'own' : ''}>
-                <span className="stars">{'★'.repeat(r.rating ?? 0)}</span>
-                {r.comment && <> {r.comment}</>}
-                <span className="small">
-                  {' '}
-                  · {timeAgo(r.createdAt, now)}
-                  {own && <span className="badge mine">내 후기</span>}
-                </span>
-                {(own || isAdmin) && (
-                  <button className="link del" disabled={busy === 'del'} onClick={() => remove(r)} aria-label="후기 삭제">
-                    삭제
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
         {err && <p className="small" style={{ color: 'var(--danger)' }}>{err}</p>}
       </section>
     </>

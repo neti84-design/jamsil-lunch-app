@@ -102,6 +102,11 @@ export function RestaurantDetail({
       }),
     );
   };
+  /** 투표 후보 담기/빼기 — 머리 아이콘만으로는 알기 어려워 한 줄 안내도 띄운다 */
+  const toggleVote = () => {
+    onToggleVote?.();
+    setShareMsg(inVote ? '투표 후보에서 뺐어요.' : '🗳️ 투표 후보에 담았어요. 투표를 만들 때 후보로 들어가요.');
+  };
   const icon = L.divIcon({ className: 'pin selected', html: `<span>${CUISINE_EMOJI[r.cuisine]}</span>`, iconSize: [34, 34], iconAnchor: [17, 34] });
 
   return (
@@ -122,6 +127,19 @@ export function RestaurantDetail({
           </div>
         </div>
         <ShareButton onClick={() => void share()} label="이 식당 공유하기" />
+        {onToggleVote && (
+          <button
+            type="button"
+            className={'vote-btn' + (inVote ? ' on' : '')}
+            onClick={toggleVote}
+            aria-pressed={inVote}
+            aria-label={inVote ? '투표 후보에서 빼기' : '투표 후보에 담기'}
+            title={inVote ? '투표 후보에서 빼기' : '투표 후보에 담기'}
+          >
+            🗳️
+            {inVote && <span className="vote-check" aria-hidden>✓</span>}
+          </button>
+        )}
         <button className={'fav big' + (favorite ? ' on' : '')} onClick={onToggleFavorite} aria-label={favorite ? '찜 해제' : '찜하기'} aria-pressed={favorite}>
           {favorite ? '♥' : '♡'}
         </button>
@@ -158,11 +176,6 @@ export function RestaurantDetail({
               📞 {r.phone}
             </a>
           ) : null}
-          {onToggleVote && (
-            <button className={'btn' + (inVote ? ' on' : '')} onClick={onToggleVote} aria-pressed={inVote}>
-              🗳️ {inVote ? '투표에 담김 ✓' : '투표에 담기'}
-            </button>
-          )}
         </div>
         {shareMsg && <p className="small share-msg">{shareMsg}</p>}
 

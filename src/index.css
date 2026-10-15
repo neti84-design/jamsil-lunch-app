@@ -1633,6 +1633,16 @@ input.mini.grow {
   background: var(--bg);
   border: 1px solid var(--line);
 }
+.today-note-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.today-note-row .section-head-actions {
+  flex: none;
+  white-space: nowrap;
+}
 .today-note {
   margin: 0;
   font-size: 11.5px;

@@ -117,21 +117,19 @@ export function TodayPick({
 
   return (
     <section className="home-section" aria-label="오늘의 추천">
-      <div className="section-head">
-        <h3 className="section-title">
-          {theme.emoji} 오늘의 추천
-        </h3>
-        <span className="section-head-actions">
-          <ShareButton onClick={() => void share()} label="오늘의 추천 공유하기" />
-          <button className="link-more" onClick={onSeeAll}>
-            더보기 ›
-          </button>
-        </span>
-      </div>
+      {/* 제목은 위 화면 제목("☀️ 오늘의 추천")과 겹쳐서 빼고, 공유·더보기는 안내 줄 오른쪽에 */}
       <div className="today-box">
-        <p className="small today-note">
-          기본 조건값으로 설정됩니다 (도보 {walk}분, {budget / 10000}만원 예산)
-        </p>
+        <div className="today-note-row">
+          <p className="small today-note">
+            기본 조건 · 도보 {walk}분, {budget / 10000}만원 예산
+          </p>
+          <span className="section-head-actions">
+            <ShareButton onClick={() => void share()} label="오늘의 추천 공유하기" />
+            <button className="link-more" onClick={onSeeAll}>
+              더보기 ›
+            </button>
+          </span>
+        </div>
         <p className="today-reason">
           {weather && (
             <span className="today-weather">

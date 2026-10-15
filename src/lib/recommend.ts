@@ -24,6 +24,7 @@ export const WEEKDAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 const INDOOR_BUILDINGS = new Set([
   '롯데월드몰',
   '롯데백화점',
+  '롯데월드 (입장 없이)',
   '잠실역 지하상가',
   '캐슬플라자',
   '영등포맥스',

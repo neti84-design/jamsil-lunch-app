@@ -29,6 +29,8 @@ export const BUILDINGS: { name: string; emoji: string; re: RegExp; after?: strin
   { name: '당산역 해링턴타워', emoji: '🏢', re: /해링턴타워|당산로 205(?!\d)/ },
   { name: '당산 삼성쉐르빌', emoji: '🏢', re: /쉐르빌|당산로45길 1(?!\d)/ },
   { name: '장미상가', emoji: '🌹', re: /장미\s*(아파트\s*)?[AB]?\s*상가|장미[AB]상가|장미상가|잠실장미점|올림픽로\s*35길\s*(104|112|124)(?!\d)/ },
+  // 롯데월드 지하·아이스링크·민속식당가 (어드벤처 입장권 없이). 층은 src/data/lotteWorldFloors.ts
+  { name: '롯데월드 (입장 없이)', emoji: '🎡', re: /롯데월드 (지하[13]층|3층 민속식당가|웰빙센터)/ },
   { name: '롯데월드몰', emoji: '🏬', re: /롯데월드몰|올림픽로 300(?!\d)/, after: '롯데백화점' },
   { name: '롯데백화점', emoji: '🛍️', re: /롯데백화점/ },
   { name: '잠실역 지하상가', emoji: '🚇', re: /잠실역\s*지하상가|잠실지하상가|잠실역 역사 내|올림픽로 지하 265(?!\d)/ },
@@ -47,7 +49,7 @@ export const BUILDINGS: { name: string; emoji: string; re: RegExp; after?: strin
 ];
 
 /** 큰 쇼핑몰은 입구에서 식당가까지 건물 안을 한참 걸어야 한다 (분) */
-const INSIDE_MIN: Record<string, number> = { 롯데월드몰: 4, 롯데백화점: 3, 타임스퀘어: 4, 신세계백화점: 3, '영등포역·롯데백화점': 3 };
+const INSIDE_MIN: Record<string, number> = { 롯데월드몰: 4, '롯데월드 (입장 없이)': 4, 롯데백화점: 3, 타임스퀘어: 4, 신세계백화점: 3, '영등포역·롯데백화점': 3 };
 
 export function insideMinutes(r: Restaurant): number {
   const b = buildingOf(r);

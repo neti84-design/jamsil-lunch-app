@@ -189,6 +189,7 @@ interface PostRow {
   allow_comments: boolean;
   device_id?: string | null;
   created_at: string;
+  hidden_at?: string | null;
 }
 interface CommentRow {
   id: string;
@@ -196,6 +197,7 @@ interface CommentRow {
   body: string;
   device_id: string | null;
   created_at: string;
+  hidden_at?: string | null;
 }
 const fromPost = (r: PostRow): TalkPost => ({
   id: r.id,
@@ -281,7 +283,12 @@ class SupabaseTalk implements TalkBackend {
     const ch = this.sb
       .channel(`talk-live-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'talk_posts' }, (e) => h.post(fromPost(e.new as PostRow)))
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'talk_posts' }, (e) => h.post(fromPost(e.new as PostRow)))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'talk_posts' }, (e) => {
+        const row = e.new as PostRow;
+        // 지우기는 숨김(hidden_at)으로 남긴다
+        if (row.hidden_at) h.postRemoved(row.id);
+        else h.post(fromPost(row));
+      })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'talk_posts' }, (e) => {
         const id = (e.old as Partial<PostRow>).id;
         if (id) h.postRemoved(id);
@@ -289,6 +296,10 @@ class SupabaseTalk implements TalkBackend {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'talk_comments' }, (e) =>
         h.comment(fromComment(e.new as CommentRow)),
       )
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'talk_comments' }, (e) => {
+        const row = e.new as CommentRow;
+        if (row.hidden_at) h.commentRemoved(row.id);
+      })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'talk_comments' }, (e) => {
         const id = (e.old as Partial<CommentRow>).id;
         if (id) h.commentRemoved(id);

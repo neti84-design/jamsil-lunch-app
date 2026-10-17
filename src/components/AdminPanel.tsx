@@ -57,7 +57,7 @@ export function AdminPanel({ reports, now, isAdmin, onLogin, onLogout, onRemove,
   };
 
   const remove = async (r: Report) => {
-    if (!confirm('이 글을 삭제할까요? 되돌릴 수 없어요.')) return;
+    if (!confirm('이 글을 삭제할까요? (앱에서는 숨기고 DB 에는 남아요)')) return;
     setBusy(true);
     setMsg(null);
     try {

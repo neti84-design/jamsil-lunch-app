@@ -111,6 +111,7 @@ npm run build      # dist/ 생성
 
 동작 방식: `reports` 테이블 하나에 웨이팅 제보·후기·맛집 체크가 쌓이고, Supabase Realtime 으로 다른 사람의 제보가 새로고침 없이 바로 뜹니다.
 익명 키로 누구나 읽기/쓰기가 가능하고, 삭제는 **본인 글(같은 기기)** 또는 **관리자 비밀번호**로만 가능합니다(RLS + 함수). 링크를 아는 사람만 쓰는 사내용 전제입니다.
+삭제한 후기·제보·공유톡 글·댓글은 DB 에서 지우지 않고 숨김(`hidden_at`, `hidden_by` = own/admin)으로 남습니다(`supabase/schema.sql` v10 필요). 앱에서는 안 보이고 Supabase 대시보드 Table Editor 에서는 그대로 보이며, `hidden_at` 을 비우면 되살아납니다.
 
 ### 관리자 비밀번호
 

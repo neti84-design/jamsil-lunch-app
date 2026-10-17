@@ -196,6 +196,7 @@ interface Row {
   tag: ReportTag | null;
   device_id: string | null;
   created_at: string;
+  hidden_at?: string | null;
 }
 
 /**
@@ -304,6 +305,11 @@ class SupabaseBackend implements ReportsBackend {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reports' }, (payload) =>
         onInsert(fromRow(payload.new as Row)),
       )
+      // 지우기는 숨김(hidden_at)으로 남긴다
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'reports' }, (payload) => {
+        const row = payload.new as Partial<Row>;
+        if (row.hidden_at && row.id) onDelete(row.id);
+      })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'reports' }, (payload) => {
         const id = (payload.old as Partial<Row>).id;
         if (id) onDelete(id);

@@ -421,3 +421,140 @@ drop policy if exists "photos_insert_all" on storage.objects;
 create policy "photos_insert_all" on storage.objects
   for insert to anon, authenticated
   with check (bucket_id = 'photos');
+
+-- ---------- v10: 지우기 → 숨김 ----------
+-- 후기·제보·공유톡 글·댓글을 지워도 DB 에서는 없애지 않고 hidden_at(숨긴 시각)·hidden_by(own=본인, admin=관리자)만 남긴다.
+-- 앱(익명 키)에서는 숨긴 글이 보이지 않고, Supabase 대시보드 Table Editor 에서는 그대로 볼 수 있다.
+-- 되살리려면: update public.reports set hidden_at = null, hidden_by = null where id = '...';
+alter table public.reports add column if not exists hidden_at timestamptz;
+alter table public.reports add column if not exists hidden_by text check (hidden_by in ('own', 'admin'));
+alter table public.talk_posts add column if not exists hidden_at timestamptz;
+alter table public.talk_posts add column if not exists hidden_by text check (hidden_by in ('own', 'admin'));
+alter table public.talk_comments add column if not exists hidden_at timestamptz;
+alter table public.talk_comments add column if not exists hidden_by text check (hidden_by in ('own', 'admin'));
+
+drop policy if exists "reports_select_all" on public.reports;
+create policy "reports_select_all" on public.reports
+  for select using (hidden_at is null);
+
+drop policy if exists "talk_posts_select_all" on public.talk_posts;
+create policy "talk_posts_select_all" on public.talk_posts for select using (hidden_at is null);
+
+-- 숨긴 글에 달린 댓글도 함께 안 보이게
+drop policy if exists "talk_comments_select_all" on public.talk_comments;
+create policy "talk_comments_select_all" on public.talk_comments for select using (
+  hidden_at is null and exists (select 1 from public.talk_posts p where p.id = post_id and p.hidden_at is null)
+);
+
+drop policy if exists "talk_comments_insert_open" on public.talk_comments;
+create policy "talk_comments_insert_open" on public.talk_comments
+  for insert with check (
+    exists (select 1 from public.talk_posts p where p.id = post_id and p.allow_comments and p.hidden_at is null)
+  );
+
+create or replace function public.admin_delete_report(p_id uuid, p_token text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.admin_check(p_token) then
+    return false;
+  end if;
+  update public.reports set hidden_at = now(), hidden_by = 'admin' where id = p_id and hidden_at is null;
+  return true;
+end;
+$$;
+
+create or replace function public.delete_own_report(p_id uuid, p_device text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.reports set hidden_at = now(), hidden_by = 'own' where id = p_id and device_id = p_device and hidden_at is null;
+$$;
+
+create or replace function public.admin_talk_delete_post(p_id uuid, p_token text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.admin_check(p_token) then
+    return false;
+  end if;
+  update public.talk_posts set hidden_at = now(), hidden_by = 'admin' where id = p_id and hidden_at is null;
+  return true;
+end;
+$$;
+
+create or replace function public.admin_talk_delete_comment(p_id uuid, p_token text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.admin_check(p_token) then
+    return false;
+  end if;
+  update public.talk_comments set hidden_at = now(), hidden_by = 'admin' where id = p_id and hidden_at is null;
+  return true;
+end;
+$$;
+
+create or replace function public.delete_own_talk_comment(p_id uuid, p_device text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.talk_comments set hidden_at = now(), hidden_by = 'own' where id = p_id and device_id = p_device and hidden_at is null;
+$$;
+
+create or replace function public.delete_own_talk_post(p_id uuid, p_device text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.talk_posts set hidden_at = now(), hidden_by = 'own' where id = p_id and device_id = p_device and hidden_at is null;
+$$;
+
+-- 숨김 처리한 글을 관리자 함수가 다시 고치거나 댓글을 열지 못하게
+create or replace function public.admin_talk_set_comments(p_id uuid, p_allow boolean, p_token text)
+returns public.talk_posts
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec public.talk_posts;
+begin
+  if not public.admin_check(p_token) then
+    return null;
+  end if;
+  update public.talk_posts set allow_comments = p_allow where id = p_id and hidden_at is null returning * into rec;
+  return rec;
+end;
+$$;
+
+create or replace function public.admin_talk_update(p_id uuid, p_body text, p_token text)
+returns public.talk_posts
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec public.talk_posts;
+begin
+  if not public.admin_check(p_token) then
+    return null;
+  end if;
+  update public.talk_posts set body = p_body where id = p_id and hidden_at is null returning * into rec;
+  return rec;
+end;
+$$;

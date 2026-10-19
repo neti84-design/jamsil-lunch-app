@@ -58,9 +58,9 @@ export function RecentReviews({ reports, restaurants, now, onSelect }: Props) {
     ? Array.from({ length: STEP + 1 }, (_, i) => rows[(offset + i) % rows.length])
     : rows.slice(0, shown);
   return (
-    <section className="home-section recent-reviews" aria-label="최근 후기">
+    <section className="home-section recent-reviews" aria-label="찐 동료 후기">
       <div className="section-head">
-        <h3 className="section-title">📝 최근 후기</h3>
+        <h3 className="section-title">📝 찐 동료 후기</h3>
         <span className="small">최근 {DAYS}일</span>
       </div>
       <div

@@ -3,6 +3,8 @@ import { Thumb } from './Thumb';
 import { formatWon } from '../lib/links';
 import { timeAgo, waitText, type ReportSummary } from '../lib/reports';
 import { OPEN_STATE_COLOR, openStatus } from '../lib/hours';
+import { kstDate } from '../lib/recommend';
+import { isNewPlace } from '../data/newPlaces';
 
 interface Props {
   r: Restaurant;
@@ -27,9 +29,12 @@ export function RestaurantCard({ r, walk, selected, favorite, budget, summary, n
   const wait = WAIT_LABELS[r.waiting.level];
   const s = r.seating;
   const hours = openStatus(r, now);
+  const fresh = isNewPlace(r.id, kstDate(now));
 
   return (
-    <article className={'card' + (selected ? ' selected' : '')} onClick={onSelect}>
+    <article className={'card' + (selected ? ' selected' : '') + (fresh ? ' fresh' : '')} onClick={onSelect}>
+      {/* 새로 등록한 곳: 왼쪽 위 동그라미 (등록 후 며칠만) */}
+      {fresh && <span className="new-dot">신규</span>}
       <div className="card-head">
         <span className={'cuisine-emoji' + (r.photo ? ' card-thumb' : '')} aria-hidden>
           <Thumb r={r} width={52} height={52} />

@@ -29,6 +29,7 @@ import { SITES, SiteContext, loadSite, saveSite, type SiteId } from './lib/sites
 import { fetchLunchWeather, type LunchWeather } from './lib/weather';
 import { dayTheme, kstDate, pickForTaste, pickForToday, tasteFrom } from './lib/recommend';
 import { PARTNERS, type Partner } from './data/partners';
+import { NEW_PLACES, isNewPlace } from './data/newPlaces';
 import { walkMinutesFrom } from './lib/geo';
 import { dishTags, type DishTag } from './lib/dish';
 import { bigBuildings, buildingOf, insideMinutes } from './lib/buildings';
@@ -175,6 +176,8 @@ interface BuzzItem {
   r: Restaurant;
   why: Why | null;
   partner: Partner | null;
+  /** 새로 등록한 곳이면 등록한 날 ("2026-10-20") */
+  added?: string;
 }
 
 interface NavState {
@@ -414,7 +417,7 @@ export default function App() {
    * 1) 최근 2주 찜 많은 순 → 또 갈래요·숨은맛집·좋은 별점 많은 순
    * 2) 최근 2주 전체 사용자가 많이 본 순
    * 3) 가깝고 지금(또는 오늘) 영업하는 곳
-   * 으로 BUZZ_SHOWN 곳을 채운다. 롯데 임직원 혜택 매장은 맨 위에 고정
+   * 으로 BUZZ_SHOWN 곳을 채운다. 롯데 임직원 혜택 매장은 맨 위에 고정, 그 다음에 새로 등록한 곳(며칠만)
    */
   const buzz = useMemo(() => {
     const since = live.now - BUZZ_DAYS * 86400_000;
@@ -439,9 +442,15 @@ export default function App() {
       why: null,
       partner: p,
     }));
-    const seen = new Set(partners.map((x) => x.r.id));
-    const out: BuzzItem[] = [...partners];
-    const room = () => out.length < Math.max(BUZZ_SHOWN, partners.length);
+    // 새로 등록한 곳은 혜택 매장 다음에 (최근 등록 순, NEW_DAYS 일 지나면 빠진다)
+    const fresh: BuzzItem[] = Object.entries(NEW_PLACES)
+      .filter(([id]) => byId.has(id) && isNewPlace(id, today) && !partners.some((x) => x.r.id === id))
+      .sort((a, b) => b[1].localeCompare(a[1]))
+      .map(([id, added]) => ({ r: byId.get(id)!, why: null, partner: null, added }));
+    const pinned = [...partners, ...fresh];
+    const seen = new Set(pinned.map((x) => x.r.id));
+    const out: BuzzItem[] = [...pinned];
+    const room = () => out.length < Math.max(BUZZ_SHOWN, pinned.length);
     const add = (id: string, why: Why) => {
       if (seen.has(id) || !room()) return;
       seen.add(id);
@@ -929,8 +938,13 @@ export default function App() {
               </>
             }
             ticker={ticker}
-            nearby={buzz.map(({ r, why, partner }) => (
+            nearby={buzz.map(({ r, why, partner, added }) => (
               <div key={r.id} className={'recommend-item' + (partner ? ' partner' : '')}>
+                {added && (
+                  <div className="recommend-why small">
+                    <span>🆕 새로 생겼어요 · {added.slice(5).replace('-', '/')} 등록</span>
+                  </div>
+                )}
                 {partner && (
                   <div className="recommend-why small">
                     <span>🎁 롯데 임직원 혜택</span>

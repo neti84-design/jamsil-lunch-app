@@ -442,9 +442,10 @@ export default function App() {
       why: null,
       partner: p,
     }));
-    // 새로 등록한 곳은 혜택 매장 다음에 (최근 등록 순, NEW_DAYS 일 지나면 빠진다)
+    // 새로 등록한 곳은 혜택 매장 다음에 (최근 등록 순, NEW_DAYS 일 지나면 빠진다).
+    // byId 엔 전에 본 다른 근무지 식당도 들어 있어서, 지금 근무지(here) 식당만
     const fresh: BuzzItem[] = Object.entries(NEW_PLACES)
-      .filter(([id]) => byId.has(id) && isNewPlace(id, today) && !partners.some((x) => x.r.id === id))
+      .filter(([id]) => here.has(id) && isNewPlace(id, today) && !partners.some((x) => x.r.id === id))
       .sort((a, b) => b[1].localeCompare(a[1]))
       .map(([id, added]) => ({ r: byId.get(id)!, why: null, partner: null, added }));
     const pinned = [...partners, ...fresh];

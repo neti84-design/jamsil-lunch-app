@@ -1,5 +1,6 @@
 import { Component, StrictMode, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { inject } from '@vercel/analytics';
 import App from './App';
 
 function showFatal(title: string, detail: unknown) {
@@ -40,3 +41,6 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>,
 );
+
+// 방문자 수 (Vercel Web Analytics — 쿠키 없이 익명으로 센다). Vercel 프로젝트 Analytics 탭에서 켜야 모인다
+inject();

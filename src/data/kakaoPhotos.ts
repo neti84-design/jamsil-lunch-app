@@ -622,6 +622,7 @@ export const KAKAO_PHOTOS: Record<string, string> = {
   "1318032918": "https://t1.kakaocdn.net/local/kakaomapPhoto/review/cced6978e92f036c6586c0cc7daded1ef8cb659c?original",
   "1324799496": "https://postfiles.pstatic.net/MjAyNjA4MzFfNjIg/MDAxNzg4MTc1NjQzODc3.DTi6Y6B3npzaN4swpMuEg03StI3n29BjbUh3z3WuGPgg.gKyBgiZwSCwFBa7lr_kjuGzyCYe6258KU1dgqtYxzrIg.JPEG/IMG%EF%BC%BF8035.JPG?type=w966",
   "1327354298": "https://t1.kakaocdn.net/local/kakaomapPhoto/review/622ce2b590ee615763cb3c0386c7471aae58ed46?original",
+  "1329233080": "https://t1.kakaocdn.net/local/kakaomapPhoto/review/a22bea81d240e5812707facdf17c429f7f23130a?original",
   "1331837634": "https://postfiles.pstatic.net/MjAyNDA2MTBfMjk3/MDAxNzE3OTkxOTc1MTM4.HUX2fmZ78z2qkPMBiTP4GB2-lpdpseV2U2fyicL9nA0g._LGnnneFTQ0fh4qFZ9AuWcHoJhhw8iMZGuycQCbJD_wg.JPEG/output_674361736.jpg?type=w773",
   "1334105509": "https://t1.kakaocdn.net/local/kakaomapPhoto/review/d3738027b6824e903f724b16ed097eab6b07888b?original",
   "1334142356": "https://postfiles.pstatic.net/MjAyNjA5MjVfMTA2/MDAxNzkwMzM0ODIxODU1.rvTU9VIAnEb1VzHfX-o780iyhUvWpL-g1nkhh_2aSNIg.kg5-3qabUE6EqucVPCIL0WBNYBwXql7GC_569_RSYeIg.JPEG/20260924_131934.jpg?type=w773",
